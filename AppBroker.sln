@@ -5,16 +5,42 @@ VisualStudioVersion = 15.0.28307.106
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppBroker", "AppBroker\AppBroker.csproj", "{C449CBC6-A680-49E8-9A6C-84F7F299976D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBokerASP", "AppBokerASP\AppBokerASP.csproj", "{58BEF908-925B-4091-908B-AC733EEA6FC7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PainlessMesh", "PainlessMesh\PainlessMesh.csproj", "{20EB7A97-916E-4E41-8976-4F2C1FB2532A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_Ubuntu|Any CPU = Debug_Ubuntu|Any CPU
 		Debug|Any CPU = Debug|Any CPU
+		Release_Ubuntu|Any CPU = Release_Ubuntu|Any CPU
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
 		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C449CBC6-A680-49E8-9A6C-84F7F299976D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{58BEF908-925B-4091-908B-AC733EEA6FC7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{20EB7A97-916E-4E41-8976-4F2C1FB2532A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
