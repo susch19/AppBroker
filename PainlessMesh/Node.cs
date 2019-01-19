@@ -72,14 +72,14 @@ namespace PainlessMesh
 
                         using (var sr = new StreamReader(Client.GetStream(), Encoding.ASCII, false, 2048, true))
                         {
-                            var whatsWrong = sr.ReadLine();
-                            Console.WriteLine(whatsWrong);
-                            json = JsonConvert.DeserializeObject<JObject>(whatsWrong);
+                            //var whatsWrong = sr.ReadLine();
+                            //Console.WriteLine(whatsWrong);
+                            //json = JsonConvert.DeserializeObject<JObject>(whatsWrong);
 
-                            //using (var jr = new JsonTextReader(sr))
-                            //{
-                            //    json = ser.Deserialize<JObject>(jr);
-                            //}
+                            using (var jr = new JsonTextReader(sr))
+                            {
+                                json = ser.Deserialize<JObject>(jr);
+                            }
                         }
 
 

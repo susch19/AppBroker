@@ -20,7 +20,7 @@ namespace AppBokerASP.Devices
         private readonly Random r = new Random();
         private readonly Connection connection;
         //private byte[] dataToSend;
-        
+
 
         private async void SendUpdatedData(string data)
         {
@@ -37,27 +37,28 @@ namespace AppBokerASP.Devices
             timer = new Timer(timerCallback, null, 0, 10000);
         }
 
-        private void timerCallback(object state) {
-            Program.Node.SendSingle(Id, JsonConvert.SerializeObject(new GeneralSmarthomeMessage() { MessageType = "Get", Command = "IP"}));
-        }
+        private void timerCallback(object state) => Program.Node.SendSingle(Id, JsonConvert.SerializeObject(new GeneralSmarthomeMessage() { MessageType = "Get", Command = "IP" }));
 
         private void Node_SingleMessageReceived(object sender, GeneralSmarthomeMessage e)
         {
             //COMMUNICATION: In sendMessage(destId): destId = 120 type = 9, msg ={ "MessageType":"Set", "Command":"IPSet", "Parameters":["10.9.254.2","10.12.206.1", "Heater"]
-    
+
             if (e.id != Id)
                 return;
-            SendUpdatedData(string.Join('\n', e.Parameters));
+            if (e.Command == "Update")
+                SendUpdatedData(string.Join('\n', e.Parameters));
         }
 
         public override async void UpdateFromApp(string command, List<string> parameter)
         {
             if (command == "SetTemp")
             {
-                Rootobject ro = new Rootobject();
-                ro.MessageType = "Update";
-                ro.Parameters = parameter;
-                ro.Command = command;
+                Rootobject ro = new Rootobject
+                {
+                    MessageType = "Update",
+                    Parameters = parameter,
+                    Command = command
+                };
                 Program.Node.SendSingle(Id, JsonConvert.SerializeObject(ro));
             }
         }
