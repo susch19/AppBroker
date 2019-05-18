@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.106
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28606.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppBroker", "AppBroker\AppBroker.csproj", "{C449CBC6-A680-49E8-9A6C-84F7F299976D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBokerASP", "AppBokerASP\AppBokerASP.csproj", "{58BEF908-925B-4091-908B-AC733EEA6FC7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PainlessMesh", "PainlessMesh\PainlessMesh.csproj", "{20EB7A97-916E-4E41-8976-4F2C1FB2532A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PainlessMesh", "PainlessMesh\PainlessMesh.csproj", "{20EB7A97-916E-4E41-8976-4F2C1FB2532A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

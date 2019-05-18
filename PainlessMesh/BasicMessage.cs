@@ -103,7 +103,7 @@ namespace PainlessMesh
 
         public bool RemoveConnection(Sub connection)
         {
-            if (Connections.Remove(connection.NodeId))
+            if (connection == null || Connections.Remove(connection.NodeId))
                 return true;
 
             return Connections.Any(x => x.Value.RemoveConnection(connection));

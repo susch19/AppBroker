@@ -22,10 +22,10 @@ namespace AppBokerASP.Devices
         //private byte[] dataToSend;
 
 
-        private async void SendUpdatedData(string data)
+        private void SendUpdatedData(string data)
         {
             PrintableInformation[0] = data;
-            SmartHome.ConnectedClients.ForEach(async x => await x.SendAsync("Update", this));
+            Subscribers.ForEach(async x => await x.ClientProxy.SendAsync("Update", this));
         }
 
         public Heater(uint id)
@@ -33,11 +33,11 @@ namespace AppBokerASP.Devices
             Id = id;
             TypeName = GetType().Name;
             PrintableInformation.Add("Something");
-            Program.Node.SingleMessageReceived += Node_SingleMessageReceived;
-            timer = new Timer(timerCallback, null, 0, 10000);
+            Program.MeshManager.Node.SingleMessageReceived += Node_SingleMessageReceived;
+            //timer = new Timer(timerCallback, null, 0, 10000);
         }
 
-        private void timerCallback(object state) => Program.Node.SendSingle(Id, JsonConvert.SerializeObject(new GeneralSmarthomeMessage() { MessageType = "Get", Command = "IP" }));
+        private void timerCallback(object state) => Program.MeshManager.Node.SendSingle(Id, JsonConvert.SerializeObject(new GeneralSmarthomeMessage() { MessageType = "Get", Command = "IP" }));
 
         private void Node_SingleMessageReceived(object sender, GeneralSmarthomeMessage e)
         {
@@ -49,7 +49,7 @@ namespace AppBokerASP.Devices
                 SendUpdatedData(string.Join('\n', e.Parameters));
         }
 
-        public override async void UpdateFromApp(string command, List<string> parameter)
+        public override void UpdateFromApp(string command, List<string> parameter)
         {
             if (command == "SetTemp")
             {
@@ -59,7 +59,7 @@ namespace AppBokerASP.Devices
                     Parameters = parameter,
                     Command = command
                 };
-                Program.Node.SendSingle(Id, JsonConvert.SerializeObject(ro));
+                Program.MeshManager.Node.SendSingle(Id, JsonConvert.SerializeObject(ro));
             }
         }
 

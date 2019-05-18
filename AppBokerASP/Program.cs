@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
@@ -12,20 +13,28 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PainlessMesh;
+using Websocket.Client;
 
 namespace AppBokerASP
 {
     public class Program
     {
-        public static Node Node { get; private set; }
         public static DeviceManager DeviceManager { get; private set; }
+
+        public static SmarthomeMeshManager MeshManager { get; private set; }
+
+        private static Task t;
+        private static WebsocketClient wsc;
 
         public static void Main(string[] args)
         {
-            Node = new Node(120);
+            MeshManager = new SmarthomeMeshManager();
+            MeshManager.Start();
             DeviceManager = new DeviceManager();
-            DoStuff();
+            Dostuff();
 
+            int asd = 123;
+            var bytes = BitConverter.GetBytes(asd);
             if (args.Length > 0)
             {
                 CreateWebHostBuilder(args).UseUrls(args).Build().Run();
@@ -40,96 +49,29 @@ namespace AppBokerASP
             }
         }
 
-        private static string GetGatewayAddress()
+        private static async void Dostuff()
         {
-
-            var ni = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Name == "wlan0");
-            string connectionUrl;
-            if (ni != null)
+            return;
+             var wc =  WebRequest.Create(@"https://192.168.49.71:8087/objects?pattern=system.adapter.zigbee.0*&prettyPrint");
+            
+            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
+            using (var sr = new StreamReader(wc.GetResponse().GetResponseStream()))
             {
-                connectionUrl = ni.GetIPProperties()?.GatewayAddresses?.FirstOrDefault(x => x.Address.AddressFamily == AddressFamily.InterNetwork)?.Address?.ToString();
+                Console.WriteLine(sr.ReadToEnd());
             }
-            else
-            {
-                connectionUrl = "10.124.187.1";//10.12.206.1, 10.9.254.1
-            }
-            return connectionUrl;
+            ClientWebSocket cws = new ClientWebSocket();
+            cws.Options.RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback;
+            await cws.ConnectAsync(new Uri("wss://192.168.49.71:8084"), CancellationToken.None);
+            //wsc = new WebsocketClient(new Uri("ws://192.168.49.71:8084"));
+            //wsc.MessageReceived.Subscribe((s) =>
+            //s.Clone());
+            //wsc.Start();
+            //while(!wsc.IsRunning)
+            //{
+            //    Thread.Sleep
+            //}
+            //await wsc.Send("getStates");
         }
-
-        private static async void DoStuff()
-        {
-            object locking = new object();
-
-            string connectionUrl = "";
-            bool changed = false;
-            NetworkChange.NetworkAddressChanged += (s, e) =>
-            {
-                lock (locking)
-                {
-                    try
-                    {
-                        connectionUrl = GetGatewayAddress();
-                        changed = true;
-                    }
-                    catch (Exception)
-                    {
-                    }
-                }
-            };
-
-            while (true)
-            {
-                try
-                {
-                    lock (locking)
-                    {
-                        connectionUrl = GetGatewayAddress();
-                    }
-                    await Node.ConnectTCPAsync(connectionUrl, 5555);
-                    //await Node.ConnectTCPAsync("10.9.254.1", 5555);
-                    Console.WriteLine("Connection sucessful: " + connectionUrl);
-                    break;
-                }
-                catch (Exception)
-                {
-                    Console.WriteLine("Connection failed: " + connectionUrl);
-                    Thread.Sleep(250);
-                }
-            }
-            new Task(async () =>
-            {
-                while (true)
-                {
-                    try
-                    {
-                        if (Node.Client == null || Node.Client.Connected == false || changed)
-                        {
-                            //await Node.ConnectTCPAsync("10.9.254.1", 5555);
-                            lock (locking)
-                            {
-                                changed = false;
-                            }
-                            await Node.ConnectTCPAsync(connectionUrl, 5555);
-                            Console.WriteLine("Reconnect sucessful: " + connectionUrl);
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        lock (locking)
-                        {
-                            connectionUrl = GetGatewayAddress();
-                            Console.WriteLine("Connection aborted, reconnecting: " + connectionUrl);
-                        }
-                    }
-                    Thread.Sleep(1000);
-                }
-            }).Start();
-        }
-
-
-        private static void Node_SingleMessageReceived(object sender, string e) => Console.WriteLine(e);
-
-        private static void Node_BroadcastMessageReceived(object sender, string e) => Console.WriteLine(e);
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
                 WebHost.CreateDefaultBuilder(args)

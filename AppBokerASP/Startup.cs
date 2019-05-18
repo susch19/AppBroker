@@ -24,7 +24,7 @@ namespace AppBokerASP
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
             
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
             services.AddSignalR();
         }
 
@@ -64,6 +64,7 @@ namespace AppBokerASP
         private void config(HubRouteBuilder obj)
         {
             obj.MapHub<SmartHome>(new PathString("/SmartHome"));
+            
         }
 
     }

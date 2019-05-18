@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using AppBokerASP.Devices;
 using Microsoft.AspNetCore.Http;
@@ -16,15 +17,13 @@ namespace AppBokerASP
 
         public SmartHome()
         {
-            if (Program.DeviceManager.Devices.Count < 2)
-            {
-                //Program.DeviceManager.Devices.Add(1, new LedStrip("http://192.168.49.57") { Id = 1 });
-            }
         }
 
         public override Task OnConnectedAsync()
         {
             ConnectedClients.Add(Clients.Caller);
+            foreach (var item in Program.DeviceManager.Devices.Values)
+                item.SendLastData(Clients.Caller);
             return base.OnConnectedAsync();
         }
 
@@ -38,6 +37,7 @@ namespace AppBokerASP
         {
             if (Program.DeviceManager.Devices.TryGetValue(message.id, out var device))
             {
+                Console.WriteLine($"User send command {message.Command} to {device} with {message.Parameters}");
                 device.UpdateFromApp(message.Command, message.Parameters);
             }
         }
@@ -47,5 +47,16 @@ namespace AppBokerASP
         }
 
         public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).ToList();
+
+        public void Subscribe(uint DeviceId)
+        {
+            Console.WriteLine("User subscribed to " + DeviceId);
+            var highlightedItemProperty = Clients.Caller.GetType().GetRuntimeFields().FirstOrDefault(pi => pi.Name == "_connectionId");
+            string connectionId = (string)highlightedItemProperty.GetValue(Clients.Caller);
+
+            if (Program.DeviceManager.Devices.TryGetValue(DeviceId, out var device))
+                if (!device.Subscribers.Any(x => x.ConnectionId == connectionId))
+                    device.Subscribers.Add(new Subscriber { ConnectionId = connectionId, ClientProxy = Clients.Caller });
+        }
     }
 }

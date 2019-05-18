@@ -13,7 +13,7 @@ namespace AppBokerASP.Devices
         {
             Id = id;
             TypeName = GetType().Name;
-            Program.Node.SingleMessageReceived += Node_SingleMessageReceived;
+            Program.MeshManager.Node.SingleMessageReceived += Node_SingleMessageReceived;
         }
 
         private void Node_SingleMessageReceived(object sender, GeneralSmarthomeMessage e)
@@ -31,7 +31,7 @@ namespace AppBokerASP.Devices
                     ledRO.OptionSet.Add(new OptionSet { Option = item.Split('=')[0], Value = item.Split('=')[1] });
                 }
 
-                Program.Node.SendSingle(Id, JsonConvert.SerializeObject(ledRO));
+                Program.MeshManager.Node.SendSingle(Id, JsonConvert.SerializeObject(ledRO));
             }
             else
             {
@@ -40,7 +40,7 @@ namespace AppBokerASP.Devices
                     id = Id,
                     MessageType = command
                 };
-                Program.Node.SendSingle(Id, JsonConvert.SerializeObject(ro));
+                Program.MeshManager.Node.SendSingle(Id, JsonConvert.SerializeObject(ro));
 
             }
 

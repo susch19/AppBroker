@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO.Ports;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -9,10 +10,11 @@ namespace PainlessMesh
 {
     public class Connection : Sub
     {
-        public TcpClient Client { get; set; }
+        //public TcpClient Client { get; set; }
+        public SerialPort SerialPort { get; set; }
         public DateTime LastReceived { get; internal set; }
 
-        public Connection() 
+        public Connection()
         {
             Connections = new Dictionary<uint, Sub>();
         }
@@ -29,10 +31,13 @@ namespace PainlessMesh
 
         public bool SafeWrite(uint nodeId, BasicMessage message)
         {
-            if (!Connections.TryGetValue(nodeId ,out var connection))
+            if (!Connections.TryGetValue(nodeId, out var connection))
                 return false;
+            if (message.type == PackageType.NODE_SYNC_REPLY || message.type == PackageType.NODE_SYNC_REQUEST)
+                return true;
             var con = connection as Connection;
-            if (!con.Client.Connected)
+            if (!con.SerialPort.IsOpen)
+            //if (!con.Client.Connected)
             {
                 RemoveConnection(connection);
                 return false;
@@ -40,16 +45,24 @@ namespace PainlessMesh
 
             try
             {
-                if(message.from == 0)
+                if (message.from == 0)
                 {
                     message.from = NodeId;
                 }
                 var asd = JsonConvert.SerializeObject(message) + '\0';
-                con.Client.Client.Send(Encoding.UTF8.GetBytes(asd));
-                return true;
+                //con.Client.Client.Send(Encoding.UTF8.GetBytes(asd));
+                con.SerialPort.WriteLine(message.dest.ToString());
+                if (con.SerialPort.ReadLine() != "ACK\r")
+                    return false;
+                con.SerialPort.WriteLine(asd);
+                if (con.SerialPort.ReadLine() == "ACK2\r")
+                    return true;
+                return false;
+
             }
-            catch (Exception)
+            catch (Exception e)
             {
+
                 RemoveConnection(connection);
                 return false;
             }
