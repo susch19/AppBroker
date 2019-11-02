@@ -35,7 +35,7 @@ namespace AppBokerASP
             app.UseCookiePolicy();
             app.UseSignalR(config);
             app.UseWebSockets();
-            app.UseMvc();
+            //app.UseMvc();
 
             app.Use(async (context, next) =>
             {

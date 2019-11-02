@@ -16,7 +16,7 @@ namespace AppBokerASP
         public DeviceManager()
         {
             types = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device)).ToList();
-            Program.MeshManager.Node.NewConnectionEstablished += Node_NewConnectionEstablished;
+            Program.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
         }
 
 

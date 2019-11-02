@@ -33,11 +33,11 @@ namespace AppBokerASP.Devices
             Id = id;
             TypeName = GetType().Name;
             PrintableInformation.Add("Something");
-            Program.MeshManager.Node.SingleMessageReceived += Node_SingleMessageReceived;
+            Program.MeshManager.SingleMessageReceived += Node_SingleMessageReceived;
             //timer = new Timer(timerCallback, null, 0, 10000);
         }
 
-        private void timerCallback(object state) => Program.MeshManager.Node.SendSingle(Id, JsonConvert.SerializeObject(new GeneralSmarthomeMessage() { MessageType = "Get", Command = "IP" }));
+        private void timerCallback(object state) => Program.MeshManager.SendSingle(Id, JsonConvert.SerializeObject(new GeneralSmarthomeMessage() { MessageType = "Get", Command = "IP" }));
 
         private void Node_SingleMessageReceived(object sender, GeneralSmarthomeMessage e)
         {
@@ -59,7 +59,7 @@ namespace AppBokerASP.Devices
                     Parameters = parameter,
                     Command = command
                 };
-                Program.MeshManager.Node.SendSingle(Id, JsonConvert.SerializeObject(ro));
+                Program.MeshManager.SendSingle(Id, JsonConvert.SerializeObject(ro));
             }
         }
 

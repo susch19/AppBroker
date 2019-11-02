@@ -44,26 +44,26 @@ namespace PainlessMesh
 
         //    return Client;
         //}
-        public SerialPort ConnectSerial(string port, int baudrate)
-        {
+        //public SerialPort ConnectSerial(string port, int baudrate)
+        //{
 
-            SerialPort = new SerialPort(port, baudrate);
-            if (SerialPort == null)
-                throw new Exception();
+        //    SerialPort = new SerialPort(port, baudrate);
+        //    if (SerialPort == null)
+        //        throw new Exception();
 
-            SerialPort.WriteBufferSize = 2560000;
-            SerialPort.ReadBufferSize = 2560000;
-            SerialPort.Open();
-            //var getNodeIdsMessage = new BroadcastMessage { dest = 0, from = NodeId, type = PackageType.BROADCAST, msg = "ServerStarted" };
-            //var getNodeIds = JsonConvert.SerializeObject(getNodeIdsMessage) + '\0';
-            //SerialPort.Write(new byte[] {0,0,0,1 }, 0, 4);
+        //    SerialPort.WriteBufferSize = 2560000;
+        //    SerialPort.ReadBufferSize = 2560000;
+        //    SerialPort.Open();
+        //    //var getNodeIdsMessage = new BroadcastMessage { dest = 0, from = NodeId, type = PackageType.BROADCAST, msg = "ServerStarted" };
+        //    //var getNodeIds = JsonConvert.SerializeObject(getNodeIdsMessage) + '\0';
+        //    //SerialPort.Write(new byte[] {0,0,0,1 }, 0, 4);
 
-            //NodeId = uint.Parse(SerialPort.ReadLine());
+        //    //NodeId = uint.Parse(SerialPort.ReadLine());
 
-            StartListening();
-            //SerialPort.DataReceived += SerialPort_DataReceived;
-            return SerialPort;
-        }
+        //    StartListening();
+        //    //SerialPort.DataReceived += SerialPort_DataReceived;
+        //    return SerialPort;
+        //}
 
         private void SerialPort_DataReceived(object sender, SerialDataReceivedEventArgs e)
         {

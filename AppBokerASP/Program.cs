@@ -6,6 +6,8 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore;
@@ -26,10 +28,17 @@ namespace AppBokerASP
         private static Task t;
         private static WebsocketClient wsc;
 
+        //private static TcpListener TcpServer = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), 8801);
+
         public static void Main(string[] args)
         {
-            MeshManager = new SmarthomeMeshManager();
-            MeshManager.Start();
+            MeshManager = new SmarthomeMeshManager(8801);
+            //MeshManager.Start();
+
+            var s = "{\"id\":3821496450,\"MessageType\":\"OnNewConnection\",\"Command\":\"OnNewConnection\",\"Parameters\":[{\"nodeId\": 1122111222}]}";
+
+            var m = System.Text.Json.JsonSerializer.Deserialize<GeneralSmarthomeMessage>(s /*jso*/);
+
             DeviceManager = new DeviceManager();
             Dostuff();
 
@@ -49,11 +58,13 @@ namespace AppBokerASP
             }
         }
 
+      
+
         private static async void Dostuff()
         {
             return;
-             var wc =  WebRequest.Create(@"https://192.168.49.71:8087/objects?pattern=system.adapter.zigbee.0*&prettyPrint");
-            
+            var wc = WebRequest.Create(@"https://192.168.49.71:8087/objects?pattern=system.adapter.zigbee.0*&prettyPrint");
+
             ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
             using (var sr = new StreamReader(wc.GetResponse().GetResponseStream()))
             {

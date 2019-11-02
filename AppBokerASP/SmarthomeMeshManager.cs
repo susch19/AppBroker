@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading;
@@ -12,92 +13,143 @@ namespace AppBokerASP
     public class SmarthomeMeshManager
     {
         public Node Node { get; private set; }
-        private string connectionUrl => GetGatewayAddress();
+        public event EventHandler<GeneralSmarthomeMessage> SingleMessageReceived;
+        public event EventHandler<(Connection, List<string>)> NewConnectionEstablished;
 
-        private readonly object locking = new object();
-        private bool changed = false;
+        private static ServerSocket serverSocket = new ServerSocket();
+        private readonly uint nodeID = 1122111222;
 
-        private Task runningTask;
-
-        public SmarthomeMeshManager() => Node = new Node(120);
-
-
-        private string GetGatewayAddress()
+        public SmarthomeMeshManager(int listenPort, uint nodeId = 1122111222)
         {
-
-            var ni = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Name == "wlan0");
-
-            if (ni != null)
-            {
-                return ni.GetIPProperties()?.GatewayAddresses?.FirstOrDefault(x => x.Address.AddressFamily == AddressFamily.InterNetwork)?.Address?.ToString();
-            }
-            else
-            {
-                return "10.9.254.1";//10.104.130.1, 10.12.206.1, 10.124.187.1
-            }
+            nodeID = nodeId;
+            serverSocket.OnClientConnected += ServerSocket_OnClientConnected;
+            serverSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
         }
 
-        private void PrintToConsole(string s)
+        private static void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
         {
-            Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + ": " + s);
+            baseClient.ReceivedData += SocketClientDataReceived;
+            //baseClient.Start();
+        }
+
+        private static void SocketClientDataReceived(object sender, GeneralSmarthomeMessage e)
+        {
+            var bc = (BaseClient)sender;
+
+            var msg = DateTime.Now.ToLongTimeString() + e.ToJson();
+
+            bc.Send(msg);
+            Console.WriteLine(msg);
 
         }
 
-        public void Start()
+        public void SendSingle(uint destination, string message)
         {
-            NetworkChange.NetworkAddressChanged += (s, e) =>
-            {
-                changed = true;
-            };
+            serverSocket.SendToAllClients(
+                new SingleAdressedMessage() { dest = destination, from = nodeID, msg = message, type = PackageType.SINGLE }
+                .ToJson());
 
-            runningTask = new Task(async () =>
-            {
-                while (true)
-                {
-                    if (!await DoMoreStuffAsync())
-                    {
-                        changed = true;
-                        PrintToConsole("Connection aborted");
-                    }
-                    Thread.Sleep(2000);
-                }
-            }, CancellationToken.None, TaskCreationOptions.LongRunning);
-            runningTask.Start();
         }
 
-        private async Task<bool> DoMoreStuffAsync()
-        {
-            while (true)
-            {
-                //if (Node.Client == null || Node.Client.Connected == false || changed)
-                if (Node.SerialPort == null || Node.SerialPort.IsOpen == false || changed)
-                {
-                    changed = false;
 
-                    //string connectionPort = "COM15";
-                    string connectionPort = "COM256";
-                    int connectionSpeed = 512000;
-                    //int connectionSpeed = 2000000;
-                    //int connectionSpeed = 115200;
-                    try
-                    {
-                        //PrintToConsole("Try Connect: " + connectionUrl);
-                        //await Node.ConnectTCPAsync(connectionUrl, 5555);
-                        PrintToConsole("Try Connect: " + connectionPort + " at " + connectionSpeed);
-                        Node.ConnectSerial(connectionPort, connectionSpeed);
-                    }
-                    catch (Exception ex)
-                    {
-                        PrintToConsole(ex.Message);
-                        return false;
-                    }
-                    PrintToConsole("Connect sucessful: " + connectionPort + " at " + connectionSpeed);
 
-                    //PrintToConsole("Connect sucessful: " + connectionUrl);
-                }
-                Thread.Sleep(250);
-            }
-        }
+
+
+
+
+
+
+
+
+
+
+
+        //private string connectionUrl => GetGatewayAddress();
+
+        //private readonly object locking = new object();
+        //private bool changed = false;
+
+        //private Task runningTask;
+
+        //public SmarthomeMeshManager() => Node = new Node(1122111222);
+
+
+        //private string GetGatewayAddress()
+        //{
+
+        //    var ni = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Name == "wlan0");
+
+        //    if (ni != null)
+        //    {
+        //        return ni.GetIPProperties()?.GatewayAddresses?.FirstOrDefault(x => x.Address.AddressFamily == AddressFamily.InterNetwork)?.Address?.ToString();
+        //    }
+        //    else
+        //    {
+        //        return "10.9.254.1";//10.104.130.1, 10.12.206.1, 10.124.187.1
+        //    }
+        //}
+
+        //private void PrintToConsole(string s)
+        //{
+        //    Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + ": " + s);
+
+        //}
+
+        //public void Start()
+        //{
+        //    NetworkChange.NetworkAddressChanged += (s, e) =>
+        //    {
+        //        changed = true;
+        //    };
+
+        //    runningTask = new Task(async () =>
+        //    {
+        //        while (true)
+        //        {
+        //            if (!await DoMoreStuffAsync())
+        //            {
+        //                changed = true;
+        //                PrintToConsole("Connection aborted");
+        //            }
+        //            Thread.Sleep(2000);
+        //        }
+        //    }, CancellationToken.None, TaskCreationOptions.LongRunning);
+        //    runningTask.Start();
+        //}
+
+        //private async Task<bool> DoMoreStuffAsync()
+        //{
+        //    while (true)
+        //    {
+        //        //if (Node.Client == null || Node.Client.Connected == false || changed)
+        //        if (Node.SerialPort == null || Node.SerialPort.IsOpen == false || changed)
+        //        {
+        //            changed = false;
+
+        //            //string connectionPort = "COM15";
+        //            string connectionPort = "COM256";
+        //            int connectionSpeed = 512000;
+        //            //int connectionSpeed = 2000000;
+        //            //int connectionSpeed = 115200;
+        //            try
+        //            {
+        //                //PrintToConsole("Try Connect: " + connectionUrl);
+        //                //await Node.ConnectTCPAsync(connectionUrl, 5555);
+        //                PrintToConsole("Try Connect: " + connectionPort + " at " + connectionSpeed);
+        //                Node.ConnectSerial(connectionPort, connectionSpeed);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                PrintToConsole(ex.Message);
+        //                return false;
+        //            }
+        //            PrintToConsole("Connect sucessful: " + connectionPort + " at " + connectionSpeed);
+
+        //            //PrintToConsole("Connect sucessful: " + connectionUrl);
+        //        }
+        //        Thread.Sleep(250);
+        //    }
+        //}
 
         //while (true)
         //{

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using Newtonsoft.Json;
 
 namespace PainlessMesh
@@ -45,7 +46,7 @@ namespace PainlessMesh
         public uint id { get; set; }
         public string MessageType { get; set; }
         public string Command { get; set; }
-        public List<string> Parameters { get; set; }
+        public List<System.Text.Json.JsonElement> Parameters { get; set; }
     }
 
 
@@ -56,13 +57,13 @@ namespace PainlessMesh
         public Dictionary<uint, Sub> subs { get; set; }
     }
 
-    public class SubJsonSerializer : JsonConverter
+    public class SubJsonSerializer : Newtonsoft.Json.JsonConverter
     {
         public override bool CanConvert(Type objectType)
         {
             return objectType.IsAssignableFrom(typeof(Dictionary<uint, Sub>));
         }
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
+        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
         {
             var res = new Dictionary<uint, Sub>();
 
@@ -70,7 +71,7 @@ namespace PainlessMesh
 
             return res;
         }
-        public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
+        public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
         {
             var subs = value as Dictionary<uint, Sub>;
             serializer.Serialize(writer, subs.Values);
