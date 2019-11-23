@@ -16,7 +16,7 @@ namespace PainlessMesh
 
         public Connection()
         {
-            Connections = new Dictionary<uint, Sub>();
+            Subs = new Dictionary<uint, Sub>();
         }
 
         //public Connection GetConnectionById(int id)
@@ -31,7 +31,7 @@ namespace PainlessMesh
 
         public bool SafeWrite(uint nodeId, BasicMessage message)
         {
-            if (!Connections.TryGetValue(nodeId, out var connection))
+            if (!Subs.TryGetValue(nodeId, out var connection))
                 return false;
             if (message.type == PackageType.NODE_SYNC_REPLY || message.type == PackageType.NODE_SYNC_REQUEST)
                 return true;

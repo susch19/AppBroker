@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 
 namespace PainlessMesh
 {
+    /*
     public class Node : Connection
     {
 
@@ -98,7 +99,7 @@ namespace PainlessMesh
                 }
                 if (string.IsNullOrWhiteSpace(broadcastMessage.msg) || broadcastMessage.msg[0] != '{')
                 {
-                    var gsm = new GeneralSmarthomeMessage { MessageType = "Get", Command = "WhoAreYou" };
+                    var gsm = new GeneralSmarthomeMessage { MessageType = MessageType.Get, Command = Command.WhoIAm};
                     var sam = new SingleAdressedMessage() { dest = bm.from, from = NodeId, msg = JsonConvert.SerializeObject(gsm), type = PackageType.SINGLE };
                     var asd = JsonConvert.SerializeObject(sam) + '\0';
 
@@ -227,7 +228,7 @@ namespace PainlessMesh
                             }
                             if (string.IsNullOrWhiteSpace(broadcastMessage.msg) || broadcastMessage.msg[0] != '{')
                             {
-                                var gsm = new GeneralSmarthomeMessage { MessageType = "Get", Command = "WhoAreYou" };
+                                var gsm = new GeneralSmarthomeMessage { MessageType = MessageType.Get, Command = Command.WhoIAm };
                                 var sam = new SingleAdressedMessage() { dest = bm.from, from = NodeId, msg = JsonConvert.SerializeObject(gsm), type = PackageType.SINGLE };
                                 var asd = JsonConvert.SerializeObject(sam) + '\0';
 
@@ -402,4 +403,5 @@ namespace PainlessMesh
             }, ct).Start();
         }
     }
+*/
 }

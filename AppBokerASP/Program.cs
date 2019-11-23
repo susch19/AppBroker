@@ -6,16 +6,21 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using AppBokerASP.Database;
+using AppBokerASP.Database.Model;
+using AppBokerASP.Devices;
+using AppBokerASP.Devices.Heater;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PainlessMesh;
-using Websocket.Client;
+
 
 namespace AppBokerASP
 {
@@ -26,19 +31,19 @@ namespace AppBokerASP
         public static SmarthomeMeshManager MeshManager { get; private set; }
 
         private static Task t;
-        private static WebsocketClient wsc;
 
         //private static TcpListener TcpServer = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), 8801);
 
+
+
         public static void Main(string[] args)
         {
+            //TimeTempMessageLE.Test();
+            //var ttm = new TimeTempMessageLE(Devices.Heater.DayOfWeek.Sat, TimeSpan.FromMinutes(1985), 55.5f);
+            //Console.WriteLine(ttm.GetBits());
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            var e =Encoding.GetEncodings();
             MeshManager = new SmarthomeMeshManager(8801);
-            //MeshManager.Start();
-
-            var s = "{\"id\":3821496450,\"MessageType\":\"OnNewConnection\",\"Command\":\"OnNewConnection\",\"Parameters\":[{\"nodeId\": 1122111222}]}";
-
-            var m = System.Text.Json.JsonSerializer.Deserialize<GeneralSmarthomeMessage>(s /*jso*/);
-
             DeviceManager = new DeviceManager();
             Dostuff();
 
@@ -58,10 +63,12 @@ namespace AppBokerASP
             }
         }
 
-      
+
 
         private static async void Dostuff()
         {
+
+
             return;
             var wc = WebRequest.Create(@"https://192.168.49.71:8087/objects?pattern=system.adapter.zigbee.0*&prettyPrint");
 

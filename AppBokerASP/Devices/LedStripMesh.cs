@@ -1,48 +1,51 @@
-﻿using System;
+﻿using PainlessMesh;
+
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using PainlessMesh;
+using System.Text.Json;
 
 namespace AppBokerASP.Devices
 {
     public class LedStripMesh : Device
     {
-        public LedStripMesh(uint id)
+        public LedStripMesh() : base(0)
         {
-            Id = id;
+        }
+
+        public LedStripMesh(uint id) : base(id)
+        {
             TypeName = GetType().Name;
-            Program.MeshManager.SingleMessageReceived += Node_SingleMessageReceived;
+            //Program.MeshManager.SingleUpdateMessageReceived += Node_SingleMessageReceived;
         }
 
         private void Node_SingleMessageReceived(object sender, GeneralSmarthomeMessage e)
         {
         }
 
-        public override void UpdateFromApp(string command, List<string> parameter)
+        public override void UpdateFromApp(Command command, List<JsonElement> parameter)
         {
-            //string args = "";
-            if (command == "options")
-            {
-                var ledRO = new LedStripRootObject { id = Id, MessageType = command, OptionSet = new List<OptionSet>() };
-                foreach (var item in parameter)
-                {
-                    ledRO.OptionSet.Add(new OptionSet { Option = item.Split('=')[0], Value = item.Split('=')[1] });
-                }
+            string args = "";
 
-                Program.MeshManager.SendSingle(Id, JsonConvert.SerializeObject(ledRO));
-            }
-            else
-            {
-                Rootobject ro = new Rootobject
-                {
-                    id = Id,
-                    MessageType = command
-                };
-                Program.MeshManager.SendSingle(Id, JsonConvert.SerializeObject(ro));
+            //if (command == Command. "options")
+            //{
+            //    var ledRO = new LedStripRootObject { id = Id, MessageType = command, OptionSet = new List<OptionSet>() };
+            //    foreach (var item in parameter)
+            //    {
+            //        ledRO.OptionSet.Add(new OptionSet { Option = item.Split('=')[0], Value = item.Split('=')[1] });
+            //    }
 
-            }
+            //    Program.MeshManager.SendSingle(Id, ledRO);
+            //}
+            //else
+            //{
+            //    Rootobject ro = new Rootobject
+            //    {
+            //        id = Id,
+            //        MessageType = command
+            //    };
+            //    Program.MeshManager.SendSingle(Id, ro);
+
+            //}
 
             //if (parameter != null)
             //    args = string.Join("&", parameter);

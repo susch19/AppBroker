@@ -1,29 +1,36 @@
-﻿using System;
+﻿using PainlessMesh;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace AppBokerASP
 {
-
     public class ServerSocket
     {
-
         public event EventHandler<BaseClient> OnClientConnected;
 
         private TcpListener tcpListener;
-        private readonly List<BaseClient> clients;
+        private readonly ConcurrentBag<BaseClient> clients;
+        private readonly Task sendTask;
+        private readonly Queue<SendMessageForQueue> sendQueue;
 
         public ServerSocket()
         {
-            clients = new List<BaseClient>();
+            clients = new ConcurrentBag<BaseClient>();
+            sendQueue = new Queue<SendMessageForQueue>();
+            sendTask = Task.Run(SendMessagesFromQueue);
         }
+
 
         public void Start(IPAddress address, int port)
         {
-            tcpListener = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), 8801);
+            tcpListener = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), port);
             tcpListener.Start();
             tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
@@ -37,7 +44,8 @@ namespace AppBokerASP
 
         public void Stop()
         {
-            clients.ForEach(x => x.Disconnect());
+            foreach (var item in clients)
+                item.Disconnect();
             clients.Clear();
 
             tcpListener.Stop();
@@ -56,20 +64,40 @@ namespace AppBokerASP
             tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
-        public void SendToAllClients(string data)
+        public void SendToAllClients(PackageType packageType, string data, uint nodeId)
+            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = nodeId });
+
+        public void SendToAllClients(PackageType packageType, string data)
+            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = 0 });
+
+        private void SendMessagesFromQueue()
         {
-            foreach (var client in clients)
+            while (true)
             {
-                try
+                Thread.Sleep(500);
+                if (sendQueue.TryDequeue(out var msg))
                 {
-                    client.Send(data);
-                }
-                catch (Exception)
-                {
-                    clients.Remove(client);
+                    foreach (var client in clients)
+                    {
+                        try
+                        {
+                            client.Send(msg.PackageType, msg.Data, msg.NodeId);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                            clients.TryTake(out var a);
+                        }
+                    }
                 }
             }
+        }
 
+        private class SendMessageForQueue
+        {
+            public PackageType PackageType { get; set; }
+            public string Data { get; set; }
+            public uint NodeId { get; set; }
         }
     }
 }

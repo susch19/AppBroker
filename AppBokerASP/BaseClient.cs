@@ -33,6 +33,7 @@ namespace AppBokerASP
 
         static BaseClient()
         {
+
             ServerStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
             ServerStore.Open(OpenFlags.ReadOnly);
             ServerCert = ServerStore.Certificates.Find(X509FindType.FindByThumbprint, "0cd48689df687d3f95cd8e3baa3d5d772361563f", true)[0];
@@ -58,10 +59,15 @@ namespace AppBokerASP
                 StopConnection(client, sslStream);
                 Console.WriteLine(ae);
             }
-            catch(IOException iOException)
+            catch (IOException iOException)
             {
                 StopConnection(client, sslStream);
                 Console.WriteLine(iOException);
+            }
+            catch (System.ComponentModel.Win32Exception e)
+            {
+                StopConnection(client, sslStream);
+                Console.WriteLine(e);
             }
         }
 
@@ -71,7 +77,7 @@ namespace AppBokerASP
             sslStream.Close();
             Source.Cancel();
         }
-      
+
         private X509Certificate LocalCertificateSelection(object sender, string targetHost, X509CertificateCollection localCertificates, X509Certificate remoteCertificate, string[] acceptableIssuers)
         {
             return ServerCert;
@@ -88,16 +94,18 @@ namespace AppBokerASP
             try
             {
 
-          
-            do
-            {
-                int ret = stream.Read(buffer, read, count);
-                if (ret < 0)
+
+                do
                 {
-                    return false;
-                }
-                read += ret;
-            } while (read < count);
+                    if (count > 10000)
+                        return false;
+                    int ret = stream.Read(buffer, read, count);
+                    if (ret < 0)
+                    {
+                        return false;
+                    }
+                    read += ret;
+                } while (read < count);
             }
             catch (IOException ioe)
             {
@@ -128,7 +136,7 @@ namespace AppBokerASP
                         return;
                     }
                     var msg = Encoding.ASCII.GetString(bodyBuf, 0, size);
-                    Console.WriteLine("Debug MSG: " +msg);
+                    Console.WriteLine("Debug MSG: " + msg);
                     var o = JsonSerializer.Deserialize<GeneralSmarthomeMessage>(msg);
 
                     ReceivedData?.Invoke(this, o);
@@ -144,11 +152,11 @@ namespace AppBokerASP
             Client.Close();
         }
 
-        public void Send(string data)
+        public void Send(PackageType packageType, string data, uint nodeId)
         {
-            var buf = Encoding.ASCII.GetBytes(data);
-            stream.Write(BitConverter.GetBytes(buf.Length), 0, HeaderSize);
-            stream.Write(buf, 0, buf.Length);
+            var buf = BitConverter.GetBytes(nodeId).Concat(new[] { (byte)packageType }).Concat(Encoding.GetEncoding(437).GetBytes(data)).ToArray();
+            stream?.Write(BitConverter.GetBytes(buf.Length), 0, HeaderSize);
+            stream?.Write(buf, 0, buf.Length);
         }
 
     }

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using PainlessMesh;
@@ -12,161 +14,155 @@ namespace AppBokerASP
 {
     public class SmarthomeMeshManager
     {
-        public Node Node { get; private set; }
-        public event EventHandler<GeneralSmarthomeMessage> SingleMessageReceived;
-        public event EventHandler<(Connection, List<string>)> NewConnectionEstablished;
+        private TimeSpan WaitBeforeWhoIAmSendAgain = new TimeSpan(0, 0, 30);
+
+        public event EventHandler<GeneralSmarthomeMessage> SingleUpdateMessageReceived;
+        public event EventHandler<GeneralSmarthomeMessage> SingleGetMessageReceived;
+        public event EventHandler<(Sub, List<string>)> NewConnectionEstablished;
 
         private static ServerSocket serverSocket = new ServerSocket();
-        private readonly uint nodeID = 1122111222;
 
-        public SmarthomeMeshManager(int listenPort, uint nodeId = 1122111222)
+        private readonly List<uint> knownNodeIds;
+        private readonly ConcurrentDictionary<uint, DateTime> WhoIAmSendTime;
+
+        private readonly uint nodeID = 1;
+
+
+        private Timer timeBroadcastTimer;
+        private Timer whoAmITask;
+        private Timer getMeshTreeUpdateTask;
+
+        public SmarthomeMeshManager(int listenPort, uint nodeId = 1)
         {
             nodeID = nodeId;
+            WhoIAmSendTime = new ConcurrentDictionary<uint, DateTime>();
+            knownNodeIds = new List<uint> { nodeID };
             serverSocket.OnClientConnected += ServerSocket_OnClientConnected;
             serverSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
+            whoAmITask = new Timer(WhoAmITask, null, TimeSpan.FromSeconds(10d), WaitBeforeWhoIAmSendAgain);
+            timeBroadcastTimer = new Timer((n) => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, JsonSerializer.Deserialize<JsonElement>($"{{\"Date\":\"{DateTime.Now.ToString()}\"}}"))), null, TimeSpan.FromMinutes(1d), TimeSpan.FromDays(1d));
+            getMeshTreeUpdateTask = new Timer((n) => SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh, JsonSerializer.Deserialize<JsonElement>("{}"))), null, TimeSpan.FromSeconds(20d), TimeSpan.FromMinutes(1d));
         }
 
-        private static void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
+        private void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
         {
+            //baseClient.Send(PackageType.BRIDGE, "GetMeshTree", nodeID);
+            SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh, JsonSerializer.Deserialize<JsonElement>("{}")));
             baseClient.ReceivedData += SocketClientDataReceived;
             //baseClient.Start();
         }
 
-        private static void SocketClientDataReceived(object sender, GeneralSmarthomeMessage e)
+        private void SocketClientDataReceived(object sender, GeneralSmarthomeMessage e)
         {
             var bc = (BaseClient)sender;
 
-            var msg = DateTime.Now.ToLongTimeString() + e.ToJson();
+            if (e.MessageType == MessageType.Update && e.Command == Command.OnNewConnection)
+                HandleUpdates(e);
 
-            bc.Send(msg);
-            Console.WriteLine(msg);
+            if (e.Command == Command.WhoIAm)
+            {
+                knownNodeIds.Add(e.NodeId);
+                while (WhoIAmSendTime.ContainsKey(e.NodeId) && !WhoIAmSendTime.TryRemove(e.NodeId, out var asda)) { }
+                if (e.Parameters == null)
+                    return;
+                NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters?.ToStringArray().ToList()));
+                return;
+            }
 
+            if (!knownNodeIds.Contains(e.NodeId))
+            {
+                if (!WhoIAmSendTime.TryGetValue(e.NodeId, out var dt) || dt.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
+                {
+                    //SendSingle(e.NodeId, new GeneralSmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
+                    if (dt == default)
+                        while (!WhoIAmSendTime.TryAdd(e.NodeId, DateTime.Now)) { }
+                    else
+                        WhoIAmSendTime[e.NodeId] = DateTime.Now;
+                }
+                return;
+            }
+
+
+            switch (e.MessageType)
+            {
+                case MessageType.Get:
+                    HandleGets(e);
+                    break;
+                case MessageType.Update:
+                    HandleUpdates(e);
+                    break;
+                default:
+                    break;
+            }
         }
 
-        public void SendSingle(uint destination, string message)
+        private void ParseSubs(Sub sub)
         {
-            serverSocket.SendToAllClients(
-                new SingleAdressedMessage() { dest = destination, from = nodeID, msg = message, type = PackageType.SINGLE }
-                .ToJson());
+            if (!knownNodeIds.Contains(sub.NodeId))
+            {
+                if (!WhoIAmSendTime.TryGetValue(sub.NodeId, out var dt) || dt.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
+                {
+                    //SendSingle(sub.NodeId, new GeneralSmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
+                    if (dt == default)
+                        while (!WhoIAmSendTime.TryAdd(sub.NodeId, DateTime.Now)) { }
+                    else
+                        WhoIAmSendTime[sub.NodeId] = DateTime.Now;
+                }
+            }
+            if (sub.Subs != null && sub.Subs != default)
+                foreach (var item in sub.Subs)
+                    ParseSubs(item.Value);
+        }
+
+        private void HandleUpdates(GeneralSmarthomeMessage e)
+        {
+            switch (e.Command)
+            {
+                case Command.IP:
+                    break;
+                case Command.OnChangedConnections:
+                case Command.OnNewConnection:
+                case Command.Mesh:
+                    var sub = e.Parameters[0].ToObject<Sub>();
+                    ParseSubs(sub);
+                    break;
+                default:
+                    SingleUpdateMessageReceived?.Invoke(this, e);
+                    break;
+            }
 
         }
 
+        private void HandleGets(GeneralSmarthomeMessage e)
+        {
+            if (e.Command == Command.Time)
+                SendSingle(e.NodeId, new GeneralSmarthomeMessage(e.NodeId, MessageType.Update, Command.Time, JsonSerializer.Deserialize<JsonElement>($"{{\"Date\":\"{DateTime.Now.ToString()}\"}}")));
+            else
+                SingleGetMessageReceived?.Invoke(this, e);
+        }
 
+        public void SendSingle<T>(uint destination, T message)
+            => serverSocket.SendToAllClients(PackageType.SINGLE, message.ToJson(), destination);
 
+        public void SendBroadcast<T>(T message)
+            => serverSocket.SendToAllClients(PackageType.BROADCAST, message.ToJson());
 
+        public void SendToBridge<T>(T message)
+            => serverSocket.SendToAllClients(PackageType.BRIDGE, message.ToJson(), nodeID);
 
+        private void WhoAmITask(object o)
+        {
 
+            foreach (var item in WhoIAmSendTime)
+            {
+                if (item.Value.Add(WaitBeforeWhoIAmSendAgain) < DateTime.Now)
+                {
+                    SendSingle(item.Key, new GeneralSmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
+                    WhoIAmSendTime[item.Key] = DateTime.Now;
+                }
+            }
 
-
-
-
-
-
-
-
-        //private string connectionUrl => GetGatewayAddress();
-
-        //private readonly object locking = new object();
-        //private bool changed = false;
-
-        //private Task runningTask;
-
-        //public SmarthomeMeshManager() => Node = new Node(1122111222);
-
-
-        //private string GetGatewayAddress()
-        //{
-
-        //    var ni = NetworkInterface.GetAllNetworkInterfaces().FirstOrDefault(x => x.Name == "wlan0");
-
-        //    if (ni != null)
-        //    {
-        //        return ni.GetIPProperties()?.GatewayAddresses?.FirstOrDefault(x => x.Address.AddressFamily == AddressFamily.InterNetwork)?.Address?.ToString();
-        //    }
-        //    else
-        //    {
-        //        return "10.9.254.1";//10.104.130.1, 10.12.206.1, 10.124.187.1
-        //    }
-        //}
-
-        //private void PrintToConsole(string s)
-        //{
-        //    Console.WriteLine(DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToShortTimeString() + ": " + s);
-
-        //}
-
-        //public void Start()
-        //{
-        //    NetworkChange.NetworkAddressChanged += (s, e) =>
-        //    {
-        //        changed = true;
-        //    };
-
-        //    runningTask = new Task(async () =>
-        //    {
-        //        while (true)
-        //        {
-        //            if (!await DoMoreStuffAsync())
-        //            {
-        //                changed = true;
-        //                PrintToConsole("Connection aborted");
-        //            }
-        //            Thread.Sleep(2000);
-        //        }
-        //    }, CancellationToken.None, TaskCreationOptions.LongRunning);
-        //    runningTask.Start();
-        //}
-
-        //private async Task<bool> DoMoreStuffAsync()
-        //{
-        //    while (true)
-        //    {
-        //        //if (Node.Client == null || Node.Client.Connected == false || changed)
-        //        if (Node.SerialPort == null || Node.SerialPort.IsOpen == false || changed)
-        //        {
-        //            changed = false;
-
-        //            //string connectionPort = "COM15";
-        //            string connectionPort = "COM256";
-        //            int connectionSpeed = 512000;
-        //            //int connectionSpeed = 2000000;
-        //            //int connectionSpeed = 115200;
-        //            try
-        //            {
-        //                //PrintToConsole("Try Connect: " + connectionUrl);
-        //                //await Node.ConnectTCPAsync(connectionUrl, 5555);
-        //                PrintToConsole("Try Connect: " + connectionPort + " at " + connectionSpeed);
-        //                Node.ConnectSerial(connectionPort, connectionSpeed);
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                PrintToConsole(ex.Message);
-        //                return false;
-        //            }
-        //            PrintToConsole("Connect sucessful: " + connectionPort + " at " + connectionSpeed);
-
-        //            //PrintToConsole("Connect sucessful: " + connectionUrl);
-        //        }
-        //        Thread.Sleep(250);
-        //    }
-        //}
-
-        //while (true)
-        //{
-        //    try
-        //    {
-
-        //        await Node.ConnectTCPAsync(connectionUrl, 5555);
-        //        //await Node.ConnectTCPAsync("10.9.254.1", 5555);
-        //        Console.WriteLine("Connection sucessful: " + connectionUrl);
-        //        break;
-        //    }
-        //    catch (Exception)
-        //    {
-        //        Console.WriteLine("Connection failed: " + connectionUrl);
-        //        Thread.Sleep(250);
-        //    }
-        //}
+        }
 
     }
 }

@@ -24,18 +24,24 @@ namespace AppBokerASP
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
             
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Latest);
-            services.AddSignalR();
+            services.AddSignalR(
+                opt => opt.EnableDetailedErrors = true
+                ).AddNewtonsoftJsonProtocol(); 
         }
 
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
-            app.UseCookiePolicy();
-            app.UseSignalR(config);
+            //app.UseDefaultFiles();
+            //app.UseStaticFiles();
+            //app.UseCookiePolicy();
             app.UseWebSockets();
             //app.UseMvc();
+            
+            
+            app.UseRouting();
+            app.UseEndpoints(e => {
+                e.MapHub<SmartHome>("/SmartHome");
+            });
 
             app.Use(async (context, next) =>
             {
@@ -61,11 +67,11 @@ namespace AppBokerASP
         }
 
  
-        private void config(HubRouteBuilder obj)
-        {
-            obj.MapHub<SmartHome>(new PathString("/SmartHome"));
+        //private void config(HubRouteBuilder obj)
+        //{
+        //    obj.MapHub<SmartHome>(new PathString("/SmartHome"));
             
-        }
+        //}
 
     }
 }

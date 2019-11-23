@@ -2,14 +2,16 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AppBokerASP.Devices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
+using PainlessMesh;
 
 namespace AppBokerASP
 {
+
     public class SmartHome : Hub
     {
 
@@ -33,13 +35,35 @@ namespace AppBokerASP
             return base.OnDisconnectedAsync(exception);
         }
 
-        public void Update(Rootobject message)
+        public void Update(GeneralSmarthomeMessage message)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(message.id, out var device))
+            if (Program.DeviceManager.Devices.TryGetValue(message.NodeId, out var device))
             {
-                Console.WriteLine($"User send command {message.Command} to {device} with {message.Parameters}");
+                switch (message.MessageType)
+                {
+                    case MessageType.Get:
+                        break;
+                    case MessageType.Update:
                 device.UpdateFromApp(message.Command, message.Parameters);
+                        break;
+                    case MessageType.Options:
+                device.OptionsFromApp(message.Command, message.Parameters);
+                        break;
+                    default:
+                        break;
+                }
+                //Console.WriteLine($"User send command {message.Command} to {device} with {message.Parameters}");
             }
+        }
+
+        public dynamic GetConfig(uint deviceId)
+        {
+            if (Program.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+            {
+                return device.GetConfig();
+                //Console.WriteLine($"User send command {message.Command} to {device} with {message.Parameters}");
+            }
+            return null;
         }
 
         public async void SendUpdate(Device device)
@@ -47,6 +71,7 @@ namespace AppBokerASP
         }
 
         public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).ToList();
+
 
         public void Subscribe(uint DeviceId)
         {

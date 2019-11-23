@@ -1,9 +1,12 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
+using nj = Newtonsoft.Json;
 
 namespace PainlessMesh
 {
@@ -30,12 +33,12 @@ namespace PainlessMesh
     }
 
 
-    public class SingleAdressedMessage : BasicMessage
+    public class SingleAdressedMessage<T> : BasicMessage
     {
-        public string msg { get; set; }
+        public T msg { get; set; }
     }
 
-    public class BroadcastMessage : SingleAdressedMessage { }
+    public class BroadcastMessage<T> : SingleAdressedMessage<T> { }
 
     public class HelperMessage
     {
@@ -43,50 +46,113 @@ namespace PainlessMesh
     }
     public class GeneralSmarthomeMessage
     {
-        public uint id { get; set; }
-        public string MessageType { get; set; }
-        public string Command { get; set; }
-        public List<System.Text.Json.JsonElement> Parameters { get; set; }
+        [JsonPropertyName("id"), nj.JsonProperty("id")]
+        public uint NodeId { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter)), JsonPropertyName("m"), nj.JsonProperty("m")]
+        public MessageType MessageType { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter)), JsonPropertyName("c"), nj.JsonProperty("c")]
+        public Command Command { get; set; }
+        [JsonPropertyName("p"), nj.JsonProperty("p"), nj.JsonConverter(typeof(SingleOrListConverter<JsonElement>))]
+        public List<JsonElement> Parameters { get; set; }
+        public GeneralSmarthomeMessage(uint nodeId, MessageType messageType, Command command, params JsonElement[] parameters)
+        {
+            NodeId = nodeId;
+            MessageType = messageType;
+            Command = command;
+            Parameters = parameters.ToList();
+        }
+        public GeneralSmarthomeMessage()
+        {
+        }
+
+    }
+    public class SingleOrListConverter<T> : nj.JsonConverter
+    {
+        public override bool CanConvert(Type objectType) => (objectType == typeof(List<T>));
+
+        public override object ReadJson(nj.JsonReader reader, Type objectType, object existingValue, nj.JsonSerializer serializer)
+        {
+            var token = JToken.Load(reader);
+            if (token.Type == JTokenType.Array)
+                return JsonSerializer.Deserialize<List<T>>(token.ToString());
+            return new List<T> { token.ToObject<T>() };
+        }
+
+        public override void WriteJson(nj.JsonWriter writer, object value, nj.JsonSerializer serializer)
+        {
+            var list = (List<T>)value;
+            if (list.Count == 1)
+                value = list[0];
+            writer.WriteValue(JsonSerializer.Serialize(value));
+            //serializer.Serialize(writer, value);
+        }
+
+        public override bool CanWrite => true;
     }
 
+    //public class JsonElementList : IList<JsonElement>
+    //{
+    //    private IList<string> stringList { get;  }
+
+    //    public JsonElementList(IList<string> elements)
+    //    {
+    //        stringList = elements;
+    //    }
+
+    //    public JsonElement this[int index] { get => JsonSerializer.Deserialize<JsonElement>(stringList[index]); set => stringList[index] = value.ToString(); }
+
+    //    public int Count => stringList.Count;
+
+    //    public bool IsReadOnly => true;
+
+    //    public void Add(JsonElement item) => stringList.Add(item.ToString());
+    //    public void Clear() => stringList.Clear();
+    //    public bool Contains(JsonElement item) => stringList.Contains(item.ToString());
+    //    public void CopyTo(JsonElement[] array, int arrayIndex) => throw new NotSupportedException();
+    //    public IEnumerator<JsonElement> GetEnumerator() => stringList.Select(x=>JsonSerializer.Deserialize<JsonElement>(x)).GetEnumerator();
+    //    public int IndexOf(JsonElement item) => stringList.IndexOf(item.ToString());
+    //    public void Insert(int index, JsonElement item) => stringList.Insert(index, item.ToString());
+    //    public bool Remove(JsonElement item) => stringList.Remove(item.ToString());
+    //    public void RemoveAt(int index) => stringList.RemoveAt(index);
+    //    IEnumerator IEnumerable.GetEnumerator() => stringList.Select(x => JsonSerializer.Deserialize<JsonElement>(x)).GetEnumerator();
+    //}
 
     public class NodeSyncMessage : BasicMessage
     {
 
-        [JsonConverter(typeof(SubJsonSerializer))]
+        [System.Text.Json.Serialization.JsonConverter(typeof(SubJsonSerializer))]
         public Dictionary<uint, Sub> subs { get; set; }
     }
 
-    public class SubJsonSerializer : Newtonsoft.Json.JsonConverter
+    public class SubJsonSerializer : System.Text.Json.Serialization.JsonConverter<Dictionary<uint, Sub>>
     {
-        public override bool CanConvert(Type objectType)
-        {
-            return objectType.IsAssignableFrom(typeof(Dictionary<uint, Sub>));
-        }
-        public override object ReadJson(JsonReader reader, Type objectType, object existingValue, Newtonsoft.Json.JsonSerializer serializer)
+
+        public override Dictionary<uint, Sub> Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
             var res = new Dictionary<uint, Sub>();
 
-            res = serializer.Deserialize<Sub[]>(reader).ToDictionary(x => x.NodeId, x => x);
+            res = System.Text.Json.JsonSerializer.Deserialize<Sub[]>(ref reader).ToDictionary(x => x.NodeId, x => x);
 
             return res;
         }
-        public override void WriteJson(JsonWriter writer, object value, Newtonsoft.Json.JsonSerializer serializer)
+
+        public override void Write(Utf8JsonWriter writer, Dictionary<uint, Sub> value, JsonSerializerOptions options)
         {
-            var subs = value as Dictionary<uint, Sub>;
-            serializer.Serialize(writer, subs.Values);
+            System.Text.Json.JsonSerializer.Serialize<Sub[]>(writer, value.Values.ToArray());
         }
     }
 
+
+
     public class Sub
     {
-        [JsonProperty(PropertyName = "nodeId")]
+        [JsonPropertyName("nodeId")]
         public uint NodeId { get; set; }
         public bool root { get; set; }
 
-        [JsonConverter(typeof(SubJsonSerializer))]
-        [JsonProperty(PropertyName = "subs")]
-        public Dictionary<uint, Sub> Connections { get; set; }
+        [System.Text.Json.Serialization.JsonConverter(typeof(SubJsonSerializer))]
+        [JsonPropertyName("subs")]
+        public Dictionary<uint, Sub> Subs { get; set; }
 
         public DateTime LastReceived { get; internal set; }
         //public static explicit operator SubConnection(Sub s)
@@ -96,18 +162,18 @@ namespace PainlessMesh
         {
             if (NodeId == id)
                 return true;
-            else if (Connections.Count == 0)
+            else if (Subs.Count == 0)
                 return false;
             else
-                return Connections.Any(x => x.Value.ContainsId(id));
+                return Subs.Any(x => x.Value.ContainsId(id));
         }
 
         public bool RemoveConnection(Sub connection)
         {
-            if (connection == null || Connections.Remove(connection.NodeId))
+            if (connection == null || Subs.Remove(connection.NodeId))
                 return true;
 
-            return Connections.Any(x => x.Value.RemoveConnection(connection));
+            return Subs.Any(x => x.Value.RemoveConnection(connection));
         }
     }
 
