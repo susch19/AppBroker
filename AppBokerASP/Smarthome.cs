@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AppBokerASP.Database;
 using AppBokerASP.Devices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
@@ -44,15 +45,25 @@ namespace AppBokerASP
                     case MessageType.Get:
                         break;
                     case MessageType.Update:
-                device.UpdateFromApp(message.Command, message.Parameters);
+                        device.UpdateFromApp(message.Command, message.Parameters);
                         break;
                     case MessageType.Options:
-                device.OptionsFromApp(message.Command, message.Parameters);
+                        device.OptionsFromApp(message.Command, message.Parameters);
                         break;
                     default:
                         break;
                 }
                 //Console.WriteLine($"User send command {message.Command} to {device} with {message.Parameters}");
+            }
+        }
+
+        public void UpdateDevice(ulong id, string newName)
+        {
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var stored))
+            {
+                stored.FriendlyName = newName;
+                DbProvider.UpdateDeviceInDb(stored);
+                stored.SendDataToAllSubscribers();
             }
         }
 
@@ -68,20 +79,33 @@ namespace AppBokerASP
 
         public async void SendUpdate(Device device)
         {
+            foreach (var client in ConnectedClients)
+            {
+                await client.SendAsync("Update", device);
+            }
         }
 
-        public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).ToList();
+        public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).Where(x=>x.ShowInApp).ToList();
 
 
-        public void Subscribe(uint DeviceId)
+        public Device Subscribe(ulong DeviceId)
         {
             Console.WriteLine("User subscribed to " + DeviceId);
             var highlightedItemProperty = Clients.Caller.GetType().GetRuntimeFields().FirstOrDefault(pi => pi.Name == "_connectionId");
             string connectionId = (string)highlightedItemProperty.GetValue(Clients.Caller);
 
             if (Program.DeviceManager.Devices.TryGetValue(DeviceId, out var device))
+            {
                 if (!device.Subscribers.Any(x => x.ConnectionId == connectionId))
                     device.Subscribers.Add(new Subscriber { ConnectionId = connectionId, ClientProxy = Clients.Caller });
+                return device;
+            }
+            return null;
+        }
+
+        public void UpdateTime()
+        {
+            Program.MeshManager.UpdateTime();
         }
     }
 }

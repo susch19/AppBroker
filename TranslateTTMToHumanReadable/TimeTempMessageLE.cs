@@ -3,11 +3,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using DayOfWeek = AppBokerASP.Devices.Heater.DayOfWeek;
 
-namespace AppBokerASP.Devices.Heater
+namespace TranslateTTMToHumanReadable
 {
 
+    public enum DayOfWeek : byte
+    {
+        Mon,
+        Tue,
+        Wed,
+        Thu,
+        Fri,
+        Sat,
+        Sun
+    }
     [StructLayout(LayoutKind.Sequential, Pack = 1)]
     public unsafe struct TimeTempMessageLE
     {
@@ -57,8 +66,8 @@ namespace AppBokerASP.Devices.Heater
             set
             {
                 var u = FloatToUShort(value);
-                //if (u > 766)
-                //    throw new NotSupportedException("This Value is to damn high");
+                if (u > 766)
+                    throw new NotSupportedException("This Value is to damn high");
 
                 data[1] = (byte)(((u & 0x3) << 6) | (data[1] & 0x3F));
                 data[2] = (byte)((u >> 2) & 0xFF);

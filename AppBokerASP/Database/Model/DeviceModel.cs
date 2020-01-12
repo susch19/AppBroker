@@ -10,7 +10,8 @@ namespace AppBokerASP.Database.Model
     public class DeviceModel 
     {
         [Key]
-        public uint Id { get; set; }
+        public ulong Id { get; set; }
         public string TypeName { get; set; }
+        public string FriendlyName { get; set; }
     }
 }

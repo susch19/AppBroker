@@ -16,7 +16,8 @@
     {
         Get, 
         Update,
-        Options
+        Options,
+        Relay
     };
 
     public enum Command
@@ -25,7 +26,7 @@
         IP,
         Time,
         Temp,
-        Brigthness,
+        Brightness,
         RelativeBrightness,
         Color,
         Mode,
@@ -40,7 +41,9 @@
         LightWander,
         RGBWander,
         Reverse,
-        SingleColor
+        SingleColor,
+        DeviceMapping,
+        Calibration
 
     };
 }

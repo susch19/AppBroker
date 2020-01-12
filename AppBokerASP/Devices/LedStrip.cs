@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json.Linq;
 using PainlessMesh;
 
 namespace AppBokerASP.Devices
@@ -11,24 +12,21 @@ namespace AppBokerASP.Devices
 
     public class LedStrip : Device
     {
-        public string Url { get; set; }
-        public LedStrip(string url) : base(0) 
+        public LedStrip(uint id) : base(id)
         {
-            Url = url;
-            TypeName = GetType().Name;
+            ShowInApp = true;
         }
 
-        public override void UpdateFromApp(Command command, List<JsonElement> parameter)
+        public override void UpdateFromApp(Command command, List<JToken> parameters)
         {
-            string args = "";
-
-            if (parameter != null)
-                args = string.Join("&", parameter);
-
-            var wr = WebRequest.Create(new Uri($"{Url}/{command}{(args == "" ? "" : "?")}{args}"));
-            wr.Method = "GET";
-            wr.GetResponse();
+            var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Update, command, parameters.ToArray());
+            Program.MeshManager.SendSingle((uint)Id, msg);
         }
 
+        public override void OptionsFromApp(Command command, List<JToken> parameters)
+        {
+            var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command, parameters.ToArray());
+            Program.MeshManager.SendSingle((uint)Id, msg);
+        }
     }
 }

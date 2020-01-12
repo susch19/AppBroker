@@ -14,6 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using System.Security.Authentication;
 using PainlessMesh;
+using Newtonsoft.Json;
 
 namespace AppBokerASP
 {
@@ -26,7 +27,7 @@ namespace AppBokerASP
         public CancellationTokenSource Source;
 
         protected readonly TcpClient Client;
-        protected readonly Stream stream;
+        protected readonly SslStream stream;
         private const int HeaderSize = sizeof(int);
         private CancellationToken startTaskToken;
         private byte[] headerBuffer = new byte[HeaderSize];
@@ -34,9 +35,20 @@ namespace AppBokerASP
         static BaseClient()
         {
 
-            ServerStore = new X509Store(StoreName.My, StoreLocation.LocalMachine);
+            ServerStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
             ServerStore.Open(OpenFlags.ReadOnly);
-            ServerCert = ServerStore.Certificates.Find(X509FindType.FindByThumbprint, "0cd48689df687d3f95cd8e3baa3d5d772361563f", true)[0];
+            var certs = ServerStore.Certificates.Find(X509FindType.FindByThumbprint, "0cd48689df687d3f95cd8e3baa3d5d772361563f", true);
+
+            if (certs.Count > 0)
+                ServerCert = certs[0];
+            else if (File.Exists("cert.pem") && File.Exists("key.pem"))
+            {
+                byte[] pubPem = Encoding.UTF8.GetBytes(File.ReadAllText("cert.pem").Trim());
+                ServerCert = new X509Certificate2(pubPem);
+                using var rsa = RSA.Create();
+                rsa.ImportPkcs8PrivateKey(GetBytesFromPEM(File.ReadAllText("key.pem"), PemStringType.RsaPrivateKey), out var key);
+                ServerCert = new X509Certificate2(ServerCert.CopyWithPrivateKey(rsa).Export(X509ContentType.Pfx));
+            }
         }
 
         internal BaseClient(TcpClient client)
@@ -52,21 +64,20 @@ namespace AppBokerASP
             try
             {
                 sslStream.AuthenticateAsServer(ServerCert, true, System.Security.Authentication.SslProtocols.Tls12, false);
-
             }
             catch (AuthenticationException ae)
             {
-                StopConnection(client, sslStream);
+                StopConnection(client, stream);
                 Console.WriteLine(ae);
             }
             catch (IOException iOException)
             {
-                StopConnection(client, sslStream);
+                StopConnection(client, stream);
                 Console.WriteLine(iOException);
             }
             catch (System.ComponentModel.Win32Exception e)
             {
-                StopConnection(client, sslStream);
+                StopConnection(client, stream);
                 Console.WriteLine(e);
             }
         }
@@ -74,7 +85,7 @@ namespace AppBokerASP
         private void StopConnection(TcpClient client, SslStream sslStream)
         {
             client.Close();
-            sslStream.Close();
+            stream.Close();
             Source.Cancel();
         }
 
@@ -100,7 +111,7 @@ namespace AppBokerASP
                     if (count > 10000)
                         return false;
                     int ret = stream.Read(buffer, read, count);
-                    if (ret < 0)
+                    if (ret <= 0)
                     {
                         return false;
                     }
@@ -135,9 +146,11 @@ namespace AppBokerASP
                         ArrayPool<byte>.Shared.Return(bodyBuf);
                         return;
                     }
-                    var msg = Encoding.ASCII.GetString(bodyBuf, 0, size);
+                    var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
+                    if (string.IsNullOrWhiteSpace(msg))
+                        continue;
                     Console.WriteLine("Debug MSG: " + msg);
-                    var o = JsonSerializer.Deserialize<GeneralSmarthomeMessage>(msg);
+                    var o = JsonConvert.DeserializeObject<GeneralSmarthomeMessage>(msg);
 
                     ReceivedData?.Invoke(this, o);
                     ArrayPool<byte>.Shared.Return(bodyBuf);
@@ -148,6 +161,7 @@ namespace AppBokerASP
 
         public void Disconnect()
         {
+            Console.WriteLine("Disconnect");
             Source.Cancel();
             Client.Close();
         }
@@ -157,6 +171,33 @@ namespace AppBokerASP
             var buf = BitConverter.GetBytes(nodeId).Concat(new[] { (byte)packageType }).Concat(Encoding.GetEncoding(437).GetBytes(data)).ToArray();
             stream?.Write(BitConverter.GetBytes(buf.Length), 0, HeaderSize);
             stream?.Write(buf, 0, buf.Length);
+        }
+
+        private static byte[] GetBytesFromPEM(string pemString, PemStringType type)
+        {
+            string header; string footer;
+            switch (type)
+            {
+                case PemStringType.Certificate:
+                    header = "-----BEGIN CERTIFICATE-----";
+                    footer = "-----END CERTIFICATE-----";
+                    break;
+                case PemStringType.RsaPrivateKey:
+                    header = "-----BEGIN PRIVATE KEY-----";
+                    footer = "-----END PRIVATE KEY-----";
+                    break;
+                default:
+                    return null;
+            }
+
+            int start = pemString.IndexOf(header) + header.Length;
+            int end = pemString.IndexOf(footer, start) - start;
+            return Convert.FromBase64String(pemString.Substring(start, end));
+        }
+        private enum PemStringType
+        {
+            Certificate,
+            RsaPrivateKey
         }
 
     }

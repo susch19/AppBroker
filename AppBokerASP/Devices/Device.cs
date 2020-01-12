@@ -4,25 +4,32 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json;
 using Microsoft.AspNetCore.SignalR;
+using Newtonsoft.Json.Linq;
 using PainlessMesh;
 
 namespace AppBokerASP.Devices
 {
     public abstract class Device
     {
+        public event EventHandler<Device> PrintableInfoChanged;
 
-        public uint Id { get; set; }
-        public List<string> PrintableInformation { get; set; } = new List<string>();
+        public ulong Id { get; set; }
+        //public List<string> PrintableInformation { get; set; } = new List<string>();
         public List<Subscriber> Subscribers { get; set; } = new List<Subscriber>();
         public string TypeName { get; set; }
+        public bool ShowInApp { get; set; }
+        public string FriendlyName { get; set; }
+        public bool IsConnected { get; set; }
 
-        public Device(uint nodeId)
+        public Device(ulong nodeId)
         {
             Id = nodeId;
+            TypeName = GetType().Name;
+            IsConnected = true;
         }
 
-        public virtual void UpdateFromApp(Command command, List<JsonElement> parameter) { }
-        public virtual void OptionsFromApp(Command command, List<JsonElement> parameter) { }
+        public virtual void UpdateFromApp(Command command, List<JToken> parameters) { }
+        public virtual void OptionsFromApp(Command command, List<JToken> parameters) { }
         public virtual void StopDevice() { }
         public virtual dynamic GetConfig() { return null; }
         public virtual async void SendLastData(IClientProxy client)
@@ -34,5 +41,10 @@ namespace AppBokerASP.Devices
             clients.ForEach(async x => await x.SendAsync("Update", this));
         }
 
+        public virtual void SendDataToAllSubscribers()
+        {
+            Subscribers.ForEach(x => SendLastData(x.ClientProxy));
+        }
+        public virtual void Reconnect() {}
     }
 }

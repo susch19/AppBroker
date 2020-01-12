@@ -1,4 +1,5 @@
-﻿using PainlessMesh;
+﻿using Newtonsoft.Json.Linq;
+using PainlessMesh;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,6 @@ namespace AppBokerASP.Devices
 {
     public class Bridge : Device
     {
-        public Bridge(uint nodeId) : base(nodeId)
-        {
-        }
-
-        public override void UpdateFromApp(Command command, List<JsonElement> parameter) => throw new NotImplementedException();
+        public Bridge(uint nodeId) : base(nodeId) => ShowInApp = false;
     }
 }

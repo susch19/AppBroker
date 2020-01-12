@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -11,6 +11,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="broker.db" />
+    <None Remove="broker.db-shm" />
+    <None Remove="broker.db-wal" />
+    <None Remove="cert.pem" />
+    <None Remove="fullchain1.pem" />
+    <None Remove="key.pem" />
+  </ItemGroup>
 
   <ItemGroup>
     <Folder Include="wwwroot\" />
@@ -23,6 +32,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0-preview3.19554.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.0-preview3.19554.8" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="SimpleSocketIoClient" Version="0.9.4.2" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0-preview3.19551.4" />
     <PackageReference Include="System.Text.Encodings.Web" Version="4.7.0-preview3.19551.4" />
     <PackageReference Include="System.Text.Json" Version="4.7.0-preview3.19551.4" />

@@ -13,6 +13,7 @@ namespace AppBokerASP.Database
     {
         public DbSet<HeaterConfigModel> HeaterConfigs { get; set; }
         public DbSet<DeviceModel> Devices { get; set; }
+        public DbSet<DeviceMappingModel> DeviceToDeviceMappings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -22,7 +23,5 @@ namespace AppBokerASP.Database
         {
             //modelBuilder.Entity<HeaterConfigModel>().HasNoKey();
         }
-
-
     }
 }

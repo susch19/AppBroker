@@ -81,6 +81,11 @@ namespace AppBokerASP
                     {
                         try
                         {
+                            if (client.Source.IsCancellationRequested)
+                            {
+                                clients.TryTake(out var a);
+                                continue;
+                            }
                             client.Send(msg.PackageType, msg.Data, msg.NodeId);
                         }
                         catch (Exception e)
