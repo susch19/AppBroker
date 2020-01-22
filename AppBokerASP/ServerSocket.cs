@@ -18,15 +18,14 @@ namespace AppBokerASP
         private TcpListener tcpListener;
         private readonly ConcurrentBag<BaseClient> clients;
         private readonly Task sendTask;
-        private readonly Queue<SendMessageForQueue> sendQueue;
+        private readonly ConcurrentQueue<SendMessageForQueue> sendQueue;
 
         public ServerSocket()
         {
             clients = new ConcurrentBag<BaseClient>();
-            sendQueue = new Queue<SendMessageForQueue>();
+            sendQueue = new ConcurrentQueue<SendMessageForQueue>();
             sendTask = Task.Run(SendMessagesFromQueue);
         }
-
 
         public void Start(IPAddress address, int port)
         {

@@ -32,6 +32,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0-preview3.19554.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.0-preview3.19554.8" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="NLog" Version="4.6.8" />
     <PackageReference Include="SimpleSocketIoClient" Version="0.9.4.2" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0-preview3.19551.4" />
     <PackageReference Include="System.Text.Encodings.Web" Version="4.7.0-preview3.19551.4" />

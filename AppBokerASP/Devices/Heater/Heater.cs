@@ -16,6 +16,8 @@ using Newtonsoft.Json;
 using AppBokerASP.Database;
 using AppBokerASP.Database.Model;
 using Newtonsoft.Json.Linq;
+using Microsoft.EntityFrameworkCore;
+using AppBokerASP.Devices.Zigbee;
 
 namespace AppBokerASP.Devices.Heater
 {
@@ -46,31 +48,49 @@ namespace AppBokerASP.Devices.Heater
             ShowInApp = true;
 
             var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
-            var mapping = cont.DeviceToDeviceMappings.FirstOrDefault(x => x.Parent == heater && cont.Devices.Any(y => y.Id == x.Child.Id));
-            if (mapping != default)
-                heaterSensorMapping = TrySubscribe(mapping);
+            var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
+            logger.Debug($"Heater {id}/{FriendlyName} has {mappings.Count} mappings");
+            if (mappings.Count > 0)
+                heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
         }
 
 
-        private Task TrySubscribe(DeviceMappingModel mapping)
+        private Task TrySubscribe(List<DeviceMappingModel> mappings)
         {
-            while (!heaterSensorMappingStop)
+            while (mappings.Count > 0)
             {
-                if (mapping?.Child == null)
+                var toRemove = new List<DeviceMappingModel>();
+                foreach (var mapping in mappings)
                 {
-                    heaterSensorMappingStop = true;
-                    break;
+
+                    if (mapping?.Child == null)
+                    {
+                        toRemove.Add(mapping);
+                        break;
+                    }
+
+                    var device = Program.DeviceManager.Devices.FirstOrDefault(x => x.Key == mapping?.Child?.Id).Value;
+                    if (device != default)
+                    {
+                        if (device is XiaomiTempSensor sensor)
+                        {
+                            sensor.TemperatureChanged += XiaomiTempSensorTemperaturChanged;
+                            XiaomiTempSensor = device.Id;
+                        }
+                        logger.Debug($"Heater {Id}/{FriendlyName} has subscribed to {device.Id}/{device.FriendlyName}");
+
+                        toRemove.Add(mapping);
+                        break;
+                    }
                 }
-                var device = Program.DeviceManager.Devices.FirstOrDefault(x => x.Key == mapping?.Child?.Id).Value;
-                if (device != default)
+
+                foreach (var mapping in toRemove)
                 {
-                    ((XiaomiTempSensor)device).TemperatureChanged += XiaomiTempSensorTemperaturChanged;
-                    XiaomiTempSensor = device.Id;
-                    heaterSensorMappingStop = true;
+                    mappings.Remove(mapping);
                 }
+
                 Thread.Sleep(1000);
             }
-            heaterSensorMapping?.Dispose();
             return Task.CompletedTask;
         }
 
@@ -78,6 +98,7 @@ namespace AppBokerASP.Devices.Heater
         {
             if (e.NodeId != Id)
                 return;
+            logger.Debug("SingleUpdateMessage " + e.ToJson());
             switch (e.Command)
             {
                 case Command.Temp:
@@ -91,6 +112,7 @@ namespace AppBokerASP.Devices.Heater
         {
             if (e.NodeId != Id)
                 return;
+            logger.Debug("SingleOptionsMessage " + e.ToJson());
             switch (e.Command)
             {
                 case Command.Temp:
@@ -119,6 +141,7 @@ namespace AppBokerASP.Devices.Heater
             }
             catch (Exception e)
             {
+                logger.Error($"Heater {Id}/{FriendlyName} has Exception inside HandleTimeTempMessageUpdate\r\n {e} ");
                 Console.WriteLine(e);
             }
 
@@ -129,6 +152,7 @@ namespace AppBokerASP.Devices.Heater
         public override void UpdateFromApp(Command command, List<JToken> parameters)
         {
 
+            logger.Debug("UpdateFromApp " + command + " <> " + parameters.ToJson());
             switch (command)
             {
                 case Command.Temp:
@@ -149,6 +173,7 @@ namespace AppBokerASP.Devices.Heater
         public override void OptionsFromApp(Command command, List<JToken> parameters)
         {
 
+            logger.Debug("OptionsFromApp " + command + " <> " + parameters.ToJson());
             if (command == Command.Temp)
             {
                 var hc = parameters.Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
@@ -233,6 +258,11 @@ namespace AppBokerASP.Devices.Heater
         public override void StopDevice()
         {
             Program.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+        }
+
+        public override void Reconnect()
+        {
+            Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
         }
 
         public override dynamic GetConfig() => timeTemps.ToJson();

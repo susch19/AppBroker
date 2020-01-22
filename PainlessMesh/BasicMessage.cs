@@ -57,7 +57,7 @@ namespace PainlessMesh
 
 
 
-    public class Sub
+    public class Sub : IEquatable<Sub>
     {
         [JsonProperty("nodeId")]
         public uint NodeId { get; set; }
@@ -66,6 +66,11 @@ namespace PainlessMesh
         [JsonProperty("subs")]
         public Dictionary<uint, Sub> Subs { get; set; }
 
+        public override bool Equals(object obj) => Equals(obj as Sub);
+        public bool Equals(Sub other) => other != null && NodeId == other.NodeId;
+
+        public static bool operator ==(Sub left, Sub right) => left?.Equals(right) ?? right == null;
+        public static bool operator !=(Sub left, Sub right) => !(left == right);
     }
 
 }

@@ -20,12 +20,14 @@ namespace AppBokerASP.Devices
         public bool ShowInApp { get; set; }
         public string FriendlyName { get; set; }
         public bool IsConnected { get; set; }
+        protected readonly NLog.Logger logger;
 
         public Device(ulong nodeId)
         {
             Id = nodeId;
             TypeName = GetType().Name;
             IsConnected = true;
+            logger = NLog.LogManager.GetCurrentClassLogger();
         }
 
         public virtual void UpdateFromApp(Command command, List<JToken> parameters) { }

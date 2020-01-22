@@ -22,6 +22,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NLog;
 using PainlessMesh;
 using SimpleSocketIoClient;
 
@@ -32,6 +33,10 @@ namespace AppBokerASP
         public static DeviceManager DeviceManager { get; private set; }
 
         public static SmarthomeMeshManager MeshManager { get; private set; }
+
+        private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
+
+
 
         private static Task t;
 
@@ -69,10 +74,23 @@ namespace AppBokerASP
             //var ttm = new TimeTempMessageLE(Devices.Heater.DayOfWeek.Sat, TimeSpan.FromMinutes(1985), 55.5f);
             //Console.WriteLine(ttm.GetBits());
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+            ConfigureLogger();
 
             Dostuff();
             MeshManager = new SmarthomeMeshManager(8801);
             DeviceManager = new DeviceManager();
+
+           var  colorTemp = 35;
+            for (int i = 0; i < 600; i++)
+            {
+                colorTemp = ((colorTemp) % (452 - 250)) + 250;
+                Console.WriteLine(colorTemp);
+            }
+
+            //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
+#if DEBUG
+            MeshManager.SocketClientDataReceived(null, new GeneralSmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, JToken.Parse("\"10.9.254.4\""), JToken.Parse("\"heater\"")));
+#endif
 
             int asd = 123;
             var bytes = BitConverter.GetBytes(asd);
@@ -90,12 +108,26 @@ namespace AppBokerASP
             }
         }
 
+        private static void ConfigureLogger()
+        {
+            var config = new NLog.Config.LoggingConfiguration();
 
+            // Targets where to log to: File and Console
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine("Logs", $"{DateTime.Now.ToString("yyyy_MM_dd")}.log") };
+            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+
+            // Rules for mapping loggers to targets            
+            config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logconsole);
+            config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logfile);
+
+            // Apply config           
+            NLog.LogManager.Configuration = config;
+        }
 
         private static async void Dostuff()
         {
 
-        
+
             return;
             var wc = WebRequest.Create(@"https://192.168.49.71:8087/objects?pattern=system.adapter.zigbee.0*&prettyPrint");
 

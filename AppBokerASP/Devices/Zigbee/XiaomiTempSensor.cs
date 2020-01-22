@@ -7,9 +7,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace AppBokerASP.Devices
+namespace AppBokerASP.Devices.Zigbee
 {
-    public class XiaomiTempSensor : Device
+    public class XiaomiTempSensor : ZigbeeDevice
     {
         public event EventHandler<float> TemperatureChanged;
         public new bool IsConnected => Available;
@@ -46,7 +46,7 @@ namespace AppBokerASP.Devices
                 //PrintableInformation[2] = $"Pressure: {value.ToString()}";
             }
         }
-        public byte Link_quality { get; set; }
+
         public byte Battery
         {
             get => battery; set
@@ -57,35 +57,17 @@ namespace AppBokerASP.Devices
         }
         public float Voltage { get; set; }
 
-        private readonly ReadOnlyCollection<PropertyInfo> propertyInfos;
         private float temperature;
         private float humidity;
         private bool available;
         private float pressure;
         private byte battery;
 
-        public XiaomiTempSensor() : base(0)
+
+        public XiaomiTempSensor(ulong id) : base(id, typeof(XiaomiTempSensor))
         {
-
-        }
-
-        public XiaomiTempSensor(ulong id) : base(id)
-        {
-            var props = typeof(XiaomiTempSensor).GetProperties(BindingFlags.Public | BindingFlags.Instance);
-            propertyInfos = Array.AsReadOnly(props);
-
             ShowInApp = true;
             Available = true;
         }
-
-        public void SetPropFromIoBroker(IoBrokerZigbee zig)
-        {
-            var prop = propertyInfos.FirstOrDefault(x => x.Name.ToLower() == zig.ValueName);
-            if (prop == default || zig.ValueParameter.Value == null)
-                return;
-            prop.SetValue(this, Convert.ChangeType(zig.ValueParameter.Value, prop.PropertyType));
-            SendDataToAllSubscribers();
-        }
-
     }
 }

@@ -31,6 +31,7 @@ namespace AppBokerASP
         private const int HeaderSize = sizeof(int);
         private CancellationToken startTaskToken;
         private byte[] headerBuffer = new byte[HeaderSize];
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         static BaseClient()
         {
@@ -68,17 +69,17 @@ namespace AppBokerASP
             catch (AuthenticationException ae)
             {
                 StopConnection(client, stream);
-                Console.WriteLine(ae);
+                logger.Error(ae);
             }
             catch (IOException iOException)
             {
                 StopConnection(client, stream);
-                Console.WriteLine(iOException);
+                logger.Error(iOException);
             }
             catch (System.ComponentModel.Win32Exception e)
             {
                 StopConnection(client, stream);
-                Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 
@@ -120,6 +121,7 @@ namespace AppBokerASP
             }
             catch (IOException ioe)
             {
+                logger.Error(ioe);
                 return false;
             }
             return true;
@@ -147,9 +149,9 @@ namespace AppBokerASP
                         return;
                     }
                     var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
-                    if (string.IsNullOrWhiteSpace(msg))
+                    if (string.IsNullOrWhiteSpace("Msg: " + msg))
                         continue;
-                    Console.WriteLine("Debug MSG: " + msg);
+                    logger.Debug(msg);
                     var o = JsonConvert.DeserializeObject<GeneralSmarthomeMessage>(msg);
 
                     ReceivedData?.Invoke(this, o);
@@ -161,7 +163,7 @@ namespace AppBokerASP
 
         public void Disconnect()
         {
-            Console.WriteLine("Disconnect");
+            logger.Debug("Disconnect");
             Source.Cancel();
             Client.Close();
         }
