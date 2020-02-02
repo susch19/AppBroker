@@ -261,3 +261,6 @@ __pycache__/
 *.pyc
 *.pem
 *.db
+/AppBokerASP/.vscode
+*.bat
+*.ps1

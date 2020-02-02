@@ -11,7 +11,7 @@ namespace AppBokerASP.IOBroker
 
     public class IoBrokerZigbee : IoBrokerObject
     {
-        public ulong Id { get; set; }
+        public long Id { get; set; }
 
         public static bool TryParse(string s, out IoBrokerZigbee obj)
         {
@@ -33,13 +33,13 @@ namespace AppBokerASP.IOBroker
             obj.AdapterInstance = instanceNum;
             obj.AdapterName = string.Join('.', split[..(splitIndex)]);
 
-            if (!ulong.TryParse(split[splitIndex + 1], System.Globalization.NumberStyles.HexNumber, null, out var id))
+            if (!long.TryParse(split[splitIndex + 1], System.Globalization.NumberStyles.HexNumber, null, out var id))
                 return false;
             obj.Id = id;
             obj.ValueName = split.Last();
 
             obj.ValueParameter = s[(s[i..].IndexOf(',')+i+1)..^1].ToDeObject<Parameter>();
-
+            
             return true;
         }
 

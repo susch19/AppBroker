@@ -73,19 +73,13 @@ namespace AppBokerASP
             //TimeTempMessageLE.Test();
             //var ttm = new TimeTempMessageLE(Devices.Heater.DayOfWeek.Sat, TimeSpan.FromMinutes(1985), 55.5f);
             //Console.WriteLine(ttm.GetBits());
+            Console.OutputEncoding = Encoding.Unicode;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             ConfigureLogger();
 
             Dostuff();
             MeshManager = new SmarthomeMeshManager(8801);
             DeviceManager = new DeviceManager();
-
-           var  colorTemp = 35;
-            for (int i = 0; i < 600; i++)
-            {
-                colorTemp = ((colorTemp) % (452 - 250)) + 250;
-                Console.WriteLine(colorTemp);
-            }
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG
@@ -151,7 +145,14 @@ namespace AppBokerASP
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-                WebHost.CreateDefaultBuilder(args)
-                    .UseStartup<Startup>();
+            WebHost
+            .CreateDefaultBuilder(args)
+            .ConfigureLogging(logging =>
+            {
+                //logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
+                //logging.AddFilter("Microsoft.AspNetCore.SignalR", Microsoft.Extensions.Logging.LogLevel.Trace);
+                //    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", Microsoft.Extensions.Logging.LogLevel.Trace);
+                })
+            .UseStartup<Startup>();
     }
 }

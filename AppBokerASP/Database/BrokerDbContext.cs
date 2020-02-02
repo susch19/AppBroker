@@ -12,6 +12,7 @@ namespace AppBokerASP.Database
     public class BrokerDbContext : DbContext
     {
         public DbSet<HeaterConfigModel> HeaterConfigs { get; set; }
+        //public DbSet<HeaterConfigModel> HeaterCalibrations { get; set; }
         public DbSet<DeviceModel> Devices { get; set; }
         public DbSet<DeviceMappingModel> DeviceToDeviceMappings { get; set; }
 

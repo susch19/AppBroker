@@ -13,63 +13,70 @@ using PainlessMesh;
 
 namespace AppBokerASP
 {
+
     public class SmarthomeMeshManager
     {
+        private class NodeSync
+        {
+            public long Id { get; }
+            public byte MissedConnections { get; set; }
+            public NodeSync(long id, byte missedConnections)
+            {
+                Id = id;
+                MissedConnections = missedConnections;
+            }
+        }
 
         public event EventHandler<GeneralSmarthomeMessage> SingleUpdateMessageReceived;
         public event EventHandler<GeneralSmarthomeMessage> SingleOptionsMessageReceived;
         public event EventHandler<GeneralSmarthomeMessage> SingleGetMessageReceived;
         public event EventHandler<(Sub, List<string>)> NewConnectionEstablished;
-        public event EventHandler<uint> ConnectionLost;
+        public event EventHandler<long> ConnectionLost;
+        public event EventHandler<long> ConnectionReastablished;
 
         private static ServerSocket serverSocket = new ServerSocket();
 
         private readonly TimeSpan WaitBeforeWhoIAmSendAgain;
-        private readonly List<uint> knownNodeIds;
-        private readonly ConcurrentDictionary<uint, (DateTime time, int count)> WhoIAmSendTime;
+        private readonly List<NodeSync> knownNodeIds;
+        private readonly ConcurrentDictionary<long, (DateTime time, int count)> WhoIAmSendTime;
 
-        private readonly uint nodeID = 1;
-        private readonly Dictionary<uint, Queue<GeneralSmarthomeMessage>> queuedMessages;
+        private readonly long nodeID = 1;
+        private readonly Dictionary<long, Queue<GeneralSmarthomeMessage>> queuedMessages;
         private readonly List<Timer> timers;
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
 
-        public SmarthomeMeshManager(int listenPort, uint nodeId = 1)
+        public SmarthomeMeshManager(int listenPort, long nodeId = 1)
         {
             WaitBeforeWhoIAmSendAgain = new TimeSpan(0, 0, 30);
-            queuedMessages = new Dictionary<uint, Queue<GeneralSmarthomeMessage>>();
+            queuedMessages = new Dictionary<long, Queue<GeneralSmarthomeMessage>>();
             timers = new List<Timer>();
             nodeID = nodeId;
-            WhoIAmSendTime = new ConcurrentDictionary<uint, (DateTime, int)>();
-            knownNodeIds = new List<uint> { nodeID, 0 };
+            WhoIAmSendTime = new ConcurrentDictionary<long, (DateTime, int)>();
+            knownNodeIds = new List<NodeSync> { new NodeSync(nodeID, 0), new NodeSync(0, 0) };
             serverSocket.OnClientConnected += ServerSocket_OnClientConnected;
             serverSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
-            timers.Add(new Timer(WhoAmITask, null, TimeSpan.FromSeconds(10d), WaitBeforeWhoIAmSendAgain));
-            timers.Add(new Timer((n) => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")}\"}}".ToJToken())), null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
-            timers.Add(new Timer((n) => SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh)), null, TimeSpan.FromSeconds(20d), TimeSpan.FromMinutes(1d)));
-            timers.Add(new Timer((n) => logger.Debug($"Timer is still running"), null, TimeSpan.FromSeconds(0), TimeSpan.FromMinutes(1d)));
+            timers.Add(new Timer(WhoAmITask, null, TimeSpan.FromSeconds(20d), WaitBeforeWhoIAmSendAgain));
+            timers.Add(new Timer((n) => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken())), null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
+            timers.Add(new Timer((n) => SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh)), null, TimeSpan.FromSeconds(10d), TimeSpan.FromMinutes(1d)));
         }
 
         private void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
         {
-            //baseClient.Send(PackageType.BRIDGE, "GetMeshTree", nodeID);
             baseClient.ReceivedData += SocketClientDataReceived;
             SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh));
-            //baseClient.Start();
         }
 
         public void SocketClientDataReceived(object sender, GeneralSmarthomeMessage e)
         {
-            var bc = (BaseClient)sender;
-
-            logger.Debug("DataReceived: " + e.ToJson());
+            //var bc = (BaseClient)sender;
 
             if (e.MessageType == MessageType.Update && e.Command == Command.OnNewConnection)
                 HandleUpdates(e);
 
             if (e.Command == Command.WhoIAm)
             {
-                knownNodeIds.Add(e.NodeId);
+                knownNodeIds.Add(new NodeSync(e.NodeId, 0));
                 while (WhoIAmSendTime.ContainsKey(e.NodeId) && !WhoIAmSendTime.TryRemove(e.NodeId, out var asda)) { }
                 if (e.Parameters == null)
                     return;
@@ -77,15 +84,16 @@ namespace AppBokerASP
                 return;
             }
 
-            if (!knownNodeIds.Contains(e.NodeId))
+            var known = knownNodeIds.FirstOrDefault(x => x.Id == e.NodeId);
+            if (known == default)
             {
                 if (!WhoIAmSendTime.TryGetValue(e.NodeId, out var dt) || dt.time.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
                 {
                     //SendSingle(e.NodeId, new GeneralSmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                     if (dt == default)
-                        WhoIAmSendTime.TryAdd(e.NodeId, (DateTime.Now, 0));
+                        WhoIAmSendTime.TryAdd(e.NodeId, (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0));
                     else
-                        WhoIAmSendTime[e.NodeId] = (DateTime.Now, 0);
+                        WhoIAmSendTime[e.NodeId] = (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0);
                 }
                 if (!queuedMessages.TryGetValue(e.NodeId, out var queue))
                 {
@@ -94,6 +102,12 @@ namespace AppBokerASP
                 }
                 queue.Enqueue(e);
                 return;
+            }
+
+            if (known.MissedConnections > 0)
+            {
+                known.MissedConnections = 0;
+                ConnectionReastablished?.Invoke(this, known.Id);
             }
 
             if (queuedMessages.TryGetValue(e.NodeId, out var messages))
@@ -127,14 +141,13 @@ namespace AppBokerASP
         internal void UpdateTime()
         => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")}\"}}".ToJToken()));
 
-
         private bool TryParseSubsRecursive(Sub sub, out List<Sub> subs)
         {
             subs = new List<Sub>();
             try
             {
                 subs.Add(sub);
-                if (!knownNodeIds.Contains(sub.NodeId))
+                if (!knownNodeIds.Any(x => x.Id == sub.NodeId))
                 {
                     if (!WhoIAmSendTime.TryGetValue(sub.NodeId, out var dt) || dt.time.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
                     {
@@ -162,7 +175,6 @@ namespace AppBokerASP
             return true;
         }
 
-
         private void HandleUpdates(GeneralSmarthomeMessage e)
         {
             switch (e.Command)
@@ -172,44 +184,64 @@ namespace AppBokerASP
                 case Command.OnChangedConnections:
                 case Command.OnNewConnection:
                 case Command.Mesh:
-                    try
-                    {
-                        var sub = e.Parameters[0].ToObject<Sub>();
-                        if (!TryParseSubsRecursive(sub, out var rsubs))
-                            return;
-                        var subs = rsubs.Distinct().ToDictionary(x => x.NodeId, x => x);
-                        var subIds = new List<uint>();
-
-                        foreach (var item in knownNodeIds)
-                        {
-                            if (!subs.ContainsKey(item))
-                                subIds.Add(item);
-                        }
-                        foreach (var item in WhoIAmSendTime)
-                        {
-                            if (subIds.Contains(item.Key))
-                            {
-                                if (subs.ContainsKey(item.Key))
-                                    subIds.Remove(item.Key);
-                            }
-                        }
-                        foreach (var id in subIds)
-                        {
-                            ConnectionLost?.Invoke(this, id);
-                            knownNodeIds.Remove(id);
-                        }
-
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.Error(nameof(HandleUpdates) + " Mesh: " + ex);
-                    }
+                    RefreshMesh(e);
                     break;
                 default:
                     SingleUpdateMessageReceived?.Invoke(this, e);
                     break;
             }
+        }
 
+        private void RefreshMesh(GeneralSmarthomeMessage e)
+        {
+            try
+            {
+                var sub = e.Parameters[0].ToObject<Sub>();
+                if (!TryParseSubsRecursive(sub, out var rsubs))
+                    return;
+                var subs = rsubs.Distinct().ToDictionary(x => x.NodeId, x => x);
+                var lostSubs = new List<long>();
+
+                foreach (var item in knownNodeIds) // Check our subs with incoming list
+                {
+                    if (!subs.ContainsKey(item.Id))
+                        lostSubs.Add(item.Id);
+                    else
+                    {
+                        if (item.MissedConnections > 0)
+                        {
+                            item.MissedConnections = 0;
+                            if (Program.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
+                                dev.Reconnect();
+                            else
+                                lostSubs.Add(item.Id);
+                        }
+                    }
+                }
+                foreach (var item in WhoIAmSendTime)
+                {
+                    if (lostSubs.Contains(item.Key))
+                    {
+                        if (subs.ContainsKey(item.Key))
+                            lostSubs.Remove(item.Key);
+                    }
+                }
+                foreach (var id in lostSubs)
+                {
+                    var knownId = knownNodeIds.FirstOrDefault(x => x.Id == id);
+                    ConnectionLost?.Invoke(this, id);
+                    if (knownId != default)
+                        if (knownId.MissedConnections > 4)
+                            knownNodeIds.Remove(knownId);
+                        else
+                            knownId.MissedConnections++;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                logger.Error(nameof(RefreshMesh) + ex);
+            }
         }
 
         private void HandleGets(GeneralSmarthomeMessage e)
@@ -220,12 +252,9 @@ namespace AppBokerASP
                 SingleGetMessageReceived?.Invoke(this, e);
         }
 
-        private void HandleOptions(GeneralSmarthomeMessage e)
-        {
-            SingleOptionsMessageReceived?.Invoke(this, e);
-        }
+        private void HandleOptions(GeneralSmarthomeMessage e) => SingleOptionsMessageReceived?.Invoke(this, e);
 
-        public void SendSingle<T>(uint destination, T message)
+        public void SendSingle<T>(long destination, T message)
         {
             try
             {
@@ -263,7 +292,7 @@ namespace AppBokerASP
 
         private void WhoAmITask(object o)
         {
-            var toDelete = new Dictionary<uint, (DateTime time, int count)>();
+            var toDelete = new Dictionary<long, (DateTime time, int count)>();
             try
             {
                 foreach (var item in WhoIAmSendTime)

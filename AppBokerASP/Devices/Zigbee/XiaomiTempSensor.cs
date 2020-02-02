@@ -64,7 +64,7 @@ namespace AppBokerASP.Devices.Zigbee
         private byte battery;
 
 
-        public XiaomiTempSensor(ulong id) : base(id, typeof(XiaomiTempSensor))
+        public XiaomiTempSensor(long id) : base(id, typeof(XiaomiTempSensor))
         {
             ShowInApp = true;
             Available = true;

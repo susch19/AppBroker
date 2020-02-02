@@ -11,7 +11,7 @@ namespace AppBokerASP.Database.Model
     public class HeaterConfigModel
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public uint Id { get; set; }
+        public long Id { get; set; }
         public Devices.Heater.DayOfWeek DayOfWeek { get; set; }
         public DateTime TimeOfDay { get; set; }
         public double Temperature { get; set; }

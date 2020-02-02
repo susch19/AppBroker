@@ -18,40 +18,71 @@ using AppBokerASP.Database.Model;
 using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore;
 using AppBokerASP.Devices.Zigbee;
+using System.Buffers.Text;
+using NLog;
 
 namespace AppBokerASP.Devices.Heater
 {
     public class Heater : Device, IDisposable
     {
+
         public HeaterConfig Temperature { get; set; }
-        public ulong XiaomiTempSensor { get; set; }
+        public long XiaomiTempSensor { get; set; }
         public HeaterConfig CurrentConfig { get; set; }
         public HeaterConfig CurrentCalibration { get; private set; }
+        public string FirmwareVersion { get; private set; }
 
         private readonly List<HeaterConfig> timeTemps = new List<HeaterConfig>();
 
+        private string logName => Id + "/" + FriendlyName;
+
         private Task heaterSensorMapping;
-        private bool heaterSensorMappingStop;
 
-
-        public Heater() : base(0)
-        {
-            ShowInApp = true;
-        }
-
-        public Heater(uint id) : base(id)
+        //2020-02-01 20:14:48.1075|DEBUG|AppBokerASP.BaseClient|{"id":3257233774, "m":"Update", "c":"WhoIAm", "p":["10.12.206.9","heater","RmlybXdhcmUgVjIgRmViICAxIDIwMjA=","YAk3oJQqQBo3QKkqYQk3oZQqQRo3QakqYgk3opQqQho3QqkqYwk3o5QqQxo3Q6kqZAk3pJQqRBo3RKkqJQ03RakqJg03Rqkq"]}
+        public Heater(long id, List<string> parameters) : base(id)
         {
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             using var cont = DbProvider.BrokerDbContext;
             timeTemps.AddRange(cont.HeaterConfigs.Where(x => x.Device.Id == id).ToList().Select(x => (HeaterConfig)x));
+            InterpretParameters(parameters);
+
             ShowInApp = true;
+            //cont.HeaterCalibrations.FirstOrDefault(x => x.Id == Id);
 
             var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
             var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
-            logger.Debug($"Heater {id}/{FriendlyName} has {mappings.Count} mappings");
+            logger.Debug($"Heater {logName} has {mappings.Count} mappings");
             if (mappings.Count > 0)
                 heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
+        }
+
+        private void InterpretParameters(List<string> parameters)
+        {
+            if (parameters.Count > 2)
+            {
+                FirmwareVersion = Encoding.ASCII.GetString(Convert.FromBase64String(parameters[2]));
+            }
+            if (parameters.Count > 3)
+            {
+                try
+                {
+                    var s = parameters[3];
+                    var s2 = "";
+                    timeTemps.OrderBy(x=>x.DayOfWeek).ThenBy(x=>x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
+
+                    if (s != s2)
+                    {
+                        logger.Warn($"Heater {logName} has wrong temps saved, trying to correct Saved:{{{s}}} Server:{{{s2}}}");
+                        var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
+                        Program.MeshManager.SendSingle((uint)Id, msg);
+                    }
+                }
+                catch (Exception e)
+                {
+                    logger.Error(e, $"Heater {logName} has transmitted wrong temps");
+                }
+            }
         }
 
 
@@ -77,7 +108,7 @@ namespace AppBokerASP.Devices.Heater
                             sensor.TemperatureChanged += XiaomiTempSensorTemperaturChanged;
                             XiaomiTempSensor = device.Id;
                         }
-                        logger.Debug($"Heater {Id}/{FriendlyName} has subscribed to {device.Id}/{device.FriendlyName}");
+                        logger.Debug($"Heater {logName} has subscribed to {device.Id}/{device.FriendlyName}");
 
                         toRemove.Add(mapping);
                         break;
@@ -98,7 +129,7 @@ namespace AppBokerASP.Devices.Heater
         {
             if (e.NodeId != Id)
                 return;
-            logger.Debug("SingleUpdateMessage " + e.ToJson());
+            logger.Debug($"DataReceived in {nameof(Node_SingleUpdateMessageReceived)} {logName}: " + e.ToJson());
             switch (e.Command)
             {
                 case Command.Temp:
@@ -112,7 +143,8 @@ namespace AppBokerASP.Devices.Heater
         {
             if (e.NodeId != Id)
                 return;
-            logger.Debug("SingleOptionsMessage " + e.ToJson());
+
+            logger.Debug($"DataReceived in {nameof(Node_SingleOptionsMessageReceived)} {logName}: " + e.ToJson());
             switch (e.Command)
             {
                 case Command.Temp:
@@ -141,7 +173,7 @@ namespace AppBokerASP.Devices.Heater
             }
             catch (Exception e)
             {
-                logger.Error($"Heater {Id}/{FriendlyName} has Exception inside HandleTimeTempMessageUpdate\r\n {e} ");
+                logger.Error($"Heater {logName} has Exception inside HandleTimeTempMessageUpdate\r\n {e} ");
                 Console.WriteLine(e);
             }
 
@@ -162,7 +194,7 @@ namespace AppBokerASP.Devices.Heater
                     Program.MeshManager.SendSingle((uint)Id, msg);
                     break;
                 case Command.DeviceMapping:
-                    UpdateDeviceMappingInDb((ulong)parameters[0], (ulong)parameters[1]);
+                    UpdateDeviceMappingInDb((long)parameters[0], (long)parameters[1]);
                     break;
                 default:
                     break;
@@ -174,19 +206,29 @@ namespace AppBokerASP.Devices.Heater
         {
 
             logger.Debug("OptionsFromApp " + command + " <> " + parameters.ToJson());
-            if (command == Command.Temp)
+            GeneralSmarthomeMessage msg;
+            switch (command)
             {
-                var hc = parameters.Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
+                case Command.Temp:
+                {
+                    var hc = parameters.Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
 
-                UpdateDB(hc);
+                    UpdateDB(hc);
 
-                var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
-                var s = "";
-                foreach (var item in ttm)
-                    s += item.ToString();
+                    var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
+                    var s = "";
+                    foreach (var item in ttm)
+                        s += item.ToString();
 
-                var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command, s.ToJToken());
-                Program.MeshManager.SendSingle((uint)Id, msg);
+                    msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command, s.ToJToken());
+                    Program.MeshManager.SendSingle((uint)Id, msg);
+                    break;
+                }
+
+                case Command.Mode:
+                    msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command);
+                    Program.MeshManager.SendSingle((uint)Id, msg);
+                    break;
             }
         }
 
@@ -211,7 +253,7 @@ namespace AppBokerASP.Devices.Heater
             cont.SaveChanges();
         }
 
-        private void UpdateDeviceMappingInDb(ulong tempId, ulong oldId)
+        private void UpdateDeviceMappingInDb(long tempId, long oldId)
         {
             using var cont = DbProvider.BrokerDbContext;
             var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
@@ -240,7 +282,6 @@ namespace AppBokerASP.Devices.Heater
             (sensor as XiaomiTempSensor).TemperatureChanged += XiaomiTempSensorTemperaturChanged;
             XiaomiTempSensor = sensor.Id;
             cont.SaveChanges();
-            heaterSensorMappingStop = true;
         }
 
         private void XiaomiTempSensorTemperaturChanged(object sender, float temp)
@@ -257,12 +298,16 @@ namespace AppBokerASP.Devices.Heater
 
         public override void StopDevice()
         {
+            base.StopDevice();
             Program.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+            Program.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
         }
 
         public override void Reconnect()
         {
+            base.Reconnect();
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+            Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
         }
 
         public override dynamic GetConfig() => timeTemps.ToJson();

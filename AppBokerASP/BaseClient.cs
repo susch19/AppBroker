@@ -139,23 +139,30 @@ namespace AppBokerASP
                         Disconnect();
                         return;
                     }
-
-                    int size = BitConverter.ToInt32(headerBuffer);
-                    var bodyBuf = ArrayPool<byte>.Shared.Rent(size);
-                    if (!ReadExactly(bodyBuf, 0, size))
+                    try
                     {
-                        Disconnect();
-                        ArrayPool<byte>.Shared.Return(bodyBuf);
-                        return;
-                    }
-                    var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
-                    if (string.IsNullOrWhiteSpace("Msg: " + msg))
-                        continue;
-                    logger.Debug(msg);
-                    var o = JsonConvert.DeserializeObject<GeneralSmarthomeMessage>(msg);
 
-                    ReceivedData?.Invoke(this, o);
-                    ArrayPool<byte>.Shared.Return(bodyBuf);
+                        int size = BitConverter.ToInt32(headerBuffer);
+                        var bodyBuf = ArrayPool<byte>.Shared.Rent(size);
+                        if (!ReadExactly(bodyBuf, 0, size))
+                        {
+                            Disconnect();
+                            ArrayPool<byte>.Shared.Return(bodyBuf);
+                            return;
+                        }
+                        var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
+                        if (string.IsNullOrWhiteSpace("Msg: " + msg))
+                            continue;
+                        logger.Debug(msg);
+                        var o = JsonConvert.DeserializeObject<GeneralSmarthomeMessage>(msg);
+
+                        ReceivedData?.Invoke(this, o);
+                        ArrayPool<byte>.Shared.Return(bodyBuf);
+                    }
+                    catch (Exception e)
+                    {
+                        logger.Error(e);
+                    }
                 }
                 Disconnect();
             }, startTaskToken);
@@ -168,9 +175,9 @@ namespace AppBokerASP
             Client.Close();
         }
 
-        public void Send(PackageType packageType, string data, uint nodeId)
+        public void Send(PackageType packageType, string data, long nodeId)
         {
-            var buf = BitConverter.GetBytes(nodeId).Concat(new[] { (byte)packageType }).Concat(Encoding.GetEncoding(437).GetBytes(data)).ToArray();
+            var buf = BitConverter.GetBytes((int)nodeId).Concat(new[] { (byte)packageType }).Concat(Encoding.GetEncoding(437).GetBytes(data)).ToArray();
             stream?.Write(BitConverter.GetBytes(buf.Length), 0, HeaderSize);
             stream?.Write(buf, 0, buf.Length);
         }

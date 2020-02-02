@@ -63,7 +63,7 @@ namespace AppBokerASP
             tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
-        public void SendToAllClients(PackageType packageType, string data, uint nodeId)
+        public void SendToAllClients(PackageType packageType, string data, long nodeId)
             => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = nodeId });
 
         public void SendToAllClients(PackageType packageType, string data)
@@ -101,7 +101,7 @@ namespace AppBokerASP
         {
             public PackageType PackageType { get; set; }
             public string Data { get; set; }
-            public uint NodeId { get; set; }
+            public long NodeId { get; set; }
         }
     }
 }

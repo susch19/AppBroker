@@ -23,7 +23,15 @@ namespace AppBokerASP
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             });
-            
+
+            services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
+            {
+                builder
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .AllowAnyOrigin();
+            }));
+
             services.AddSignalR(
                 opt => opt.EnableDetailedErrors = true
                 ).AddNewtonsoftJsonProtocol(); 
@@ -31,47 +39,14 @@ namespace AppBokerASP
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            //app.UseDefaultFiles();
-            //app.UseStaticFiles();
-            //app.UseCookiePolicy();
             app.UseWebSockets();
-            //app.UseMvc();
-            
-            
+            app.UseCors("CorsPolicy");
             app.UseRouting();
             app.UseEndpoints(e => {
                 e.MapHub<SmartHome>("/SmartHome");
             });
-
-            app.Use(async (context, next) =>
-            {
-                //if (context.Request.Path == "/Heater")
-                //{
-                //    if (context.WebSockets.IsWebSocketRequest)
-                //    {
-                //        WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-                //        var heater = new Heater(webSocket) { Id = DeviceManager.NextId };
-                //        DeviceManager.Devices.Add(heater.Id, heater);
-                //        await heater.Update(context, webSocket);
-                //    }
-                //    else
-                //    {
-                //        context.Response.StatusCode = 400;
-                //    }
-                //}
-                //else
-                //{
-                //    await next();
-                //}
-            });
         }
 
- 
-        //private void config(HubRouteBuilder obj)
-        //{
-        //    obj.MapHub<SmartHome>(new PathString("/SmartHome"));
-            
-        //}
 
     }
 }

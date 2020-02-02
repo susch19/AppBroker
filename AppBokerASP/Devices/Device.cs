@@ -13,7 +13,7 @@ namespace AppBokerASP.Devices
     {
         public event EventHandler<Device> PrintableInfoChanged;
 
-        public ulong Id { get; set; }
+        public long Id { get; set; }
         //public List<string> PrintableInformation { get; set; } = new List<string>();
         public List<Subscriber> Subscribers { get; set; } = new List<Subscriber>();
         public string TypeName { get; set; }
@@ -22,7 +22,7 @@ namespace AppBokerASP.Devices
         public bool IsConnected { get; set; }
         protected readonly NLog.Logger logger;
 
-        public Device(ulong nodeId)
+        public Device(long nodeId)
         {
             Id = nodeId;
             TypeName = GetType().Name;
@@ -32,21 +32,14 @@ namespace AppBokerASP.Devices
 
         public virtual void UpdateFromApp(Command command, List<JToken> parameters) { }
         public virtual void OptionsFromApp(Command command, List<JToken> parameters) { }
-        public virtual void StopDevice() { }
-        public virtual dynamic GetConfig() { return null; }
-        public virtual async void SendLastData(IClientProxy client)
-        {
-            await client.SendAsync("Update", this);
-        }
-        public virtual void SendLastData(List<IClientProxy> clients)
-        {
-            clients.ForEach(async x => await x.SendAsync("Update", this));
-        }
 
-        public virtual void SendDataToAllSubscribers()
-        {
-            Subscribers.ForEach(x => SendLastData(x.ClientProxy));
-        }
-        public virtual void Reconnect() {}
+        public virtual dynamic GetConfig() { return null; }
+
+        public virtual async void SendLastData(IClientProxy client) => await client.SendAsync("Update", this);
+        public virtual void SendLastData(List<IClientProxy> clients) => clients.ForEach(async x => await x.SendAsync("Update", this));
+        public virtual void SendDataToAllSubscribers() => Subscribers.ForEach(x => SendLastData(x.ClientProxy));
+
+        public virtual void StopDevice() => IsConnected = false;
+        public virtual void Reconnect() => IsConnected = true;
     }
 }

@@ -10,6 +10,6 @@ namespace AppBokerASP.Devices
 {
     public class Bridge : Device
     {
-        public Bridge(uint nodeId) : base(nodeId) => ShowInApp = false;
+        public Bridge(long nodeId, List<string> parameter) : base(nodeId) => ShowInApp = false;
     }
 }

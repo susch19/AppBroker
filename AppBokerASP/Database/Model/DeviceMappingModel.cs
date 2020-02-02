@@ -11,7 +11,7 @@ namespace AppBokerASP.Database.Model
     public class DeviceMappingModel
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public uint Id { get; set; }
+        public long Id { get; set; }
 
         [ForeignKey("ParentId")]
         public DeviceModel Parent { get; set; }

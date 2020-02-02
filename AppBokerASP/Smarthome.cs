@@ -6,6 +6,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using AppBokerASP.Database;
 using AppBokerASP.Devices;
+using AppBokerASP.Devices.Zigbee;
+using AppBokerASP.IOBroker;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
 using PainlessMesh;
@@ -57,7 +59,7 @@ namespace AppBokerASP
             }
         }
 
-        public void UpdateDevice(ulong id, string newName)
+        public void UpdateDevice(long id, string newName)
         {
             if (Program.DeviceManager.Devices.TryGetValue(id, out var stored))
             {
@@ -85,22 +87,79 @@ namespace AppBokerASP
             }
         }
 
-        public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).Where(x=>x.ShowInApp).ToList();
+        public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
 
-
-        public Device Subscribe(ulong DeviceId)
+        public List<IoBrokerHistory> GetIoBrokerHistories(long id, string dt)
         {
-            Console.WriteLine("User subscribed to " + DeviceId);
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
+                if (device is ZigbeeDevice d)
+                    return d.ReadHistoryJSON(DateTime.Parse(dt));
+            return new List<IoBrokerHistory>();
+        }
+
+        public IoBrokerHistory GetIoBrokerHistory(long id, string dt, string propertyName)
+        {
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
+                if (device is ZigbeeDevice d)
+                    return d.ReadHistoryJSON(DateTime.Parse(dt), propertyName);
+            return new IoBrokerHistory();
+        }
+
+        public List<IoBrokerHistory> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
+        {
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
+                if (device is ZigbeeDevice d)
+                {
+                    var from = DateTime.Parse(dt);
+                    var to = DateTime.Parse(dt2);
+                    var histories = new List<IoBrokerHistory>();
+                    while (from < to)
+                    {
+                        histories.AddRange(d.ReadHistoryJSON(from));
+                        from = from.AddDays(1);
+                    }
+                    return histories;
+                }
+            return new List<IoBrokerHistory>();
+        }
+
+        public List<IoBrokerHistory> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
+        {
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
+                if (device is ZigbeeDevice d)
+                {
+                    var from = DateTime.Parse(dt);
+                    var to = DateTime.Parse(dt2);
+                    var histories = new List<IoBrokerHistory>();
+                    while (from < to)
+                    {
+                        histories.Add(d.ReadHistoryJSON(from, propertyName));
+                        from = from.AddDays(1);
+                    }
+                    return histories;
+                }
+            return new List<IoBrokerHistory>();
+        }
+
+        public List<Device> Subscribe(IEnumerable<long> DeviceIds)
+        {
             var highlightedItemProperty = Clients.Caller.GetType().GetRuntimeFields().FirstOrDefault(pi => pi.Name == "_connectionId");
             string connectionId = (string)highlightedItemProperty.GetValue(Clients.Caller);
-
-            if (Program.DeviceManager.Devices.TryGetValue(DeviceId, out var device))
+            var devices = new List<Device>();
+            var subMessage = "User subscribed to ";
+            foreach (var deviceId in DeviceIds)
             {
-                if (!device.Subscribers.Any(x => x.ConnectionId == connectionId))
-                    device.Subscribers.Add(new Subscriber { ConnectionId = connectionId, ClientProxy = Clients.Caller });
-                return device;
+
+                if (Program.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+                {
+                    if (!device.Subscribers.Any(x => x.ConnectionId == connectionId))
+                        device.Subscribers.Add(new Subscriber { ConnectionId = connectionId, ClientProxy = Clients.Caller });
+                    devices.Add(device);
+                    subMessage += device.Id + "/" + device.FriendlyName + ", ";
+                }
             }
-            return null;
+            Console.WriteLine(subMessage);
+            return devices;
         }
 
         public void UpdateTime()
