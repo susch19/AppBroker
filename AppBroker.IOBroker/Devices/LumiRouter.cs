@@ -1,0 +1,15 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace AppBroker.IOBroker.Devices
+{
+    public class LumiRouter : ZigbeeDevice
+    {
+        public LumiRouter(long nodeId) : base(nodeId, typeof(LumiRouter))
+        {
+            ShowInApp = false;
+        }
+    }
+}

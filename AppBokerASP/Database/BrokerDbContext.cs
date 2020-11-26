@@ -15,6 +15,7 @@ namespace AppBokerASP.Database
         //public DbSet<HeaterConfigModel> HeaterCalibrations { get; set; }
         public DbSet<DeviceModel> Devices { get; set; }
         public DbSet<DeviceMappingModel> DeviceToDeviceMappings { get; set; }
+        public DbSet<UserModel> Users { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
