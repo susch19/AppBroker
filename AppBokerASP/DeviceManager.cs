@@ -7,13 +7,18 @@ using System.Net;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+
 using AppBokerASP.Database;
 using AppBokerASP.Devices;
 using AppBokerASP.Devices.Zigbee;
 using AppBokerASP.IOBroker;
+
 using Microsoft.AspNetCore.SignalR;
+
 using Newtonsoft.Json;
+
 using PainlessMesh;
+
 using SimpleSocketIoClient;
 
 namespace AppBokerASP
@@ -44,13 +49,13 @@ namespace AppBokerASP
                 device.StopDevice();
             }
         }
-        private void MeshManager_ConnectionReastablished(object sender, long e)
+        private void MeshManager_ConnectionReastablished(object sender, (long id, List<string> parameter) e)
         {
-            if (Devices.TryGetValue(e, out var device))
+            if (Devices.TryGetValue(e.id, out var device))
             {
                 //while (!Devices.TryRemove(e, out var d)) { }
                 //Console.WriteLine($"Removed device {device.Id} - {device.FriendlyName} - {device.GetType()}");
-                device.Reconnect();
+                device.Reconnect(e.parameter);
             }
         }
 
@@ -66,13 +71,16 @@ namespace AppBokerASP
         {
             if (Devices.TryGetValue(e.c.NodeId, out var device))
             {
-                device.Reconnect();
+                device.Reconnect(e.l);
             }
             else
             {
-
-                var newDevice = (Device)Activator.CreateInstance(types.FirstOrDefault(x => x.Name.ToLower() == e.l[1].ToLower()), e.c.NodeId, e.l);
-                logger.Info($"New Device: {newDevice.TypeName}, {newDevice.Id}");
+                logger.Debug($"Trying to get device with {e.l[1]} name");
+                var type = types.FirstOrDefault(x =>
+                       x.Name.ToLower() == e.l[1].ToLower()
+                           || x.GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName == e.l[1]);
+                var newDevice = (Device)Activator.CreateInstance(type, e.c.NodeId, e.l);
+                logger.Debug($"New Device: {newDevice?.TypeName}, {newDevice?.Id}");
                 Devices.TryAdd(e.c.NodeId, newDevice);
                 if (!DbProvider.AddDeviceToDb(newDevice))
                     DbProvider.MergeDeviceWithDbData(newDevice);
@@ -89,27 +97,49 @@ namespace AppBokerASP
                     var suc = IoBrokerZigbee.TryParse(args.Value, out var zo);
                     if (suc)
                     {
-                        if (Devices.TryGetValue(zo.Id, out var dev))
-                            (dev as ZigbeeDevice).SetPropFromIoBroker(zo, true);
+
+                        if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
+                        {
+                            try
+                            {
+                                zigbeeDev.SetPropFromIoBroker(zo, true);
+                            }
+                            catch (Exception e)
+                            {
+                                logger.Error(e);
+                            }
+                        }
                         else
                             GetZigbeeDevices();
                     }
                 };
-            client.AfterException += (sender, args) => logger.Error($"AfterException: {args.Value}");
+            client.AfterException += async (sender, args) =>
+            {
+                logger.Error($"AfterException, trying reconnect: {args.Value}");
+                await client.DisconnectAsync();
+                await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
+            };
+
             client.Connected += (s, e) =>
             {
                 Console.WriteLine("Connected");
+                logger.Debug("Connected Zigbee Client");
                 client.Emit("subscribe", '*');
                 client.Emit("subscribeObjects", '*');
                 GetZigbeeDevices();
             };
             var random = new Random();
             await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
-            await client.Emit("setState", new { id = "zigbee.0.d0cf5efffe1fa105.colortemp", val = 400, ack = true, ts = DateTime.Now.Ticks });
+            //await client.Emit("setState", new { id = "zigbee.0.d0cf5efffe1fa105.colortemp", val = 400, ack = true, ts = DateTime.Now.Ticks });
         }
 
         public void GetZigbeeDevices()
         {
+            if (Devices.Count > 0)
+            {
+                logger.Debug($"Cancel {nameof(GetZigbeeDevices)}, because it wasn't the startup");
+                return;
+            }
 
             string content = RequestStringData(@"http://ZigbeeHub:8087/objects?pattern=zigbee.0*");
             var better = Regex.Replace(content, "\"zigbee[.\\w\\s\\d]+\":", "");
@@ -152,11 +182,17 @@ namespace AppBokerASP
                 {
                     switch (deviceRes.common.type)
                     {
+                        case "WSDCGQ11LM":
                         case "lumi.weather": dev = new XiaomiTempSensor(id); break;
                         case "lumi.router": dev = new LumiRouter(id); break;
+                        case "L1529":
                         case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, "http://ZigbeeHub:8087/set/" + deviceRes._id); break;
+                        case "E1524/E1810":
+
                         case "TRADFRI remote control": dev = new TradfriRemoteControl(id); break;
+                        case "AB32840":
                         case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, "http://ZigbeeHub:8087/set/" + deviceRes._id); break;
+                        case "AB3257001NJ":
                         case "Plug 01": dev = new OsramPlug(id, "http://ZigbeeHub:8087/set/" + deviceRes._id); break;
                         default: break;
                     }

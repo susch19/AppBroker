@@ -1,4 +1,4 @@
-﻿using AppBokerASP.Database.Model;
+﻿using DbMigrator.V1ToV2.Database.Model;
 using AppBokerASP.Devices;
 using AppBokerASP.Devices.Heater;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AppBokerASP.Database
+namespace DbMigrator.V1ToV2.Database
 {
     public class BrokerDbContext : DbContext
     {
@@ -15,7 +15,7 @@ namespace AppBokerASP.Database
         //public DbSet<HeaterConfigModel> HeaterCalibrations { get; set; }
         public DbSet<DeviceModel> Devices { get; set; }
         public DbSet<DeviceMappingModel> DeviceToDeviceMappings { get; set; }
-        //public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
+        public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

@@ -19,6 +19,7 @@ namespace AppBokerASP
         private readonly ConcurrentBag<BaseClient> clients;
         private readonly Task sendTask;
         private readonly ConcurrentQueue<SendMessageForQueue> sendQueue;
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public ServerSocket()
         {
@@ -73,7 +74,6 @@ namespace AppBokerASP
         {
             while (true)
             {
-                Thread.Sleep(500);
                 if (sendQueue.TryDequeue(out var msg))
                 {
                     foreach (var client in clients)
@@ -85,14 +85,21 @@ namespace AppBokerASP
                                 clients.TryTake(out var a);
                                 continue;
                             }
+                            logger.Debug($"Send to NodeId: {msg.NodeId}, Type: {msg.PackageType}, Data: {msg.Data}");
                             client.Send(msg.PackageType, msg.Data, msg.NodeId);
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
+                            logger.Error(e);
                             clients.TryTake(out var a);
                         }
                     }
+                    Thread.Sleep(250);
+                }
+                else
+                {
+                    Thread.Sleep(16);
                 }
             }
         }

@@ -8,7 +8,9 @@ using System.Net.Sockets;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json.Linq;
+
 using PainlessMesh;
 
 namespace AppBokerASP
@@ -32,9 +34,9 @@ namespace AppBokerASP
         public event EventHandler<GeneralSmarthomeMessage> SingleGetMessageReceived;
         public event EventHandler<(Sub, List<string>)> NewConnectionEstablished;
         public event EventHandler<long> ConnectionLost;
-        public event EventHandler<long> ConnectionReastablished;
+        public event EventHandler<(long id, List<string> parameter)> ConnectionReastablished;
 
-        private static ServerSocket serverSocket = new ServerSocket();
+        private static readonly ServerSocket serverSocket = new();
 
         private readonly TimeSpan WaitBeforeWhoIAmSendAgain;
         private readonly List<NodeSync> knownNodeIds;
@@ -49,16 +51,20 @@ namespace AppBokerASP
         public SmarthomeMeshManager(int listenPort, long nodeId = 1)
         {
             WaitBeforeWhoIAmSendAgain = new TimeSpan(0, 0, 30);
+
             queuedMessages = new Dictionary<long, Queue<GeneralSmarthomeMessage>>();
             timers = new List<Timer>();
             nodeID = nodeId;
             WhoIAmSendTime = new ConcurrentDictionary<long, (DateTime, int)>();
             knownNodeIds = new List<NodeSync> { new NodeSync(nodeID, 0), new NodeSync(0, 0) };
+
             serverSocket.OnClientConnected += ServerSocket_OnClientConnected;
             serverSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
-            timers.Add(new Timer(WhoAmITask, null, TimeSpan.FromSeconds(20d), WaitBeforeWhoIAmSendAgain));
+
+            timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(20d), WaitBeforeWhoIAmSendAgain));
             timers.Add(new Timer((n) => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken())), null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
             timers.Add(new Timer((n) => SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh)), null, TimeSpan.FromSeconds(10d), TimeSpan.FromMinutes(1d)));
+
         }
 
         private void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
@@ -76,11 +82,12 @@ namespace AppBokerASP
 
             if (e.Command == Command.WhoIAm)
             {
-                knownNodeIds.Add(new NodeSync(e.NodeId, 0));
-                while (WhoIAmSendTime.ContainsKey(e.NodeId) && !WhoIAmSendTime.TryRemove(e.NodeId, out var asda)) { }
-                if (e.Parameters == null)
-                    return;
-                NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters?.ToStringArray().ToList()));
+                if (!knownNodeIds.Any(x => x.Id == e.NodeId))
+                    knownNodeIds.Add(new NodeSync(e.NodeId, 0));
+
+                WhoIAmSendTime.TryRemove(e.NodeId, out var asda);
+                if (e.Parameters != null)
+                    NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters?.ToStringArray().ToList()));
                 return;
             }
 
@@ -107,7 +114,7 @@ namespace AppBokerASP
             if (known.MissedConnections > 0)
             {
                 known.MissedConnections = 0;
-                ConnectionReastablished?.Invoke(this, known.Id);
+                ConnectionReastablished?.Invoke(this, (known.Id, e.Parameters?.ToStringArray().ToList()));
             }
 
             if (queuedMessages.TryGetValue(e.NodeId, out var messages))
@@ -212,7 +219,7 @@ namespace AppBokerASP
                         {
                             item.MissedConnections = 0;
                             if (Program.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
-                                dev.Reconnect();
+                                dev.Reconnect(null);
                             else
                                 lostSubs.Add(item.Id);
                         }
@@ -231,7 +238,7 @@ namespace AppBokerASP
                     var knownId = knownNodeIds.FirstOrDefault(x => x.Id == id);
                     ConnectionLost?.Invoke(this, id);
                     if (knownId != default)
-                        if (knownId.MissedConnections > 4)
+                        if (knownId.MissedConnections > 15)
                             knownNodeIds.Remove(knownId);
                         else
                             knownId.MissedConnections++;
@@ -240,7 +247,7 @@ namespace AppBokerASP
             }
             catch (Exception ex)
             {
-                logger.Error(nameof(RefreshMesh) + ex);
+                logger.Error(ex);
             }
         }
 
@@ -263,6 +270,7 @@ namespace AppBokerASP
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 
@@ -275,6 +283,7 @@ namespace AppBokerASP
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 
@@ -287,6 +296,20 @@ namespace AppBokerASP
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                logger.Error(e);
+            }
+        }
+
+        private void TryCatchWhoAmITask(object o)
+        {
+            try
+            {
+                WhoAmITask(o);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                logger.Error(ex);
             }
         }
 
@@ -315,6 +338,7 @@ namespace AppBokerASP
             catch (Exception e)
             {
                 Console.WriteLine(e);
+                logger.Error(e);
             }
         }
 

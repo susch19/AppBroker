@@ -58,13 +58,11 @@ namespace AppBokerASP
             Client.NoDelay = true;
             Source = new CancellationTokenSource();
 
-            //SessionCert = new X509Certificate2(@"F:\painlessmeshboost\cert.pfx");
-
-            var sslStream = new SslStream(Client.GetStream());/*, false, RemoteCertValidation, LocalCertificateSelection, EncryptionPolicy.RequireEncryption);*/
+            var sslStream = new SslStream(Client.GetStream());
             stream = sslStream;
             try
             {
-                sslStream.AuthenticateAsServer(ServerCert, true, System.Security.Authentication.SslProtocols.Tls12, false);
+                sslStream.AuthenticateAsServer(ServerCert, true, SslProtocols.Tls12 | SslProtocols.Tls13 , false);
             }
             catch (AuthenticationException ae)
             {
@@ -88,16 +86,6 @@ namespace AppBokerASP
             client.Close();
             stream.Close();
             Source.Cancel();
-        }
-
-        private X509Certificate LocalCertificateSelection(object sender, string targetHost, X509CertificateCollection localCertificates, X509Certificate remoteCertificate, string[] acceptableIssuers)
-        {
-            return ServerCert;
-        }
-
-        private bool RemoteCertValidation(object sender, X509Certificate certificate, X509Chain chain, SslPolicyErrors sslPolicyErrors)
-        {
-            return true;
         }
 
         private bool ReadExactly(byte[] buffer, int offset, int count)

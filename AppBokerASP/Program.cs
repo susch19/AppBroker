@@ -4,26 +4,37 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+
 using AppBokerASP.Database;
 using AppBokerASP.Database.Model;
 using AppBokerASP.Devices;
 using AppBokerASP.Devices.Heater;
+using AppBokerASP.Extension;
 using AppBokerASP.IOBroker;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using NLog;
+
 using PainlessMesh;
+
 using SimpleSocketIoClient;
 
 namespace AppBokerASP
@@ -68,18 +79,32 @@ namespace AppBokerASP
          * 
          * 
          */
+        private enum PemStringType
+        {
+            Certificate,
+            RsaPrivateKey
+        }
+
         public static void Main(string[] args)
         {
-            //TimeTempMessageLE.Test();
-            //var ttm = new TimeTempMessageLE(Devices.Heater.DayOfWeek.Sat, TimeSpan.FromMinutes(1985), 55.5f);
-            //Console.WriteLine(ttm.GetBits());
             Console.OutputEncoding = Encoding.Unicode;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            ConfigureLogger();
+
+            string s = "\"SingleColor\",55,93,88,30,0,4278190080,1";
+
+            var span = s.AsSpan();
+           
+
+            var jtoken = $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken();
+            var shm = new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken());
+
+            //ConfigureLogger();
 
             Dostuff();
             MeshManager = new SmarthomeMeshManager(8801);
             DeviceManager = new DeviceManager();
+
+
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG
@@ -152,7 +177,7 @@ namespace AppBokerASP
                 //logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
                 //logging.AddFilter("Microsoft.AspNetCore.SignalR", Microsoft.Extensions.Logging.LogLevel.Trace);
                 //    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", Microsoft.Extensions.Logging.LogLevel.Trace);
-                })
+            })
             .UseStartup<Startup>();
     }
 }

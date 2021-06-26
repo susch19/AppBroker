@@ -59,9 +59,16 @@ namespace AppBokerASP.Devices.Heater
 
         private void InterpretParameters(List<string> parameters)
         {
+            if (parameters is null)
+                return;
             if (parameters.Count > 2)
             {
-                FirmwareVersion = Encoding.ASCII.GetString(Convert.FromBase64String(parameters[2]));
+                FirmwareVersion = "Firmware Version: " + parameters[2];
+                var s2 = "";
+                timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
+                var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
+                Program.MeshManager.SendSingle((uint)Id, msg);
+
             }
             if (parameters.Count > 3)
             {
@@ -69,7 +76,7 @@ namespace AppBokerASP.Devices.Heater
                 {
                     var s = parameters[3];
                     var s2 = "";
-                    timeTemps.OrderBy(x=>x.DayOfWeek).ThenBy(x=>x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
+                    timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
 
                     if (s != s2)
                     {
@@ -106,6 +113,7 @@ namespace AppBokerASP.Devices.Heater
                         if (device is XiaomiTempSensor sensor)
                         {
                             sensor.TemperatureChanged += XiaomiTempSensorTemperaturChanged;
+                            SendLastTempData();
                             XiaomiTempSensor = device.Id;
                         }
                         logger.Debug($"Heater {logName} has subscribed to {device.Id}/{device.FriendlyName}");
@@ -210,20 +218,20 @@ namespace AppBokerASP.Devices.Heater
             switch (command)
             {
                 case Command.Temp:
-                {
-                    var hc = parameters.Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
+                    {
+                        var hc = parameters.Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
 
-                    UpdateDB(hc);
+                        UpdateDB(hc);
 
-                    var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
-                    var s = "";
-                    foreach (var item in ttm)
-                        s += item.ToString();
+                        var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
+                        var s = "";
+                        foreach (var item in ttm)
+                            s += item.ToString();
 
-                    msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command, s.ToJToken());
-                    Program.MeshManager.SendSingle((uint)Id, msg);
-                    break;
-                }
+                        msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command, s.ToJToken());
+                        Program.MeshManager.SendSingle((uint)Id, msg);
+                        break;
+                    }
 
                 case Command.Mode:
                     msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command);
@@ -303,17 +311,32 @@ namespace AppBokerASP.Devices.Heater
             Program.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
         }
 
-        public override void Reconnect()
+        public override void Reconnect(List<string>? parameter)
         {
-            base.Reconnect();
+            base.Reconnect(parameter);
+
+            InterpretParameters(parameter);
+
+            Program.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+            Program.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+
+            SendLastTempData();
         }
+
 
         public override dynamic GetConfig() => timeTemps.ToJson();
         public void Dispose()
         {
             heaterSensorMapping?.Dispose();
+        }
+
+        private void SendLastTempData()
+        {
+            if (Program.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out var device)
+                    && device is XiaomiTempSensor sensor && sensor.Temperature > 5f)
+                XiaomiTempSensorTemperaturChanged(this, sensor.Temperature);
         }
     }
 }

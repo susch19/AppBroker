@@ -43,7 +43,9 @@
         Reverse,
         SingleColor,
         DeviceMapping,
-        Calibration
+        Calibration,
+        OTA,
+        OTAPart
 
     };
 }
