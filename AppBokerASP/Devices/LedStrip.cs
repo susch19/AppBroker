@@ -36,17 +36,17 @@ namespace AppBokerASP.Devices
             Program.MeshManager.SingleUpdateMessageReceived += SingleUpdateMessageReceived;
         }
 
-        private void SingleUpdateMessageReceived(object? sender, GeneralSmarthomeMessage e)
+        private void SingleUpdateMessageReceived(object? sender, BinarySmarthomeMessage e)
         {
             if (e.Command != Command.Mode)
                 return;
 
             for (int i = 0; i < e.Parameters.Count; i++)
             {
-                JToken? item = e.Parameters[i];
+                var item = e.Parameters[i];
                 if (item is null)
                     continue;
-                var str = item.ToString();
+                var str = System.Text.Encoding.UTF8.GetString(item); 
                 if (i == 0)
                     ColorMode = str;
                 else if (i == 1 && int.TryParse(str, out var delay))
@@ -80,17 +80,17 @@ namespace AppBokerASP.Devices
 
         public override void UpdateFromApp(Command command, List<JToken> parameters)
         {
-            var msg = new GeneralSmarthomeMessage(Id, MessageType.Update, command, parameters.ToArray());
+            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, parameters.ToArray());
             Program.MeshManager.SendSingle(Id, msg);
         }
 
         public override void OptionsFromApp(Command command, List<JToken> parameters)
         {
-            var msg = new GeneralSmarthomeMessage(Id, MessageType.Options, command, parameters.ToArray());
+            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, parameters.ToArray());
             Program.MeshManager.SendSingle(Id, msg);
         }
 
-        public override void Reconnect(List<string>? parameter)
+        public override void Reconnect(ByteLengthList parameter)
         {
 
             Program.MeshManager.SingleUpdateMessageReceived += SingleUpdateMessageReceived;

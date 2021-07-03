@@ -40,6 +40,6 @@ namespace AppBokerASP.Devices
         public virtual void SendDataToAllSubscribers() => Subscribers.ForEach(x => SendLastData(x.ClientProxy));
 
         public virtual void StopDevice() => IsConnected = false;
-        public virtual void Reconnect(List<string>? parameter) => IsConnected = true;
+        public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
     }
 }

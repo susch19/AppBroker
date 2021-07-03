@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+
 using DayOfWeek = AppBokerASP.Devices.Heater.DayOfWeek;
 
 namespace AppBokerASP.Devices.Heater
@@ -82,6 +83,29 @@ namespace AppBokerASP.Devices.Heater
             for (int i = 0; i < 3; i++)
                 s += Convert.ToString(data[i], 2).PadLeft(8, '0') + " ";
             return s;
+        }
+
+        public byte[] ToBinary()
+        {
+            return new byte[] { data[0], data[1], data[2], };
+        }
+
+        public void FromBinary(ReadOnlySpan<byte> bytes)
+        {
+            if (bytes.Length != 3)
+                throw new ArgumentException(nameof(bytes));
+
+            for (int i = 0; i < 3; i++)
+            {
+                data[i] = bytes[i];
+            }
+        }
+
+        public static TimeTempMessageLE LoadFromBinary(ReadOnlySpan<byte> bytes)
+        {
+            var ttm = new TimeTempMessageLE();
+            ttm.FromBinary(bytes);
+            return ttm;
         }
 
         public override string ToString()

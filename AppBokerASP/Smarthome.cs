@@ -38,7 +38,7 @@ namespace AppBokerASP
             return base.OnDisconnectedAsync(exception);
         }
 
-        public void Update(GeneralSmarthomeMessage message)
+        public void Update(JsonSmarthomeMessage message)
         {
             if (Program.DeviceManager.Devices.TryGetValue(message.NodeId, out var device))
             {

@@ -15,6 +15,7 @@ using System.Security.Cryptography;
 using System.Security.Authentication;
 using PainlessMesh;
 using Newtonsoft.Json;
+using System.Diagnostics;
 
 namespace AppBokerASP
 {
@@ -23,7 +24,7 @@ namespace AppBokerASP
         private static X509Certificate2 ServerCert;
         private static X509Store ServerStore;
 
-        public event EventHandler<GeneralSmarthomeMessage> ReceivedData;
+        public event EventHandler<BinarySmarthomeMessage> ReceivedData;
         public CancellationTokenSource Source;
 
         protected readonly TcpClient Client;
@@ -138,13 +139,20 @@ namespace AppBokerASP
                             ArrayPool<byte>.Shared.Return(bodyBuf);
                             return;
                         }
-                        var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
-                        if (string.IsNullOrWhiteSpace("Msg: " + msg))
-                            continue;
-                        logger.Debug(msg);
-                        var o = JsonConvert.DeserializeObject<GeneralSmarthomeMessage>(msg);
 
-                        ReceivedData?.Invoke(this, o);
+                        using var ms = new MemoryStream(bodyBuf);
+                        
+                        var bsm = BinarySmarthomeMessageSerialization.Deserialize(ms);
+
+
+                        //var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
+                        //if (string.IsNullOrWhiteSpace("Msg: " + msg))
+                        //    continue;
+
+                        //logger.Debug(msg);
+                        //var o = JsonConvert.DeserializeObject<BinarySmarthomeMessage>(msg);
+                        
+                        ReceivedData?.Invoke(this, bsm);
                         ArrayPool<byte>.Shared.Return(bodyBuf);
                     }
                     catch (Exception e)
@@ -163,11 +171,18 @@ namespace AppBokerASP
             Client.Close();
         }
 
-        public void Send(PackageType packageType, string data, long nodeId)
+        public void Send(PackageType packageType, Span<byte> data, long nodeId)
         {
-            var buf = BitConverter.GetBytes((int)nodeId).Concat(new[] { (byte)packageType }).Concat(Encoding.GetEncoding(437).GetBytes(data)).ToArray();
-            stream?.Write(BitConverter.GetBytes(buf.Length), 0, HeaderSize);
-            stream?.Write(buf, 0, buf.Length);
+            if (stream is null)
+                return;
+
+            Span<byte> buffer = stackalloc byte[sizeof(int) + sizeof(byte) + data.Length];
+            BitConverter.TryWriteBytes(buffer, (int)nodeId);
+            BitConverter.TryWriteBytes(buffer[sizeof(int)..], (byte)packageType);
+            data.CopyTo(buffer[(sizeof(int) + sizeof(byte))..]);
+
+            stream.Write(BitConverter.GetBytes(buffer.Length), 0, HeaderSize);
+            stream.Write(buffer);
         }
 
         private static byte[] GetBytesFromPEM(string pemString, PemStringType type)

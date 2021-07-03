@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Text;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +18,7 @@ using PainlessMesh;
 namespace AppBokerASP
 {
 
-    public class SmarthomeMeshManager
+    public class SmarthomeMeshManager: IDisposable
     {
         private class NodeSync
         {
@@ -29,12 +31,12 @@ namespace AppBokerASP
             }
         }
 
-        public event EventHandler<GeneralSmarthomeMessage> SingleUpdateMessageReceived;
-        public event EventHandler<GeneralSmarthomeMessage> SingleOptionsMessageReceived;
-        public event EventHandler<GeneralSmarthomeMessage> SingleGetMessageReceived;
-        public event EventHandler<(Sub, List<string>)> NewConnectionEstablished;
+        public event EventHandler<BinarySmarthomeMessage> SingleUpdateMessageReceived;
+        public event EventHandler<BinarySmarthomeMessage> SingleOptionsMessageReceived;
+        public event EventHandler<BinarySmarthomeMessage> SingleGetMessageReceived;
+        public event EventHandler<(Sub, ByteLengthList)> NewConnectionEstablished;
         public event EventHandler<long> ConnectionLost;
-        public event EventHandler<(long id, List<string> parameter)> ConnectionReastablished;
+        public event EventHandler<(long id, ByteLengthList parameter)> ConnectionReastablished;
 
         private static readonly ServerSocket serverSocket = new();
 
@@ -43,7 +45,7 @@ namespace AppBokerASP
         private readonly ConcurrentDictionary<long, (DateTime time, int count)> WhoIAmSendTime;
 
         private readonly long nodeID = 1;
-        private readonly Dictionary<long, Queue<GeneralSmarthomeMessage>> queuedMessages;
+        private readonly Dictionary<long, Queue<BinarySmarthomeMessage>> queuedMessages;
         private readonly List<Timer> timers;
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
@@ -52,7 +54,7 @@ namespace AppBokerASP
         {
             WaitBeforeWhoIAmSendAgain = new TimeSpan(0, 0, 30);
 
-            queuedMessages = new Dictionary<long, Queue<GeneralSmarthomeMessage>>();
+            queuedMessages = new Dictionary<long, Queue<BinarySmarthomeMessage>>();
             timers = new List<Timer>();
             nodeID = nodeId;
             WhoIAmSendTime = new ConcurrentDictionary<long, (DateTime, int)>();
@@ -62,18 +64,30 @@ namespace AppBokerASP
             serverSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
 
             timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(20d), WaitBeforeWhoIAmSendAgain));
-            timers.Add(new Timer((n) => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken())), null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
-            timers.Add(new Timer((n) => SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh)), null, TimeSpan.FromSeconds(10d), TimeSpan.FromMinutes(1d)));
+            timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
+            timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10d), TimeSpan.FromMinutes(1d)));
 
+        }
+
+        private void GetMeshUpdate(object? state)
+        {
+            SendToBridge(new BinarySmarthomeMessage(1, MessageType.Get, Command.Mesh));
+        }
+
+        internal void UpdateTime() => SendTimeUpdate(null);
+        private void SendTimeUpdate(object? state)
+        {
+            var msg = new BinarySmarthomeMessage(0, MessageType.Update, Command.Time, Encoding.UTF8.GetBytes($"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}"));
+            SendBroadcast(msg);
         }
 
         private void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
         {
             baseClient.ReceivedData += SocketClientDataReceived;
-            SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh));
+            SendToBridge(new BinarySmarthomeMessage(1, MessageType.Get, Command.Mesh));
         }
 
-        public void SocketClientDataReceived(object sender, GeneralSmarthomeMessage e)
+        public void SocketClientDataReceived(object sender, BinarySmarthomeMessage e)
         {
             //var bc = (BaseClient)sender;
 
@@ -87,7 +101,7 @@ namespace AppBokerASP
 
                 WhoIAmSendTime.TryRemove(e.NodeId, out var asda);
                 if (e.Parameters != null)
-                    NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters?.ToStringArray().ToList()));
+                    NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters));
                 return;
             }
 
@@ -96,7 +110,7 @@ namespace AppBokerASP
             {
                 if (!WhoIAmSendTime.TryGetValue(e.NodeId, out var dt) || dt.time.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
                 {
-                    //SendSingle(e.NodeId, new GeneralSmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
+                    //SendSingle(e.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                     if (dt == default)
                         WhoIAmSendTime.TryAdd(e.NodeId, (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0));
                     else
@@ -104,7 +118,7 @@ namespace AppBokerASP
                 }
                 if (!queuedMessages.TryGetValue(e.NodeId, out var queue))
                 {
-                    queue = new Queue<GeneralSmarthomeMessage>();
+                    queue = new Queue<BinarySmarthomeMessage>();
                     queuedMessages.Add(e.NodeId, queue);
                 }
                 queue.Enqueue(e);
@@ -114,7 +128,7 @@ namespace AppBokerASP
             if (known.MissedConnections > 0)
             {
                 known.MissedConnections = 0;
-                ConnectionReastablished?.Invoke(this, (known.Id, e.Parameters?.ToStringArray().ToList()));
+                ConnectionReastablished?.Invoke(this, (known.Id, e.Parameters));
             }
 
             if (queuedMessages.TryGetValue(e.NodeId, out var messages))
@@ -127,7 +141,7 @@ namespace AppBokerASP
             MessageTypeSwitch(e);
         }
 
-        private void MessageTypeSwitch(GeneralSmarthomeMessage e)
+        private void MessageTypeSwitch(BinarySmarthomeMessage e)
         {
             switch (e.MessageType)
             {
@@ -145,8 +159,6 @@ namespace AppBokerASP
             }
         }
 
-        internal void UpdateTime()
-        => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")}\"}}".ToJToken()));
 
         private bool TryParseSubsRecursive(Sub sub, out List<Sub> subs)
         {
@@ -158,7 +170,7 @@ namespace AppBokerASP
                 {
                     if (!WhoIAmSendTime.TryGetValue(sub.NodeId, out var dt) || dt.time.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
                     {
-                        //SendSingle(sub.NodeId, new GeneralSmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
+                        //SendSingle(sub.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                         if (dt == default)
                             WhoIAmSendTime.TryAdd(sub.NodeId, (DateTime.Now, 0));
                         else
@@ -182,7 +194,7 @@ namespace AppBokerASP
             return true;
         }
 
-        private void HandleUpdates(GeneralSmarthomeMessage e)
+        private void HandleUpdates(BinarySmarthomeMessage e)
         {
             switch (e.Command)
             {
@@ -199,11 +211,12 @@ namespace AppBokerASP
             }
         }
 
-        private void RefreshMesh(GeneralSmarthomeMessage e)
+        private void RefreshMesh(BinarySmarthomeMessage e)
         {
             try
             {
-                var sub = e.Parameters[0].ToObject<Sub>();
+                var str = Encoding.UTF8.GetString(e.Parameters[0]);
+                var sub = JsonSerializer.Deserialize<Sub>(str);
                 if (!TryParseSubsRecursive(sub, out var rsubs))
                     return;
                 var subs = rsubs.Distinct().ToDictionary(x => x.NodeId, x => x);
@@ -211,7 +224,7 @@ namespace AppBokerASP
 
                 foreach (var item in knownNodeIds) // Check our subs with incoming list
                 {
-                    if (!subs.ContainsKey(item.Id))
+                    if (!subs.ContainsKey((uint)item.Id))
                         lostSubs.Add(item.Id);
                     else
                     {
@@ -229,7 +242,7 @@ namespace AppBokerASP
                 {
                     if (lostSubs.Contains(item.Key))
                     {
-                        if (subs.ContainsKey(item.Key))
+                        if (subs.ContainsKey((uint)item.Key))
                             lostSubs.Remove(item.Key);
                     }
                 }
@@ -251,21 +264,23 @@ namespace AppBokerASP
             }
         }
 
-        private void HandleGets(GeneralSmarthomeMessage e)
+        private void HandleGets(BinarySmarthomeMessage e)
         {
             if (e.Command == Command.Time)
-                SendBroadcast(new GeneralSmarthomeMessage(e.NodeId, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss")}\"}}".ToJToken()));
+                SendTimeUpdate(null);
             else
                 SingleGetMessageReceived?.Invoke(this, e);
         }
 
-        private void HandleOptions(GeneralSmarthomeMessage e) => SingleOptionsMessageReceived?.Invoke(this, e);
+        private void HandleOptions(BinarySmarthomeMessage e) => SingleOptionsMessageReceived?.Invoke(this, e);
 
-        public void SendSingle<T>(long destination, T message)
+        public void SendSingle<T>(long destination, T message) where T : BinarySmarthomeMessage
         {
             try
             {
-                serverSocket.SendToAllClients(PackageType.SINGLE, message.ToJson(), destination);
+                using var ms = new MemoryStream();
+                message.Serialize(ms);
+                serverSocket.SendToAllClients(PackageType.SINGLE, ms.ToArray(), destination);
             }
             catch (Exception e)
             {
@@ -274,11 +289,13 @@ namespace AppBokerASP
             }
         }
 
-        public void SendBroadcast<T>(T message)
+        public void SendBroadcast<T>(T message) where T : BinarySmarthomeMessage
         {
             try
             {
-                serverSocket.SendToAllClients(PackageType.BROADCAST, message.ToJson());
+                using var ms = new MemoryStream();
+                message.Serialize(ms);
+                serverSocket.SendToAllClients(PackageType.BROADCAST, ms.ToArray());
             }
             catch (Exception e)
             {
@@ -287,11 +304,13 @@ namespace AppBokerASP
             }
         }
 
-        public void SendToBridge<T>(T message)
+        public void SendToBridge<T>(T message) where T : BinarySmarthomeMessage
         {
             try
             {
-                serverSocket.SendToAllClients(PackageType.BRIDGE, message.ToJson(), nodeID);
+                using var ms = new MemoryStream();
+                message.Serialize(ms);
+                serverSocket.SendToAllClients(PackageType.BRIDGE, ms.ToArray(), nodeID);
             }
             catch (Exception e)
             {
@@ -322,7 +341,7 @@ namespace AppBokerASP
                 {
                     if (item.Value.time.Add(WaitBeforeWhoIAmSendAgain) < DateTime.Now)
                     {
-                        SendSingle(item.Key, new GeneralSmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
+                        SendSingle(item.Key, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                         WhoIAmSendTime[item.Key] = (DateTime.Now, item.Value.count + 1);
                     }
                     if (item.Value.count > 20)
@@ -342,6 +361,13 @@ namespace AppBokerASP
             }
         }
 
+        public void Dispose()
+        {
+            foreach (var item in timers)
+            {
+                item.Dispose();
+            }
+        }
     }
 }
 

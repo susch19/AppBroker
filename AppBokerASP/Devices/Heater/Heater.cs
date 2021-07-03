@@ -39,7 +39,7 @@ namespace AppBokerASP.Devices.Heater
         private Task heaterSensorMapping;
 
         //2020-02-01 20:14:48.1075|DEBUG|AppBokerASP.BaseClient|{"id":3257233774, "m":"Update", "c":"WhoIAm", "p":["10.12.206.9","heater","RmlybXdhcmUgVjIgRmViICAxIDIwMjA=","YAk3oJQqQBo3QKkqYQk3oZQqQRo3QakqYgk3opQqQho3QqkqYwk3o5QqQxo3Q6kqZAk3pJQqRBo3RKkqJQ03RakqJg03Rqkq"]}
-        public Heater(long id, List<string> parameters) : base(id)
+        public Heater(long id, ByteLengthList parameters) : base(id)
         {
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
@@ -57,16 +57,15 @@ namespace AppBokerASP.Devices.Heater
                 heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
         }
 
-        private void InterpretParameters(List<string> parameters)
+        private void InterpretParameters(ByteLengthList parameters)
         {
             if (parameters is null)
                 return;
             if (parameters.Count > 2)
             {
                 FirmwareVersion = "Firmware Version: " + parameters[2];
-                var s2 = "";
-                timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
-                var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
+                var bin = GetSendableTimeTemps(timeTemps);
+                var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, bin);
                 Program.MeshManager.SendSingle((uint)Id, msg);
 
             }
@@ -75,13 +74,12 @@ namespace AppBokerASP.Devices.Heater
                 try
                 {
                     var s = parameters[3];
-                    var s2 = "";
-                    timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
+                    byte[] s2 = GetSendableTimeTemps(timeTemps);
 
-                    if (s != s2)
+                    if (s.SequenceEqual(s2))
                     {
                         logger.Warn($"Heater {logName} has wrong temps saved, trying to correct Saved:{{{s}}} Server:{{{s2}}}");
-                        var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
+                        var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2);
                         Program.MeshManager.SendSingle((uint)Id, msg);
                     }
                 }
@@ -92,6 +90,10 @@ namespace AppBokerASP.Devices.Heater
             }
         }
 
+        private byte[] GetSendableTimeTemps(IEnumerable<HeaterConfig> timeTemps)
+        {
+            return timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).SelectMany(x => ((TimeTempMessageLE)x).ToBinary()).ToArray();
+        }
 
         private Task TrySubscribe(List<DeviceMappingModel> mappings)
         {
@@ -133,7 +135,7 @@ namespace AppBokerASP.Devices.Heater
             return Task.CompletedTask;
         }
 
-        private void Node_SingleUpdateMessageReceived(object sender, GeneralSmarthomeMessage e)
+        private void Node_SingleUpdateMessageReceived(object sender, BinarySmarthomeMessage e)
         {
             if (e.NodeId != Id)
                 return;
@@ -141,13 +143,13 @@ namespace AppBokerASP.Devices.Heater
             switch (e.Command)
             {
                 case Command.Temp:
-                    HandleTimeTempMessageUpdate((string)e.Parameters[0]);
+                    HandleTimeTempMessageUpdate(e.Parameters[0]);
                     break;
                 default:
                     break;
             }
         }
-        private void Node_SingleOptionsMessageReceived(object sender, GeneralSmarthomeMessage e)
+        private void Node_SingleOptionsMessageReceived(object sender, BinarySmarthomeMessage e)
         {
             if (e.NodeId != Id)
                 return;
@@ -164,13 +166,14 @@ namespace AppBokerASP.Devices.Heater
             }
         }
 
-        private void HandleTimeTempMessageUpdate(string messages)
+        private void HandleTimeTempMessageUpdate(byte[] messages)
         {
-            var ttm = TimeTempMessageLE.FromBase64(messages[0..4]);
+            var message = messages.AsSpan();
+            var ttm = TimeTempMessageLE.LoadFromBinary(message[0..3]);
             Temperature = ttm;
-            ttm = TimeTempMessageLE.FromBase64(messages[4..8]);
+            ttm = TimeTempMessageLE.LoadFromBinary(message[3..6]);
             CurrentConfig = ttm;
-            ttm = TimeTempMessageLE.FromBase64(messages[8..12]);
+            ttm = TimeTempMessageLE.LoadFromBinary(message[6..9]);
             try
             {
                 var dt = DateTime.Now;
@@ -198,7 +201,7 @@ namespace AppBokerASP.Devices.Heater
                 case Command.Temp:
                     var temp = (float)parameters[0];
                     var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
-                    var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Update, command, ttm.ToString().ToJToken());
+                    var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, ttm.ToBinary());
                     Program.MeshManager.SendSingle((uint)Id, msg);
                     break;
                 case Command.DeviceMapping:
@@ -214,7 +217,8 @@ namespace AppBokerASP.Devices.Heater
         {
 
             logger.Debug("OptionsFromApp " + command + " <> " + parameters.ToJson());
-            GeneralSmarthomeMessage msg;
+            BinarySmarthomeMessage msg;
+            
             switch (command)
             {
                 case Command.Temp:
@@ -224,17 +228,15 @@ namespace AppBokerASP.Devices.Heater
                         UpdateDB(hc);
 
                         var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
-                        var s = "";
-                        foreach (var item in ttm)
-                            s += item.ToString();
+                        var s = ttm.SelectMany(x => x.ToBinary()).ToArray();
 
-                        msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command, s.ToJToken());
+                        msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, s);
                         Program.MeshManager.SendSingle((uint)Id, msg);
                         break;
                     }
 
                 case Command.Mode:
-                    msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, command);
+                    msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command);
                     Program.MeshManager.SendSingle((uint)Id, msg);
                     break;
             }
@@ -295,7 +297,7 @@ namespace AppBokerASP.Devices.Heater
         private void XiaomiTempSensorTemperaturChanged(object sender, float temp)
         {
             var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
-            var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToString().ToJToken());
+            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToBinary());
             Program.MeshManager.SendSingle((uint)Id, msg);
         }
 
@@ -311,7 +313,7 @@ namespace AppBokerASP.Devices.Heater
             Program.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
         }
 
-        public override void Reconnect(List<string>? parameter)
+        public override void Reconnect(ByteLengthList parameter)
         {
             base.Reconnect(parameter);
 

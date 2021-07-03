@@ -90,13 +90,13 @@ namespace AppBokerASP
             Console.OutputEncoding = Encoding.Unicode;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            string s = "\"SingleColor\",55,93,88,30,0,4278190080,1";
+            //string s = "\"SingleColor\",55,93,88,30,0,4278190080,1";
 
-            var span = s.AsSpan();
+            //var span = s.AsSpan();
            
 
-            var jtoken = $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken();
-            var shm = new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken());
+            //var jtoken = $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken();
+            //var shm = new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken());
 
             //ConfigureLogger();
 
@@ -108,7 +108,7 @@ namespace AppBokerASP
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG
-            MeshManager.SocketClientDataReceived(null, new GeneralSmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, JToken.Parse("\"10.9.254.4\""), JToken.Parse("\"heater\"")));
+            //MeshManager.SocketClientDataReceived(null, new GeneralSmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, JToken.Parse("\"10.9.254.4\""), JToken.Parse("\"heater\"")));
 #endif
 
             int asd = 123;
