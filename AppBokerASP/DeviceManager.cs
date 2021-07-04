@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -49,7 +50,7 @@ namespace AppBokerASP
                 device.StopDevice();
             }
         }
-        private void MeshManager_ConnectionReastablished(object sender, (long id, List<string> parameter) e)
+        private void MeshManager_ConnectionReastablished(object sender, (long id, ByteLengthList parameter) e)
         {
             if (Devices.TryGetValue(e.id, out var device))
             {
@@ -67,7 +68,7 @@ namespace AppBokerASP
         //    while (!Devices.TryAdd(e.c.NodeId, newDevice)) { }
         //}
 
-        private void Node_NewConnectionEstablished(object sender, (Sub c, List<string> l) e)
+        private void Node_NewConnectionEstablished(object sender, (Sub c, ByteLengthList l) e)
         {
             if (Devices.TryGetValue(e.c.NodeId, out var device))
             {
@@ -75,10 +76,11 @@ namespace AppBokerASP
             }
             else
             {
-                logger.Debug($"Trying to get device with {e.l[1]} name");
+                var deviceName = Encoding.UTF8.GetString(e.l[1]);
+                logger.Debug($"Trying to get device with {deviceName} name");
                 var type = types.FirstOrDefault(x =>
-                       x.Name.ToLower() == e.l[1].ToLower()
-                           || x.GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName == e.l[1]);
+                       x.Name.Equals(deviceName, StringComparison.InvariantCultureIgnoreCase)
+                           || x.GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName == deviceName);
                 var newDevice = (Device)Activator.CreateInstance(type, e.c.NodeId, e.l);
                 logger.Debug($"New Device: {newDevice?.TypeName}, {newDevice?.Id}");
                 Devices.TryAdd(e.c.NodeId, newDevice);

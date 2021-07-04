@@ -38,7 +38,6 @@ namespace PainlessMesh
         public override Command Command { get => base.Command; set => base.Command = value; }
 
         [Azura]
-        [nj.JsonProperty("p")/*, nj.JsonConverter(typeof(SingleOrListConverter<JsonElement>))*/]
         public ByteLengthList Parameters { get; set; }
 
         public BinarySmarthomeMessage(uint nodeId, MessageType messageType, Command command, params byte[][] parameters)
@@ -48,16 +47,21 @@ namespace PainlessMesh
             Command = command;
             Parameters = new ByteLengthList(parameters);
         }
+        public BinarySmarthomeMessage(uint nodeId, MessageType messageType, Command command, ByteLengthList parameters)
+        {
+            NodeId = nodeId;
+            MessageType = messageType;
+            Command = command;
+            Parameters = parameters;
+        }
         public BinarySmarthomeMessage()
         {
 
         }
     }
 
-    [Azura]
     public partial class JsonSmarthomeMessage : BaseSmarthomeMessage
     {
-        [Azura]
         [nj.JsonProperty("p")]
         public List<JToken> Parameters { get; set; }
         public JsonSmarthomeMessage(uint nodeId, MessageType messageType, Command command, params JToken[] parameters)

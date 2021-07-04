@@ -78,7 +78,7 @@ namespace AppBokerASP.Devices.Heater
 
                     if (s.SequenceEqual(s2))
                     {
-                        logger.Warn($"Heater {logName} has wrong temps saved, trying to correct Saved:{{{s}}} Server:{{{s2}}}");
+                        logger.Warn($"Heater {logName} has wrong temps saved, trying correcting");
                         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2);
                         Program.MeshManager.SendSingle((uint)Id, msg);
                     }

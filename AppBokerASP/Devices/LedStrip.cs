@@ -80,13 +80,43 @@ namespace AppBokerASP.Devices
 
         public override void UpdateFromApp(Command command, List<JToken> parameters)
         {
-            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, parameters.ToArray());
+            ByteLengthList meshParams = new ();
+            switch (command)
+            {
+                case Command.SingleColor:
+                    if(parameters.Count > 0)
+                    {
+                        var color = Convert.ToInt32(parameters[0].ToString(), 16);
+                        meshParams.Add(BitConverter.GetBytes(color));
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, meshParams);
             Program.MeshManager.SendSingle(Id, msg);
         }
 
         public override void OptionsFromApp(Command command, List<JToken> parameters)
         {
-            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, parameters.ToArray());
+            ByteLengthList meshParams = new ();
+            switch (command)
+            {
+                case Command.SingleColor:
+                case Command.Brightness:
+                case Command.Calibration:
+                    if (parameters.Count > 0)
+                    {
+                        var color = Convert.ToInt32(parameters[0].ToString(), 16);
+                        meshParams.Add(BitConverter.GetBytes(color));
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, meshParams);
             Program.MeshManager.SendSingle(Id, msg);
         }
 
