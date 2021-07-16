@@ -64,7 +64,7 @@ namespace AppBokerASP
             tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
-        public void SendToAllClients(PackageType packageType, Memory<byte> data, long nodeId)
+        public void SendToAllClients(PackageType packageType, Memory<byte> data, uint nodeId)
             => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = nodeId });
 
         public void SendToAllClients(PackageType packageType, Memory<byte> data)
@@ -85,7 +85,6 @@ namespace AppBokerASP
                                 clients.TryTake(out var a);
                                 continue;
                             }
-                            logger.Debug($"Send to NodeId: {msg.NodeId}, Type: {msg.PackageType}, Data: {msg.Data}");
                             client.Send(msg.PackageType, msg.Data.Span, msg.NodeId);
                         }
                         catch (Exception e)
@@ -108,7 +107,7 @@ namespace AppBokerASP
         {
             public PackageType PackageType { get; set; }
             public Memory<byte> Data { get; set; }
-            public long NodeId { get; set; }
+            public uint NodeId { get; set; }
         }
     }
 }

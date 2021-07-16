@@ -15,12 +15,11 @@ using AppBokerASP.Devices.Zigbee;
 using AppBokerASP.IOBroker;
 
 using Microsoft.AspNetCore.SignalR;
-
+using H.Socket.IO;
 using Newtonsoft.Json;
 
 using PainlessMesh;
 
-using SimpleSocketIoClient;
 
 namespace AppBokerASP
 {
@@ -41,7 +40,7 @@ namespace AppBokerASP
             temp = ConnectToIOBroker();
         }
 
-        private void MeshManager_ConnectionLost(object sender, long e)
+        private void MeshManager_ConnectionLost(object sender, uint e)
         {
             if (Devices.TryGetValue(e, out var device))
             {
@@ -50,7 +49,7 @@ namespace AppBokerASP
                 device.StopDevice();
             }
         }
-        private void MeshManager_ConnectionReastablished(object sender, (long id, ByteLengthList parameter) e)
+        private void MeshManager_ConnectionReastablished(object sender, (uint id, ByteLengthList parameter) e)
         {
             if (Devices.TryGetValue(e.id, out var device))
             {
@@ -93,10 +92,11 @@ namespace AppBokerASP
         {
 
             client = new SocketIoClient();
-
-            client.AfterEvent += (sender, args) =>
+            //int i = 0;
+            client.EventReceived += (sender, args) =>
                 {
                     var suc = IoBrokerZigbee.TryParse(args.Value, out var zo);
+                    //Console.Write(i++ + ", ");
                     if (suc)
                     {
 
@@ -115,7 +115,7 @@ namespace AppBokerASP
                             GetZigbeeDevices();
                     }
                 };
-            client.AfterException += async (sender, args) =>
+            client.ExceptionOccurred += async (sender, args) =>
             {
                 logger.Error($"AfterException, trying reconnect: {args.Value}");
                 await client.DisconnectAsync();
@@ -126,7 +126,7 @@ namespace AppBokerASP
             {
                 Console.WriteLine("Connected");
                 logger.Debug("Connected Zigbee Client");
-                client.Emit("subscribe", '*');
+                client.Emit("subscribe", "zigbee.*");
                 client.Emit("subscribeObjects", '*');
                 GetZigbeeDevices();
             };

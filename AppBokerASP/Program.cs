@@ -35,7 +35,6 @@ using NLog;
 
 using PainlessMesh;
 
-using SimpleSocketIoClient;
 
 namespace AppBokerASP
 {
@@ -93,18 +92,20 @@ namespace AppBokerASP
             //string s = "\"SingleColor\",55,93,88,30,0,4278190080,1";
 
             //var span = s.AsSpan();
-           
+
 
             //var jtoken = $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken();
             //var shm = new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken());
 
             //ConfigureLogger();
 
+            var sub = JsonConvert.DeserializeObject<Sub>(@"{""nodeId"":1,""subs"":[{""nodeId"":3257153498}]}");
+
             Dostuff();
             MeshManager = new SmarthomeMeshManager(8801);
             DeviceManager = new DeviceManager();
 
-
+            MeshManager.Start();
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG
@@ -122,7 +123,7 @@ namespace AppBokerASP
 #if DEBUG
                 CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
 #else
-                CreateWebHostBuilder(args).UseUrls("http://[::1]:5055", "http://0.0.0.0:5055").Build().Run();
+                CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
 #endif
             }
         }

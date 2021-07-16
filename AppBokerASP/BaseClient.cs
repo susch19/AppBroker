@@ -39,7 +39,7 @@ namespace AppBokerASP
 
             ServerStore = new X509Store(StoreName.My, StoreLocation.CurrentUser);
             ServerStore.Open(OpenFlags.ReadOnly);
-            var certs = ServerStore.Certificates.Find(X509FindType.FindByThumbprint, "0cd48689df687d3f95cd8e3baa3d5d772361563f", true);
+            var certs = ServerStore.Certificates.Find(X509FindType.FindByThumbprint, "643b4f728a001e1b0aa429b6109ec42cb14f7881", true);
 
             if (certs.Count > 0)
                 ServerCert = certs[0];
@@ -50,6 +50,7 @@ namespace AppBokerASP
                 using var rsa = RSA.Create();
                 rsa.ImportPkcs8PrivateKey(GetBytesFromPEM(File.ReadAllText("key.pem"), PemStringType.RsaPrivateKey), out var key);
                 ServerCert = new X509Certificate2(ServerCert.CopyWithPrivateKey(rsa).Export(X509ContentType.Pfx));
+                
             }
         }
 
@@ -141,20 +142,22 @@ namespace AppBokerASP
                         }
 
                         using var ms = new MemoryStream(bodyBuf);
-                        
+
+                        var nodeId = uintSerialization.Deserialize(ms);
                         var bsm = BinarySmarthomeMessageSerialization.Deserialize(ms);
+                        bsm.NodeId = nodeId;
 
-
+                        logger.Debug($"Recvd: Von: {bsm.NodeId}, Command: {bsm.Command}, MessageType: {bsm.MessageType}, ParamsAmount: {bsm.Parameters.Count}");
                         //var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
                         //if (string.IsNullOrWhiteSpace("Msg: " + msg))
                         //    continue;
 
                         //logger.Debug(msg);
                         //var o = JsonConvert.DeserializeObject<BinarySmarthomeMessage>(msg);
-                        
+
                         ReceivedData?.Invoke(this, bsm);
                         ArrayPool<byte>.Shared.Return(bodyBuf);
-                    }
+                    } 
                     catch (Exception e)
                     {
                         logger.Error(e);
@@ -171,13 +174,13 @@ namespace AppBokerASP
             Client.Close();
         }
 
-        public void Send(PackageType packageType, Span<byte> data, long nodeId)
+        public void Send(PackageType packageType, Span<byte> data, uint nodeId)
         {
             if (stream is null)
                 return;
 
             Span<byte> buffer = stackalloc byte[sizeof(int) + sizeof(byte) + data.Length];
-            BitConverter.TryWriteBytes(buffer, (int)nodeId);
+            BitConverter.TryWriteBytes(buffer, nodeId);
             BitConverter.TryWriteBytes(buffer[sizeof(int)..], (byte)packageType);
             data.CopyTo(buffer[(sizeof(int) + sizeof(byte))..]);
 

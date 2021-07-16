@@ -18,7 +18,7 @@ namespace PainlessMesh
             bl.AddRange(SerializationBase.DeserializeArray(stream, count, (b) =>
                {
                    var innerCount = shortSerialization.Deserialize(stream);
-                   return SerializationBase.DeserializeArray(stream, innerCount,byteSerialization.Deserialize);
+                   return SerializationBase.DeserializeArray(stream, innerCount, byteSerialization.Deserialize);
                }));
 
             return bl;
@@ -30,13 +30,15 @@ namespace PainlessMesh
             byteSerialization.Serialize((byte)self.Count, stream);
             var span = CollectionsMarshal.AsSpan(self);
 
-            SerializationBase.SerializeArray(span, stream, innerSer);
+            foreach (var item in span)
+                innerSer(item, stream);
         }
 
         private static void innerSer(in byte[] t, Stream stream)
         {
             shortSerialization.Serialize((short)t.Length, stream);
-            SerializationBase.SerializeArray<byte>(t, stream, byteSerialization.Serialize);
+            foreach (var item in t)
+                byteSerialization.Serialize(item, stream);
         }
     }
 }

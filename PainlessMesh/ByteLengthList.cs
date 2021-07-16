@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace PainlessMesh
@@ -18,6 +19,10 @@ namespace PainlessMesh
         {
         }
         public ByteLengthList(byte capacity) : base(capacity)
+        {
+
+        }
+        public ByteLengthList(params byte[][] bytes) : base(bytes)
         {
 
         }

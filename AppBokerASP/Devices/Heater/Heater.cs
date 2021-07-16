@@ -23,6 +23,8 @@ using NLog;
 
 namespace AppBokerASP.Devices.Heater
 {
+    [PainlessMeshName("heater")]
+
     public class Heater : Device, IDisposable
     {
 
@@ -43,18 +45,27 @@ namespace AppBokerASP.Devices.Heater
         {
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+            InterpretParameters(parameters);
+            logger.Info("Heater connected: " + FirmwareVersion);
+
             using var cont = DbProvider.BrokerDbContext;
             timeTemps.AddRange(cont.HeaterConfigs.Where(x => x.Device.Id == id).ToList().Select(x => (HeaterConfig)x));
-            InterpretParameters(parameters);
 
             ShowInApp = true;
             //cont.HeaterCalibrations.FirstOrDefault(x => x.Id == Id);
+            try
+            {
 
-            var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
-            var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
-            logger.Debug($"Heater {logName} has {mappings.Count} mappings");
-            if (mappings.Count > 0)
-                heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
+                var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
+                var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
+                logger.Debug($"Heater {logName} has {mappings.Count} mappings");
+                if (mappings.Count > 0)
+                    heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         private void InterpretParameters(ByteLengthList parameters)
@@ -63,7 +74,7 @@ namespace AppBokerASP.Devices.Heater
                 return;
             if (parameters.Count > 2)
             {
-                FirmwareVersion = "Firmware Version: " + parameters[2];
+                FirmwareVersion = "Firmware Version: " + Encoding.UTF8.GetString(parameters[2]);
                 var bin = GetSendableTimeTemps(timeTemps);
                 var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, bin);
                 Program.MeshManager.SendSingle((uint)Id, msg);
@@ -218,7 +229,7 @@ namespace AppBokerASP.Devices.Heater
 
             logger.Debug("OptionsFromApp " + command + " <> " + parameters.ToJson());
             BinarySmarthomeMessage msg;
-            
+
             switch (command)
             {
                 case Command.Temp:

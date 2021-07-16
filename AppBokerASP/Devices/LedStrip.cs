@@ -95,7 +95,7 @@ namespace AppBokerASP.Devices
             }
 
             var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, meshParams);
-            Program.MeshManager.SendSingle(Id, msg);
+            Program.MeshManager.SendSingle((uint)Id, msg);
         }
 
         public override void OptionsFromApp(Command command, List<JToken> parameters)
@@ -117,7 +117,7 @@ namespace AppBokerASP.Devices
             }
 
             var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, meshParams);
-            Program.MeshManager.SendSingle(Id, msg);
+            Program.MeshManager.SendSingle((uint)Id, msg);
         }
 
         public override void Reconnect(ByteLengthList parameter)

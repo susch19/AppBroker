@@ -9,8 +9,11 @@
         NODE_SYNC_REPLY = 6,
         BROADCAST = 8,  //application data for everyone
         SINGLE = 9,   //application data for a single node
-        BRIDGE = 255, 
+        BRIDGE = 255,
+         
     };
+
+    
 
     public enum MessageType
     {
