@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
-namespace AppBokerASP.Devices.Heater
+namespace AppBokerASP.Devices.Painless.Heater
 {
     public class HeaterConfig
     {

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using DayOfWeek = AppBokerASP.Devices.Heater.DayOfWeek;
+using DayOfWeek = AppBokerASP.Devices.Painless.Heater.DayOfWeek;
 
-namespace AppBokerASP.Devices.Heater
+namespace AppBokerASP.Devices.Painless.Heater
 {
 
     [StructLayout(LayoutKind.Sequential, Pack = 1)]

@@ -16,12 +16,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using AppBokerASP.Database;
-using AppBokerASP.Database.Model;
-using AppBokerASP.Devices;
-using AppBokerASP.Devices.Heater;
-using AppBokerASP.Extension;
-using AppBokerASP.IOBroker;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;

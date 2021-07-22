@@ -21,16 +21,15 @@ using AppBokerASP.Devices.Zigbee;
 using System.Buffers.Text;
 using NLog;
 
-namespace AppBokerASP.Devices.Heater
+namespace AppBokerASP.Devices.Painless.Heater
 {
-    public class Heater : Device, IDisposable
+    public class Heater : PainlessDevice, IDisposable
     {
 
         public HeaterConfig Temperature { get; set; }
         public long XiaomiTempSensor { get; set; }
         public HeaterConfig CurrentConfig { get; set; }
         public HeaterConfig CurrentCalibration { get; private set; }
-        public string FirmwareVersion { get; private set; }
 
         private readonly List<HeaterConfig> timeTemps = new List<HeaterConfig>();
 
@@ -57,19 +56,19 @@ namespace AppBokerASP.Devices.Heater
                 heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
         }
 
-        private void InterpretParameters(List<string> parameters)
+        protected override void InterpretParameters(List<string> parameters)
         {
             if (parameters is null)
                 return;
-            if (parameters.Count > 2)
-            {
-                FirmwareVersion = "Firmware Version: " + parameters[2];
-                var s2 = "";
-                timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
-                var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
-                Program.MeshManager.SendSingle((uint)Id, msg);
+            base.InterpretParameters(parameters);
+            //if (parameters.Count > 2)
+            //{
+                //var s2 = "";
+                //timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
+                //var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
+                //Program.MeshManager.SendSingle((uint)Id, msg);
 
-            }
+            //}
             if (parameters.Count > 3)
             {
                 try

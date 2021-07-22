@@ -12,10 +12,10 @@ using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
 
-namespace AppBokerASP.Devices
+namespace AppBokerASP.Devices.Painless
 {//2021-01-08 22:39:51.9215|DEBUG|AppBokerASP.BaseClient|{"id":763955710, "m":"Update", "c":"Mode", "p":["SingleColor",16,94,239,86,0,4278190080,1]}
     [PainlessMeshName("ledstri")]
-    public class LedStrip : Device
+    public class LedStrip : PainlessDevice
     {
         //{"id":763955710, "m":"Update", "c":"Mode", "p":["SingleColor",55,93,88,30,0,4278190080,1]}
 
@@ -28,10 +28,9 @@ namespace AppBokerASP.Devices
         public uint ColorNumber { get; set; }
         public ushort Version { get; set; }
 
-        public LedStrip(long id, List<string> parameter) : base(id)
+        public LedStrip(long id, List<string> parameter) : base(id, parameter)
         {
             ShowInApp = true;
-
 
             Program.MeshManager.SingleUpdateMessageReceived += SingleUpdateMessageReceived;
         }
@@ -73,7 +72,7 @@ namespace AppBokerASP.Devices
             //var span = param.ToString().AsSpan();
             //var indices = span.IndexesOf(',');
 
-
+            
 
             SendDataToAllSubscribers();
         }

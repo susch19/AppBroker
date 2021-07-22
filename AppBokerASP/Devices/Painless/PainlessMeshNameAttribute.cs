@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AppBokerASP.Devices
+namespace AppBokerASP.Devices.Painless
 {
     internal class PainlessMeshNameAttribute : Attribute
     {

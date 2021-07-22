@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
-using AppBokerASP.Devices.Heater;
+using AppBokerASP.Devices.Painless.Heater;
 
 namespace AppBokerASP.Database.Model
 {
@@ -12,7 +12,7 @@ namespace AppBokerASP.Database.Model
     {
         [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public long Id { get; set; }
-        public Devices.Heater.DayOfWeek DayOfWeek { get; set; }
+        public Devices.Painless.Heater.DayOfWeek DayOfWeek { get; set; }
         public DateTime TimeOfDay { get; set; }
         public double Temperature { get; set; }
         

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 using AppBokerASP.Database;
 using AppBokerASP.Devices;
+using AppBokerASP.Devices.Painless;
 using AppBokerASP.Devices.Zigbee;
 using AppBokerASP.IOBroker;
 

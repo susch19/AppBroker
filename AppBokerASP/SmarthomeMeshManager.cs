@@ -273,12 +273,36 @@ namespace AppBokerASP
                 logger.Error(e);
             }
         }
+        public void SendCustomSingle<T>(long destination, PackageType type, T message)
+        {
+            try
+            {
+                serverSocket.SendToAllClients(type, message.ToJson(), destination);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                logger.Error(e);
+            }
+        }
 
         public void SendBroadcast<T>(T message)
         {
             try
             {
                 serverSocket.SendToAllClients(PackageType.BROADCAST, message.ToJson());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                logger.Error(e);
+            }
+        }
+        public void SendCustomBroadcast<T>(PackageType type, T message)
+        {
+            try
+            {
+                serverSocket.SendToAllClients(type, message.ToJson(), 0);
             }
             catch (Exception e)
             {
