@@ -101,7 +101,8 @@ namespace AppBokerASP
         private static byte[] fromServer = new byte[] { 1 };
         private void SendTimeUpdate(object? state)
         {
-            var list = new ByteLengthList(fromServer, BitConverter.GetBytes(new TimeSpan(DateTime.Now.Ticks).TotalSeconds));
+            var dto = new DateTimeOffset(DateTime.Now.Ticks, TimeSpan.Zero);
+            var list = new ByteLengthList(fromServer, BitConverter.GetBytes((int)dto.ToUnixTimeSeconds()));
             var msg = new BinarySmarthomeMessage(0, MessageType.Update, Command.Time, list);
             SendBroadcast(msg);
         }
@@ -306,7 +307,7 @@ namespace AppBokerASP
             {
                 using var ms = new MemoryStream();
                 message.Serialize(ms);
-                logger.Debug($"{PackageType.SINGLE}: NodeId: {destination}, Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}");
+                logger.Debug($"{PackageType.SINGLE}: NodeId: {destination}, Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x=>BitConverter.ToString(x))));
                 serverSocket.SendToAllClients(PackageType.SINGLE, ms.ToArray(), destination);
             }
             catch (Exception e)
@@ -322,7 +323,7 @@ namespace AppBokerASP
             {
                 using var ms = new MemoryStream();
                 message.Serialize(ms);
-                logger.Debug($"{PackageType.BROADCAST}: Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}");
+                logger.Debug($"{PackageType.BROADCAST}: Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
                 serverSocket.SendToAllClients(PackageType.BROADCAST, ms.ToArray());
             }
             catch (Exception e)
@@ -338,7 +339,7 @@ namespace AppBokerASP
             {
                 using var ms = new MemoryStream();
                 message.Serialize(ms);
-                logger.Debug($"{PackageType.BRIDGE}: Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}");
+                logger.Debug($"{PackageType.BRIDGE}: Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
 
                 serverSocket.SendToAllClients(PackageType.BRIDGE, ms.ToArray(), nodeID);
             }

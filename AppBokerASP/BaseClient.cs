@@ -147,7 +147,7 @@ namespace AppBokerASP
                         var bsm = BinarySmarthomeMessageSerialization.Deserialize(ms);
                         bsm.NodeId = nodeId;
 
-                        logger.Debug($"Recvd: Von: {bsm.NodeId}, Command: {bsm.Command}, MessageType: {bsm.MessageType}, ParamsAmount: {bsm.Parameters.Count}");
+                        logger.Debug($"Recvd: Von: {bsm.NodeId}, Command: {bsm.Command}, MessageType: {bsm.MessageType}, ParamsAmount: {bsm.Parameters.Count}, " + string.Join(", ", bsm.Parameters.Select(x => BitConverter.ToString(x))));
                         //var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
                         //if (string.IsNullOrWhiteSpace("Msg: " + msg))
                         //    continue;

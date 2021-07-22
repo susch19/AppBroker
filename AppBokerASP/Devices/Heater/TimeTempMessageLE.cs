@@ -87,7 +87,7 @@ namespace AppBokerASP.Devices.Heater
 
         public byte[] ToBinary()
         {
-            return new byte[] { data[0], data[1], data[2], };
+            return new byte[] { data[0], data[1], data[2] };
         }
 
         public void FromBinary(ReadOnlySpan<byte> bytes)

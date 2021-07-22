@@ -33,8 +33,8 @@ namespace AppBokerASP.Devices.Heater
         public static implicit operator HeaterConfig(TimeTempMessageLE ttm)
         {
             var dt = DateTime.Now;
-            dt.AddHours(ttm.Time.Hours - dt.Hour);
-            dt.AddMinutes(ttm.Time.Minutes - dt.Minute);
+            dt = dt.AddHours(ttm.Time.Hours - dt.Hour);
+            dt = dt.AddMinutes(ttm.Time.Minutes - dt.Minute);
             return new HeaterConfig(ttm.DayOfWeek, dt, ttm.Temp);
         }
     }

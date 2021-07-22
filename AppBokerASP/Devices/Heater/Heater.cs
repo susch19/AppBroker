@@ -75,9 +75,9 @@ namespace AppBokerASP.Devices.Heater
             if (parameters.Count > 2)
             {
                 FirmwareVersion = "Firmware Version: " + Encoding.UTF8.GetString(parameters[2]);
-                var bin = GetSendableTimeTemps(timeTemps);
-                var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, bin);
-                Program.MeshManager.SendSingle((uint)Id, msg);
+                //var bin = GetSendableTimeTemps(timeTemps);
+                //var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, bin);
+                //Program.MeshManager.SendSingle((uint)Id, msg);
 
             }
             if (parameters.Count > 3)
@@ -87,7 +87,7 @@ namespace AppBokerASP.Devices.Heater
                     var s = parameters[3];
                     byte[] s2 = GetSendableTimeTemps(timeTemps);
 
-                    if (s.SequenceEqual(s2))
+                    if (!s.SequenceEqual(s2))
                     {
                         logger.Warn($"Heater {logName} has wrong temps saved, trying correcting");
                         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2);
@@ -150,7 +150,7 @@ namespace AppBokerASP.Devices.Heater
         {
             if (e.NodeId != Id)
                 return;
-            logger.Debug($"DataReceived in {nameof(Node_SingleUpdateMessageReceived)} {logName}: " + e.ToJson());
+            logger.Debug($"DataReceived in {nameof(Node_SingleUpdateMessageReceived)} {logName}: ");
             switch (e.Command)
             {
                 case Command.Temp:
@@ -165,7 +165,7 @@ namespace AppBokerASP.Devices.Heater
             if (e.NodeId != Id)
                 return;
 
-            logger.Debug($"DataReceived in {nameof(Node_SingleOptionsMessageReceived)} {logName}: " + e.ToJson());
+            logger.Debug($"DataReceived in {nameof(Node_SingleOptionsMessageReceived)} {logName}: ");
             switch (e.Command)
             {
                 case Command.Temp:
@@ -187,11 +187,8 @@ namespace AppBokerASP.Devices.Heater
             ttm = TimeTempMessageLE.LoadFromBinary(message[6..9]);
             try
             {
-                var dt = DateTime.Now;
-                dt.AddHours(ttm.Time.Hours - dt.Hour);
-                dt.AddMinutes(ttm.Time.Minutes - dt.Minute);
-
-                CurrentCalibration = new HeaterConfig(ttm.DayOfWeek, dt, ttm.Temp - 51.2f);
+                CurrentCalibration = ttm;
+                CurrentCalibration.Temperature -= 51.2f;
             }
             catch (Exception e)
             {
@@ -212,6 +209,7 @@ namespace AppBokerASP.Devices.Heater
                 case Command.Temp:
                     var temp = (float)parameters[0];
                     var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
+                    //logger.Debug("Send new ttm: " + )
                     var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, ttm.ToBinary());
                     Program.MeshManager.SendSingle((uint)Id, msg);
                     break;
