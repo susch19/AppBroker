@@ -33,15 +33,12 @@ namespace AppBokerASP.Devices.Painless.Heater
 
         private readonly List<HeaterConfig> timeTemps = new List<HeaterConfig>();
 
-        private string logName => Id + "/" + FriendlyName;
 
         private Task heaterSensorMapping;
 
         //2020-02-01 20:14:48.1075|DEBUG|AppBokerASP.BaseClient|{"id":3257233774, "m":"Update", "c":"WhoIAm", "p":["10.12.206.9","heater","RmlybXdhcmUgVjIgRmViICAxIDIwMjA=","YAk3oJQqQBo3QKkqYQk3oZQqQRo3QakqYgk3opQqQho3QqkqYwk3o5QqQxo3Q6kqZAk3pJQqRBo3RKkqJQ03RakqJg03Rqkq"]}
         public Heater(long id, List<string> parameters) : base(id)
         {
-            Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-            Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             using var cont = DbProvider.BrokerDbContext;
             timeTemps.AddRange(cont.HeaterConfigs.Where(x => x.Device.Id == id).ToList().Select(x => (HeaterConfig)x));
             InterpretParameters(parameters);
@@ -51,7 +48,7 @@ namespace AppBokerASP.Devices.Painless.Heater
 
             var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
             var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
-            logger.Debug($"Heater {logName} has {mappings.Count} mappings");
+            logger.Debug($"Heater {LogName} has {mappings.Count} mappings");
             if (mappings.Count > 0)
                 heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
         }
@@ -79,14 +76,14 @@ namespace AppBokerASP.Devices.Painless.Heater
 
                     if (s != s2)
                     {
-                        logger.Warn($"Heater {logName} has wrong temps saved, trying to correct Saved:{{{s}}} Server:{{{s2}}}");
+                        logger.Warn($"Heater {LogName} has wrong temps saved, trying to correct Saved:{{{s}}} Server:{{{s2}}}");
                         var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
                         Program.MeshManager.SendSingle((uint)Id, msg);
                     }
                 }
                 catch (Exception e)
                 {
-                    logger.Error(e, $"Heater {logName} has transmitted wrong temps");
+                    logger.Error(e, $"Heater {LogName} has transmitted wrong temps");
                 }
             }
         }
@@ -115,7 +112,7 @@ namespace AppBokerASP.Devices.Painless.Heater
                             SendLastTempData();
                             XiaomiTempSensor = device.Id;
                         }
-                        logger.Debug($"Heater {logName} has subscribed to {device.Id}/{device.FriendlyName}");
+                        logger.Debug($"Heater {LogName} has subscribed to {device.Id}/{device.FriendlyName}");
 
                         toRemove.Add(mapping);
                         break;
@@ -132,11 +129,9 @@ namespace AppBokerASP.Devices.Painless.Heater
             return Task.CompletedTask;
         }
 
-        private void Node_SingleUpdateMessageReceived(object sender, GeneralSmarthomeMessage e)
+        protected override void UpdateMessageReceived(GeneralSmarthomeMessage e)
         {
-            if (e.NodeId != Id)
-                return;
-            logger.Debug($"DataReceived in {nameof(Node_SingleUpdateMessageReceived)} {logName}: " + e.ToJson());
+    
             switch (e.Command)
             {
                 case Command.Temp:
@@ -146,12 +141,9 @@ namespace AppBokerASP.Devices.Painless.Heater
                     break;
             }
         }
-        private void Node_SingleOptionsMessageReceived(object sender, GeneralSmarthomeMessage e)
-        {
-            if (e.NodeId != Id)
-                return;
 
-            logger.Debug($"DataReceived in {nameof(Node_SingleOptionsMessageReceived)} {logName}: " + e.ToJson());
+        protected override void OptionMessageReceived(GeneralSmarthomeMessage e)
+        {
             switch (e.Command)
             {
                 case Command.Temp:
@@ -180,7 +172,7 @@ namespace AppBokerASP.Devices.Painless.Heater
             }
             catch (Exception e)
             {
-                logger.Error($"Heater {logName} has Exception inside HandleTimeTempMessageUpdate\r\n {e} ");
+                logger.Error($"Heater {LogName} has Exception inside HandleTimeTempMessageUpdate\r\n {e} ");
                 Console.WriteLine(e);
             }
 
@@ -303,12 +295,7 @@ namespace AppBokerASP.Devices.Painless.Heater
 
         }
 
-        public override void StopDevice()
-        {
-            base.StopDevice();
-            Program.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-            Program.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        }
+
 
         public override void Reconnect(List<string>? parameter)
         {
@@ -337,5 +324,6 @@ namespace AppBokerASP.Devices.Painless.Heater
                     && device is XiaomiTempSensor sensor && sensor.Temperature > 5f)
                 XiaomiTempSensorTemperaturChanged(this, sensor.Temperature);
         }
+
     }
 }

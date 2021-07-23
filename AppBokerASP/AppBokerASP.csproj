@@ -25,17 +25,16 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="H.Socket.IO" Version="1.2.1" />
     <PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="3.1.0-preview3.19555.2" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="3.1.0-preview3.19555.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" Version="3.1.0-preview3.19554.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="3.1.0-preview3.19554.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="NLog" Version="4.6.8" />
-    <PackageReference Include="SimpleSocketIoClient" Version="0.9.4.2" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="4.7.0-preview3.19551.4" />
     <PackageReference Include="System.Text.Encodings.Web" Version="4.7.0-preview3.19551.4" />
-    <PackageReference Include="System.Text.Json" Version="4.7.0-preview3.19551.4" />
   </ItemGroup>
 
   <ItemGroup>

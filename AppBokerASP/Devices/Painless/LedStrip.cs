@@ -32,10 +32,10 @@ namespace AppBokerASP.Devices.Painless
         {
             ShowInApp = true;
 
-            Program.MeshManager.SingleUpdateMessageReceived += SingleUpdateMessageReceived;
         }
 
-        private void SingleUpdateMessageReceived(object? sender, GeneralSmarthomeMessage e)
+        protected override void OptionMessageReceived(GeneralSmarthomeMessage e) { }
+        protected override void UpdateMessageReceived(GeneralSmarthomeMessage e)
         {
             if (e.Command != Command.Mode)
                 return;
@@ -89,18 +89,6 @@ namespace AppBokerASP.Devices.Painless
             Program.MeshManager.SendSingle(Id, msg);
         }
 
-        public override void Reconnect(List<string>? parameter)
-        {
-
-            Program.MeshManager.SingleUpdateMessageReceived += SingleUpdateMessageReceived;
-            base.Reconnect(parameter);
-        }
-
-        public override void StopDevice()
-        {
-            Program.MeshManager.SingleUpdateMessageReceived -= SingleUpdateMessageReceived;
-            base.StopDevice();
-        }
 
     }
 }

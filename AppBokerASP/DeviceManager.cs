@@ -20,7 +20,7 @@ using Newtonsoft.Json;
 
 using PainlessMesh;
 
-using SimpleSocketIoClient;
+using H.Socket.IO;
 
 namespace AppBokerASP
 {
@@ -93,28 +93,29 @@ namespace AppBokerASP
 
             client = new SocketIoClient();
 
-            client.AfterEvent += (sender, args) =>
+            client.EventReceived += (sender, args) =>
+            {
+                var suc = IoBrokerZigbee.TryParse(args.Value, out var zo);
+                //Console.Write(i++ + ", ");
+                if (suc)
                 {
-                    var suc = IoBrokerZigbee.TryParse(args.Value, out var zo);
-                    if (suc)
-                    {
 
-                        if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
+                    if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
+                    {
+                        try
                         {
-                            try
-                            {
-                                zigbeeDev.SetPropFromIoBroker(zo, true);
-                            }
-                            catch (Exception e)
-                            {
-                                logger.Error(e);
-                            }
+                            zigbeeDev.SetPropFromIoBroker(zo, true);
                         }
-                        else
-                            GetZigbeeDevices();
+                        catch (Exception e)
+                        {
+                            logger.Error(e);
+                        }
                     }
-                };
-            client.AfterException += async (sender, args) =>
+                    else
+                        GetZigbeeDevices();
+                }
+            };
+            client.ExceptionOccurred += async (sender, args) =>
             {
                 logger.Error($"AfterException, trying reconnect: {args.Value}");
                 await client.DisconnectAsync();
@@ -125,7 +126,7 @@ namespace AppBokerASP
             {
                 Console.WriteLine("Connected");
                 logger.Debug("Connected Zigbee Client");
-                client.Emit("subscribe", '*');
+                client.Emit("subscribe", "zigbee.*");
                 client.Emit("subscribeObjects", '*');
                 GetZigbeeDevices();
             };

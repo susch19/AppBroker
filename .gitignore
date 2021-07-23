@@ -265,3 +265,6 @@ __pycache__/
 *.bat
 *.ps1
 /AppBokerASP/jwt.key
+/AppBokerASP/*.ota
+/AppBokerASP/*.bin
+/AppBokerASP/OTA/*

@@ -9,6 +9,8 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
+using AppBokerASP.Devices.Painless;
+
 using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
@@ -65,6 +67,16 @@ namespace AppBokerASP
             timers.Add(new Timer((n) => SendBroadcast(new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken())), null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
             timers.Add(new Timer((n) => SendToBridge(new GeneralSmarthomeMessage(1, MessageType.Get, Command.Mesh)), null, TimeSpan.FromSeconds(10d), TimeSpan.FromMinutes(1d)));
 
+            Program.UpdateManager.Advertisment += OtaAdvertisment;
+        }
+
+        private void OtaAdvertisment(object? sender, PainlessMesh.Ota.FirmwareMetadata e)
+        {
+            foreach (var item in Program.DeviceManager.Devices.Values)
+            {
+                if (item is PainlessDevice pd)
+                    pd.OtaAdvertisment(e);
+            }
         }
 
         private void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
@@ -273,6 +285,18 @@ namespace AppBokerASP
                 logger.Error(e);
             }
         }
+        public void SendSingle(long destination, string message)
+        {
+            try
+            {
+                serverSocket.SendToAllClients(PackageType.SINGLE, message, destination, false);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                logger.Error(e);
+            }
+        }
         public void SendCustomSingle<T>(long destination, PackageType type, T message)
         {
             try
@@ -291,6 +315,19 @@ namespace AppBokerASP
             try
             {
                 serverSocket.SendToAllClients(PackageType.BROADCAST, message.ToJson());
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                logger.Error(e);
+            }
+        }
+
+        public void SendBroadcast(string message)
+        {
+            try
+            {
+                serverSocket.SendToAllClients(PackageType.BROADCAST, message, false);
             }
             catch (Exception e)
             {

@@ -47,8 +47,8 @@
         SingleColor,
         DeviceMapping,
         Calibration,
-        OTA,
-        OTAPart
+        Ota,
+        OtaPart
 
     };
 }

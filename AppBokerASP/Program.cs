@@ -28,8 +28,8 @@ using Newtonsoft.Json.Linq;
 using NLog;
 
 using PainlessMesh;
+using PainlessMesh.Ota;
 
-using SimpleSocketIoClient;
 
 namespace AppBokerASP
 {
@@ -38,6 +38,7 @@ namespace AppBokerASP
         public static DeviceManager DeviceManager { get; private set; }
 
         public static SmarthomeMeshManager MeshManager { get; private set; }
+        public static UpdateManager UpdateManager { get; private set; }
 
         private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
 
@@ -94,11 +95,16 @@ namespace AppBokerASP
 
             //ConfigureLogger();
 
+
+
+
             Dostuff();
+            UpdateManager = new();
             MeshManager = new SmarthomeMeshManager(8801);
             DeviceManager = new DeviceManager();
 
-
+            //var str = JsonConvert.SerializeObject(new FileOtaUpdate { FilePath = "Path", FirmwareMetadata = new FirmwareMetadata { TargetId = 332211456, DeviceNr = 123, DeviceType = "heater", FirmwareVersion = 8, Forced = false, PackageCount = 100, PartSize = 512, SizeInBytes = 51200 } });
+            //;
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG
