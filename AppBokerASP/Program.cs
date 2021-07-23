@@ -16,12 +16,6 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-using AppBokerASP.Database;
-using AppBokerASP.Database.Model;
-using AppBokerASP.Devices;
-using AppBokerASP.Devices.Heater;
-using AppBokerASP.Extension;
-using AppBokerASP.IOBroker;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
@@ -34,6 +28,7 @@ using Newtonsoft.Json.Linq;
 using NLog;
 
 using PainlessMesh;
+using PainlessMesh.Ota;
 
 
 namespace AppBokerASP
@@ -43,6 +38,7 @@ namespace AppBokerASP
         public static DeviceManager DeviceManager { get; private set; }
 
         public static SmarthomeMeshManager MeshManager { get; private set; }
+        public static UpdateManager UpdateManager { get; private set; }
 
         private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
 
@@ -99,9 +95,11 @@ namespace AppBokerASP
 
             //ConfigureLogger();
 
-            var sub = JsonConvert.DeserializeObject<Sub>(@"{""nodeId"":1,""subs"":[{""nodeId"":3257153498}]}");
+
+
 
             Dostuff();
+            UpdateManager = new();
             MeshManager = new SmarthomeMeshManager(8801);
             DeviceManager = new DeviceManager();
 

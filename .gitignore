@@ -266,3 +266,5 @@ __pycache__/
 *.ps1
 /AppBokerASP/jwt.key
 *.bin
+*.ota
+/AppBokerASP/OTA/*

@@ -1,6 +1,6 @@
 ﻿using AppBokerASP.Database.Model;
 using AppBokerASP.Devices;
-using AppBokerASP.Devices.Heater;
+using AppBokerASP.Devices.Painless.Heater;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;

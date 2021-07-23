@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AppBokerASP.Devices
+namespace AppBokerASP.Devices.Painless
 {
     [AttributeUsage(AttributeTargets.Class)]
     internal class PainlessMeshNameAttribute : Attribute

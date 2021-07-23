@@ -10,7 +10,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using AppBokerASP.Devices.Painless;
+
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
 
@@ -74,6 +77,7 @@ namespace AppBokerASP
             timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(10d), WaitBeforeWhoIAmSendAgain));
             timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
             timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10d), TimeSpan.FromSeconds(10d)));
+            Program.UpdateManager.Advertisment += OtaAdvertisment;
         }
 
         public void Stop()
@@ -105,6 +109,16 @@ namespace AppBokerASP
             var list = new ByteLengthList(fromServer, BitConverter.GetBytes((int)dto.ToUnixTimeSeconds()));
             var msg = new BinarySmarthomeMessage(0, MessageType.Update, Command.Time, list);
             SendBroadcast(msg);
+        }
+
+
+        private void OtaAdvertisment(object? sender, PainlessMesh.Ota.FirmwareMetadata e)
+        {
+            foreach (var item in Program.DeviceManager.Devices.Values)
+            {
+                if (item is PainlessDevice pd)
+                    pd.OtaAdvertisment(e);
+            }
         }
 
         private void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
@@ -307,7 +321,7 @@ namespace AppBokerASP
             {
                 using var ms = new MemoryStream();
                 message.Serialize(ms);
-                logger.Debug($"{PackageType.SINGLE}: NodeId: {destination}, Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x=>BitConverter.ToString(x))));
+                logger.Debug($"{PackageType.SINGLE}: NodeId: {destination}, Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
                 serverSocket.SendToAllClients(PackageType.SINGLE, ms.ToArray(), destination);
             }
             catch (Exception e)
@@ -316,6 +330,30 @@ namespace AppBokerASP
                 logger.Error(e);
             }
         }
+        public void SendSingle(uint destination, Memory<byte> message)
+        {
+            try
+            {
+                serverSocket.SendToAllClients(PackageType.SINGLE, message, destination, false);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                logger.Error(e);
+            }
+        }
+        //public void SendCustomSingle<T>(long destination, PackageType type, T message)
+        //{
+        //    try
+        //    {
+        //        serverSocket.SendToAllClients(type, message.ToJson(), destination);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine(e);
+        //        logger.Error(e);
+        //    }
+        //}
 
         public void SendBroadcast<T>(T message) where T : BinarySmarthomeMessage
         {
@@ -332,6 +370,31 @@ namespace AppBokerASP
                 logger.Error(e);
             }
         }
+
+        public void SendBroadcast(Memory<byte> message)
+        {
+            try
+            {
+                serverSocket.SendToAllClients(PackageType.BROADCAST, message, false);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                logger.Error(e);
+            }
+        }
+        //public void SendCustomBroadcast<T>(PackageType type, T message)
+        //{
+        //    try
+        //    {
+        //        serverSocket.SendToAllClients(type, message.ToJson(), 0);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        Console.WriteLine(e);
+        //        logger.Error(e);
+        //    }
+        //}
 
         public void SendToBridge<T>(T message) where T : BinarySmarthomeMessage
         {

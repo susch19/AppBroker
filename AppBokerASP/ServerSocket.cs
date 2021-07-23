@@ -1,4 +1,5 @@
 ﻿using PainlessMesh;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -64,11 +65,11 @@ namespace AppBokerASP
             tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
-        public void SendToAllClients(PackageType packageType, Memory<byte> data, uint nodeId)
-            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = nodeId });
+        public void SendToAllClients(PackageType packageType, Memory<byte> data, uint nodeId, bool logMessage = true)
+            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = nodeId, LogMessage = logMessage });
 
-        public void SendToAllClients(PackageType packageType, Memory<byte> data)
-            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = 0 });
+        public void SendToAllClients(PackageType packageType, Memory<byte> data, bool logMessage = true)
+            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = 0, LogMessage = logMessage });
 
         private void SendMessagesFromQueue()
         {
@@ -85,6 +86,8 @@ namespace AppBokerASP
                                 clients.TryTake(out var a);
                                 continue;
                             }
+                            //if (msg.LogMessage)
+                            //    logger.Debug($"Send to NodeId: {msg.NodeId}, Type: {msg.PackageType}, Data: {msg.Data}");
                             client.Send(msg.PackageType, msg.Data.Span, msg.NodeId);
                         }
                         catch (Exception e)
@@ -94,7 +97,7 @@ namespace AppBokerASP
                             clients.TryTake(out var a);
                         }
                     }
-                    Thread.Sleep(250);
+                    Thread.Sleep(100);
                 }
                 else
                 {
@@ -108,6 +111,7 @@ namespace AppBokerASP
             public PackageType PackageType { get; set; }
             public Memory<byte> Data { get; set; }
             public uint NodeId { get; set; }
+            public bool LogMessage { get; internal set; }
         }
     }
 }
