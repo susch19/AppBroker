@@ -17,10 +17,10 @@ namespace AppBokerASP.Database.Model
         public double Temperature { get; set; }
         
         [ForeignKey("DeviceId")]
-        public virtual DeviceModel Device { get; set; }
+        public virtual DeviceModel? Device { get; set; }
 
-        public static implicit operator HeaterConfig(HeaterConfigModel model) => new HeaterConfig {DayOfWeek = model.DayOfWeek,  Temperature = model.Temperature, TimeOfDay = model.TimeOfDay};
+        public static implicit operator HeaterConfig(HeaterConfigModel model) => new() { DayOfWeek = model.DayOfWeek,  Temperature = model.Temperature, TimeOfDay = model.TimeOfDay};
 
-        public static implicit operator HeaterConfigModel(HeaterConfig model) => new HeaterConfigModel { DayOfWeek = model.DayOfWeek, Temperature = model.Temperature, TimeOfDay = model.TimeOfDay };
+        public static implicit operator HeaterConfigModel(HeaterConfig model) => new() { DayOfWeek = model.DayOfWeek, Temperature = model.Temperature, TimeOfDay = model.TimeOfDay };
     }
 }

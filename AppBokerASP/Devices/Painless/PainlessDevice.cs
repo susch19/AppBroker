@@ -8,6 +8,7 @@ using System.Buffers.Text;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,27 +16,33 @@ namespace AppBokerASP.Devices.Painless
 {
     public abstract class PainlessDevice : Device
     {
-        public string IP { get; protected set; }
-        public uint FirmwareVersionNr { get; set; }
+        public string IP { get; protected set; } = "";
+        protected uint FirmwareVersionNr { get; set; } = 0;
         public string FirmwareVersion => "Firmware Version: " + FirmwareVersionNr;
         protected string LogName => Id + "/" + FriendlyName;
+        public string DeviceName { get; set; }
+
 
         protected DateTime LastPartRequestReceived { get; set; }
 
         protected PainlessDevice(long nodeId) : base(nodeId)
         {
+            DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             Program.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+
         }
 
 
         protected PainlessDevice(long nodeId, ByteLengthList parameter) : base(nodeId)
         {
+            DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
             InterpretParameters(parameter);
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             Program.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+
         }
 
         private void Node_SingleGetMessageReceived(object? sender, BinarySmarthomeMessage e)
@@ -85,35 +92,33 @@ namespace AppBokerASP.Devices.Painless
         }
 
 
-        protected void Node_SingleUpdateMessageReceived(object sender, BinarySmarthomeMessage e)
+        protected void Node_SingleUpdateMessageReceived(object? sender, BinarySmarthomeMessage e)
         {
             if (e.NodeId != Id)
                 return;
-            logger.Debug($"DataReceived in {nameof(Node_SingleUpdateMessageReceived)} {LogName}: " + e.ToJson());
 
             UpdateMessageReceived(e);
         }
 
 
-        protected void Node_SingleOptionsMessageReceived(object sender, BinarySmarthomeMessage e)
+        protected void Node_SingleOptionsMessageReceived(object? sender, BinarySmarthomeMessage e)
         {
             if (e.NodeId != Id)
                 return;
-
-            logger.Debug($"DataReceived in {nameof(Node_SingleOptionsMessageReceived)} {LogName}: " + e.ToJson());
 
             OptionMessageReceived(e);
         }
 
         public void OtaAdvertisment(FirmwareMetadata metadata)
         {
-            if (((FirmwareVersionNr == metadata.FirmwareVersion || !metadata.Forced)
+            if (!DeviceName.Equals(metadata.DeviceType, StringComparison.InvariantCultureIgnoreCase)
+                || ((FirmwareVersionNr == metadata.FirmwareVersion || !metadata.Forced)
                     && FirmwareVersionNr >= metadata.FirmwareVersion)
                 || LastPartRequestReceived.AddSeconds(30) > DateTime.Now
                 || (metadata.TargetId > 0 && metadata.TargetId != Id))
                 return;
 
-            logger.Debug(LogName + " starting Ota with " + metadata.ToJson());
+            logger.Debug(LogName + $" v{FirmwareVersionNr} starting Ota with " + metadata.ToJson());
             //DeviceType ���?�������?, FirmwareVersion 6678942, Forced 0, PartSize 0, Size 0, Cound 0, PartNo 1073740960
 
             //Do OTA
@@ -121,14 +126,29 @@ namespace AppBokerASP.Devices.Painless
             Program.MeshManager.SendSingle((uint)Id, msg);
         }
 
-
         protected virtual void InterpretParameters(ByteLengthList parameter)
         {
             if (parameter.Count > 2)
             {
-                IP = Encoding.UTF8.GetString(parameter[0]);
+                try
+                {
+                    IP = Encoding.UTF8.GetString(parameter[0]);
 
-                FirmwareVersionNr = BitConverter.ToUInt32(parameter[2]);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, nameof(InterpretParameters) + ": IP could not be read");
+                }
+                try
+                {
+
+                    FirmwareVersionNr = BitConverter.ToUInt32(parameter[2]);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, nameof(InterpretParameters) + ": Firmware version could not be read, setting it to 1");
+                    FirmwareVersionNr = 1;
+                }
             }
         }
 
@@ -140,7 +160,7 @@ namespace AppBokerASP.Devices.Painless
             Program.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
         }
 
-        public override void Reconnect(ByteLengthList? parameter)
+        public override void Reconnect(ByteLengthList parameter)
         {
             base.Reconnect(parameter);
 

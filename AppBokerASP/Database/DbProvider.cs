@@ -11,7 +11,7 @@ namespace AppBokerASP.Database
 {
     public static class DbProvider
     {
-        public static BrokerDbContext BrokerDbContext => new BrokerDbContext();
+        public static BrokerDbContext BrokerDbContext => new();
         static DbProvider() => _ = BrokerDbContext.Database.EnsureCreated();
 
 
@@ -20,8 +20,8 @@ namespace AppBokerASP.Database
             using var cont = BrokerDbContext;
             if (!cont.Devices.Any(x => x.Id == d.Id))
             {
-                cont.Add(d.GetModel());
-                cont.SaveChanges();
+                _ = cont.Add(d.GetModel());
+                _ = cont.SaveChanges();
                 return true;
             }
             return false;
@@ -34,7 +34,7 @@ namespace AppBokerASP.Database
             if (dbDevice != default)
             {
                 dbDevice.FriendlyName = d.FriendlyName;
-                cont.SaveChanges();
+                _ = cont.SaveChanges();
                 return true;
             }
             return false;

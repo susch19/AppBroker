@@ -11,7 +11,7 @@ namespace AppBokerASP.Database.Model
     {
         [Key]
         public long Id { get; set; }
-        public string TypeName { get; set; }
-        public string FriendlyName { get; set; }
+        public string TypeName { get; set; } = "";
+        public string FriendlyName { get; set; } = "";
     }
 }

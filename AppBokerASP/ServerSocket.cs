@@ -14,9 +14,9 @@ namespace AppBokerASP
 {
     public class ServerSocket
     {
-        public event EventHandler<BaseClient> OnClientConnected;
+        public event EventHandler<BaseClient>? OnClientConnected;
 
-        private TcpListener tcpListener;
+        private TcpListener? tcpListener;
         private readonly ConcurrentBag<BaseClient> clients;
         private readonly Task sendTask;
         private readonly ConcurrentQueue<SendMessageForQueue> sendQueue;
@@ -33,14 +33,7 @@ namespace AppBokerASP
         {
             tcpListener = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), port);
             tcpListener.Start();
-            tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
-        }
-        public void Start(string host, int port)
-        {
-            var address = Dns.GetHostAddresses(host).FirstOrDefault(
-                a => a.AddressFamily == tcpListener.Server.AddressFamily);
-
-            Start(address, port);
+            _ = tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
         public void Stop()
@@ -49,20 +42,20 @@ namespace AppBokerASP
                 item.Disconnect();
             clients.Clear();
 
-            tcpListener.Stop();
+            tcpListener?.Stop();
         }
 
 
         private void OnClientAccepted(IAsyncResult ar)
         {
-            var tmpListen = tcpListener.EndAcceptTcpClient(ar);
+            var tmpListen = tcpListener!.EndAcceptTcpClient(ar);
             var tmpClient = new BaseClient(tmpListen);
             clients.Add(tmpClient);
             OnClientConnected?.Invoke(this, tmpClient);
 
-            tmpClient.Start();
+            _ = tmpClient.Start();
 
-            tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
+            _ = tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
         public void SendToAllClients(PackageType packageType, Memory<byte> data, uint nodeId, bool logMessage = true)
@@ -83,7 +76,7 @@ namespace AppBokerASP
                         {
                             if (client.Source.IsCancellationRequested)
                             {
-                                clients.TryTake(out var a);
+                                _ = clients.TryTake(out var a);
                                 continue;
                             }
                             //if (msg.LogMessage)
@@ -94,7 +87,7 @@ namespace AppBokerASP
                         {
                             Console.WriteLine(e);
                             logger.Error(e);
-                            clients.TryTake(out var a);
+                            _ = clients.TryTake(out var a);
                         }
                     }
                     Thread.Sleep(100);

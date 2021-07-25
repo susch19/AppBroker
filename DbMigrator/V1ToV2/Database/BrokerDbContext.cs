@@ -19,7 +19,7 @@ namespace DbMigrator.V1ToV2.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=broker.db");
+            _ = optionsBuilder.UseSqlite("Data Source=broker.db");
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

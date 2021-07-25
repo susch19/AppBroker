@@ -28,21 +28,21 @@ namespace AppBokerASP.Devices.Painless.Heater
     public class Heater : PainlessDevice, IDisposable
     {
 
-        public HeaterConfig Temperature { get; set; }
-        public long XiaomiTempSensor { get; set; }
-        public HeaterConfig CurrentConfig { get; set; }
-        public HeaterConfig CurrentCalibration { get; private set; }
+        public HeaterConfig? Temperature { get; set; }
+        public long XiaomiTempSensor { get; set; } = 0;
+        public HeaterConfig? CurrentConfig { get; set; }
+        public HeaterConfig? CurrentCalibration { get; private set; }
 
-        private readonly List<HeaterConfig> timeTemps = new List<HeaterConfig>();
+        private readonly List<HeaterConfig> timeTemps = new();
 
 
-        private Task heaterSensorMapping;
+        private readonly Task? heaterSensorMapping;
 
         //2020-02-01 20:14:48.1075|DEBUG|AppBokerASP.BaseClient|{"id":3257233774, "m":"Update", "c":"WhoIAm", "p":["10.12.206.9","heater","RmlybXdhcmUgVjIgRmViICAxIDIwMjA=","YAk3oJQqQBo3QKkqYQk3oZQqQRo3QakqYgk3opQqQho3QqkqYwk3o5QqQxo3Q6kqZAk3pJQqRBo3RKkqJQ03RakqJg03Rqkq"]}
         public Heater(long id, ByteLengthList parameters) : base(id)
         {
             using var cont = DbProvider.BrokerDbContext;
-            timeTemps.AddRange(cont.HeaterConfigs.Where(x => x.Device.Id == id).ToList().Select(x => (HeaterConfig)x));
+            timeTemps.AddRange(cont.HeaterConfigs.Where(x => x.Device!.Id == id).ToList().Select(x => (HeaterConfig)x));
 
             ShowInApp = true;
             //cont.HeaterCalibrations.FirstOrDefault(x => x.Id == Id);
@@ -50,9 +50,9 @@ namespace AppBokerASP.Devices.Painless.Heater
             {
 
                 var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
-                var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
-                logger.Debug($"Heater {LogName} has {mappings.Count} mappings");
-                if (mappings.Count > 0)
+                var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent!.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
+                logger.Debug($"Heater {LogName} has {mappings?.Count} mappings");
+                if (mappings?.Count > 0)
                     heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
             }
             catch (Exception ex)
@@ -61,17 +61,17 @@ namespace AppBokerASP.Devices.Painless.Heater
             }
         }
 
-        private void InterpretParameters(ByteLengthList parameters)
+        protected override void InterpretParameters(ByteLengthList parameters)
         {
             if (parameters is null)
                 return;
             base.InterpretParameters(parameters);
             //if (parameters.Count > 2)
             //{
-                //var s2 = "";
-                //timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
-                //var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
-                //Program.MeshManager.SendSingle((uint)Id, msg);
+            //var s2 = "";
+            //timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
+            //var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
+            //Program.MeshManager.SendSingle((uint)Id, msg);
 
             //}
             if (parameters.Count > 3)
@@ -108,7 +108,7 @@ namespace AppBokerASP.Devices.Painless.Heater
                 foreach (var mapping in mappings)
                 {
 
-                    if (mapping?.Child == null)
+                    if (mapping is not null && mapping.Child is null)
                     {
                         toRemove.Add(mapping);
                         break;
@@ -125,14 +125,15 @@ namespace AppBokerASP.Devices.Painless.Heater
                         }
                         logger.Debug($"Heater {LogName} has subscribed to {device.Id}/{device.FriendlyName}");
 
-                        toRemove.Add(mapping);
+                        if (mapping is not null)
+                            toRemove.Add(mapping);
                         break;
                     }
                 }
 
                 foreach (var mapping in toRemove)
                 {
-                    mappings.Remove(mapping);
+                    _ = mappings.Remove(mapping);
                 }
 
                 Thread.Sleep(1000);
@@ -142,7 +143,7 @@ namespace AppBokerASP.Devices.Painless.Heater
 
         protected override void UpdateMessageReceived(BinarySmarthomeMessage e)
         {
-    
+
             switch (e.Command)
             {
                 case Command.Temp:
@@ -248,17 +249,18 @@ namespace AppBokerASP.Devices.Painless.Heater
             var models = hc.Select(x => (HeaterConfigModel)x).ToList();
             using var cont = DbProvider.BrokerDbContext;
             var d = cont.Devices.FirstOrDefault(x => x.Id == Id);
-            foreach (var item in models)
-                item.Device = d;
+            if (d is not null)
+                foreach (var item in models)
+                    item.Device = d;
 
-            var oldConfs = cont.HeaterConfigs.Where(x => x.Device.Id == Id).ToList();
+            var oldConfs = cont.HeaterConfigs.Where(x => x.Device!.Id == Id).ToList();
             if (oldConfs.Count > 0)
             {
                 cont.RemoveRange(oldConfs);
-                cont.SaveChanges();
+                _ = cont.SaveChanges();
             }
             cont.AddRange(models);
-            cont.SaveChanges();
+            _ = cont.SaveChanges();
         }
 
         private void UpdateDeviceMappingInDb(long tempId, long oldId)
@@ -270,29 +272,30 @@ namespace AppBokerASP.Devices.Painless.Heater
             if (heater == default || tempSensor == default || sensor == default)
                 return;
 
-
-            var oldMappings = cont.DeviceToDeviceMappings.Where(x => x.Parent.Id == Id);
+            var oldMappings = cont.DeviceToDeviceMappings.Where(x => x.Parent!.Id == Id);
             foreach (var oldMapping in oldMappings)
             {
                 var oldsensor = Program.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;
-                if (oldsensor != default)
-                    ((XiaomiTempSensor)oldsensor).TemperatureChanged -= XiaomiTempSensorTemperaturChanged;
-                cont.Remove(oldMapping);
+                if (oldsensor is not null and XiaomiTempSensor xts)
+                    xts.TemperatureChanged -= XiaomiTempSensorTemperaturChanged;
+                _ = cont.Remove(oldMapping);
             }
-            cont.SaveChanges();
+            _ = cont.SaveChanges();
 
 
-            cont.Add(new DeviceMappingModel
+            _ = cont.Add(new DeviceMappingModel
             {
                 Parent = heater,
                 Child = tempSensor
             });
-            (sensor as XiaomiTempSensor).TemperatureChanged += XiaomiTempSensorTemperaturChanged;
+
+            if (sensor is XiaomiTempSensor xiaomiTempSensor)
+                xiaomiTempSensor.TemperatureChanged += XiaomiTempSensorTemperaturChanged;
             XiaomiTempSensor = sensor.Id;
-            cont.SaveChanges();
+            _ = cont.SaveChanges();
         }
 
-        private void XiaomiTempSensorTemperaturChanged(object sender, float temp)
+        private void XiaomiTempSensorTemperaturChanged(object? sender, float temp)
         {
             var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
             var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToBinary());

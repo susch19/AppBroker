@@ -13,6 +13,7 @@ namespace TranslateTTMToHumanReadable
                 var s = Console.ReadLine();
                 try
                 {
+                    s = s.Replace("-", "");
                     for (int i = 0; i < (s.Length / 6 * 6); i += 6)
                     {
 

@@ -28,7 +28,7 @@ namespace AppBokerASP.Devices.Zigbee
             {
                 case Command.Delay:
                     Transition_Time = parameters[0].ToObject<float>();
-                    UpdateZigbeeDeviceRequest(nameof(Transition_Time).ToLower(), Transition_Time);
+                    _ = UpdateZigbeeDeviceRequest(nameof(Transition_Time).ToLower(), Transition_Time);
                     break;
             }
         }
@@ -39,15 +39,15 @@ namespace AppBokerASP.Devices.Zigbee
             {
                 case Command.Temp:
                     ColorTemp = parameters[0].ToObject<int>();
-                    UpdateZigbeeDeviceRequest(nameof(ColorTemp).ToLower(), ColorTemp);
+                    _ = UpdateZigbeeDeviceRequest(nameof(ColorTemp).ToLower(), ColorTemp);
                     break;
                 case Command.Brightness:
                     Brightness = parameters[0].ToObject<byte>();
-                    UpdateZigbeeDeviceRequest(nameof(Brightness).ToLower(), Brightness);
+                    _ = UpdateZigbeeDeviceRequest(nameof(Brightness).ToLower(), Brightness);
                     break;
                 case Command.Off:
                     State = !State;
-                    UpdateZigbeeDeviceRequest(nameof(State).ToLower(), State.ToString().ToLower());
+                    _ = UpdateZigbeeDeviceRequest(nameof(State).ToLower(), State.ToString().ToLower());
                     break;
                 default:
                     break;

@@ -33,12 +33,12 @@ namespace AppBokerASP
             }
         }
 
-        public event EventHandler<BinarySmarthomeMessage> SingleUpdateMessageReceived;
-        public event EventHandler<BinarySmarthomeMessage> SingleOptionsMessageReceived;
-        public event EventHandler<BinarySmarthomeMessage> SingleGetMessageReceived;
-        public event EventHandler<(Sub, ByteLengthList)> NewConnectionEstablished;
-        public event EventHandler<uint> ConnectionLost;
-        public event EventHandler<(uint id, ByteLengthList parameter)> ConnectionReastablished;
+        public event EventHandler<BinarySmarthomeMessage>? SingleUpdateMessageReceived;
+        public event EventHandler<BinarySmarthomeMessage>? SingleOptionsMessageReceived;
+        public event EventHandler<BinarySmarthomeMessage>? SingleGetMessageReceived;
+        public event EventHandler<(Sub, ByteLengthList)>? NewConnectionEstablished;
+        public event EventHandler<uint>? ConnectionLost;
+        public event EventHandler<(uint id, ByteLengthList parameter)>? ConnectionReastablished;
 
         private static readonly ServerSocket serverSocket = new();
 
@@ -102,7 +102,7 @@ namespace AppBokerASP
 
         internal void UpdateTime() => SendTimeUpdate(null);
 
-        private static byte[] fromServer = new byte[] { 1 };
+        private static readonly byte[] fromServer = new byte[] { 1 };
         private void SendTimeUpdate(object? state)
         {
             var dto = new DateTimeOffset(DateTime.Now.Ticks, TimeSpan.Zero);
@@ -121,13 +121,13 @@ namespace AppBokerASP
             }
         }
 
-        private void ServerSocket_OnClientConnected(object sender, BaseClient baseClient)
+        private void ServerSocket_OnClientConnected(object? sender, BaseClient baseClient)
         {
             baseClient.ReceivedData += SocketClientDataReceived;
             SendToBridge(new BinarySmarthomeMessage(1, MessageType.Get, Command.Mesh));
         }
 
-        public void SocketClientDataReceived(object sender, BinarySmarthomeMessage e)
+        public void SocketClientDataReceived(object? sender, BinarySmarthomeMessage e)
         {
             //var bc = (BaseClient)sender;
 
@@ -139,7 +139,7 @@ namespace AppBokerASP
                 if (!knownNodeIds.Any(x => x.Id == e.NodeId))
                     knownNodeIds.Add(new NodeSync(e.NodeId, 0));
 
-                WhoIAmSendTime.TryRemove(e.NodeId, out var asda);
+                _ = WhoIAmSendTime.TryRemove(e.NodeId, out var asda);
                 if (e.Parameters != null)
                     NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters));
                 return;
@@ -152,7 +152,7 @@ namespace AppBokerASP
                 {
                     //SendSingle(e.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                     if (dt == default)
-                        WhoIAmSendTime.TryAdd(e.NodeId, (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0));
+                        _ = WhoIAmSendTime.TryAdd(e.NodeId, (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0));
                     else
                         WhoIAmSendTime[e.NodeId] = (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0);
                 }
@@ -175,7 +175,7 @@ namespace AppBokerASP
             {
                 while (messages.TryDequeue(out var message))
                     MessageTypeSwitch(message);
-                queuedMessages.Remove(e.NodeId);
+                _ = queuedMessages.Remove(e.NodeId);
             }
 
             MessageTypeSwitch(e);
@@ -212,13 +212,13 @@ namespace AppBokerASP
                     {
                         //SendSingle(sub.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                         if (dt == default)
-                            WhoIAmSendTime.TryAdd(sub.NodeId, (DateTime.Now, 0));
+                            _ = WhoIAmSendTime.TryAdd(sub.NodeId, (DateTime.Now, 0));
                         else
                             WhoIAmSendTime[sub.NodeId] = (DateTime.Now, 0);
                     }
                 }
 
-                if (sub.Subs != null && sub.Subs != default)
+                if (sub.Subs is not null and not null)
                     foreach (var item in sub.Subs)
                     {
                         if (TryParseSubsRecursive(item.Value, out var rsubs))
@@ -258,7 +258,7 @@ namespace AppBokerASP
                 var str = Encoding.UTF8.GetString(e.Parameters[0]);
                 logger.Debug(str);
                 var sub = JsonConvert.DeserializeObject<Sub>(str);
-                if (!TryParseSubsRecursive(sub, out var rsubs))
+                if (sub is null || !TryParseSubsRecursive(sub, out var rsubs))
                     return;
                 var subs = rsubs.Distinct().ToDictionary(x => x.NodeId, x => x);
                 var lostSubs = new List<uint>();
@@ -273,7 +273,7 @@ namespace AppBokerASP
                         {
                             item.MissedConnections = 0;
                             if (Program.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
-                                dev.Reconnect(null);
+                                SendSingle((uint)dev.Id, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                             else
                                 lostSubs.Add(item.Id);
                         }
@@ -284,7 +284,7 @@ namespace AppBokerASP
                     if (lostSubs.Contains(item.Key))
                     {
                         if (subs.ContainsKey((uint)item.Key))
-                            lostSubs.Remove(item.Key);
+                            _ = lostSubs.Remove(item.Key);
                     }
                 }
                 foreach (var id in lostSubs)
@@ -293,7 +293,7 @@ namespace AppBokerASP
                     ConnectionLost?.Invoke(this, id);
                     if (knownId != default)
                         if (knownId.MissedConnections > 15)
-                            knownNodeIds.Remove(knownId);
+                            _ = knownNodeIds.Remove(knownId);
                         else
                             knownId.MissedConnections++;
                 }
@@ -413,7 +413,7 @@ namespace AppBokerASP
             }
         }
 
-        private void TryCatchWhoAmITask(object o)
+        private void TryCatchWhoAmITask(object? o)
         {
             try
             {
@@ -426,7 +426,7 @@ namespace AppBokerASP
             }
         }
 
-        private void WhoAmITask(object o)
+        private void WhoAmITask(object? o)
         {
             var toDelete = new Dictionary<uint, (DateTime time, int count)>();
             try
@@ -444,7 +444,7 @@ namespace AppBokerASP
 
                 foreach (var item in toDelete)
                 {
-                    WhoIAmSendTime.TryRemove(item.Key, out var val);
+                    _ = WhoIAmSendTime.TryRemove(item.Key, out var val);
                 }
                 toDelete.Clear();
             }

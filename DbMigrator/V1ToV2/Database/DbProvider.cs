@@ -9,12 +9,12 @@ namespace DbMigrator.V1ToV2.Database
 {
     public static class DbProvider
     {
-        public static BrokerDbContext BrokerDbContext => new BrokerDbContext();
-        public static BrokerDbContextOld BrokerDbContextOld => new BrokerDbContextOld();
+        public static BrokerDbContext BrokerDbContext => new();
+        public static BrokerDbContextOld BrokerDbContextOld => new();
         static DbProvider()
         {
-            BrokerDbContext.Database.EnsureCreated();
-            BrokerDbContextOld.Database.EnsureCreated();
+            _ = BrokerDbContext.Database.EnsureCreated();
+            _ = BrokerDbContextOld.Database.EnsureCreated();
         }
     }
 }

@@ -19,19 +19,19 @@ using System.Diagnostics;
 
 namespace AppBokerASP
 {
-    public class BaseClient
+    public class BaseClient : IDisposable
     {
-        private static X509Certificate2 ServerCert;
-        private static X509Store ServerStore;
+        private static readonly X509Certificate2? ServerCert;
+        private static readonly X509Store ServerStore;
 
-        public event EventHandler<BinarySmarthomeMessage> ReceivedData;
+        public event EventHandler<BinarySmarthomeMessage>? ReceivedData;
         public CancellationTokenSource Source;
 
         protected readonly TcpClient Client;
         protected readonly SslStream stream;
         private const int HeaderSize = sizeof(int);
         private CancellationToken startTaskToken;
-        private byte[] headerBuffer = new byte[HeaderSize];
+        private readonly byte[] headerBuffer = new byte[HeaderSize];
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         static BaseClient()
@@ -50,7 +50,7 @@ namespace AppBokerASP
                 using var rsa = RSA.Create();
                 rsa.ImportPkcs8PrivateKey(GetBytesFromPEM(File.ReadAllText("key.pem"), PemStringType.RsaPrivateKey), out var key);
                 ServerCert = new X509Certificate2(ServerCert.CopyWithPrivateKey(rsa).Export(X509ContentType.Pfx));
-                
+
             }
         }
 
@@ -64,7 +64,7 @@ namespace AppBokerASP
             stream = sslStream;
             try
             {
-                sslStream.AuthenticateAsServer(ServerCert, true, SslProtocols.Tls12 | SslProtocols.Tls13 , false);
+                sslStream.AuthenticateAsServer(ServerCert!, true, SslProtocols.Tls12 | SslProtocols.Tls13, false);
             }
             catch (AuthenticationException ae)
             {
@@ -133,6 +133,12 @@ namespace AppBokerASP
                     {
 
                         int size = BitConverter.ToInt32(headerBuffer);
+                        if(size > 4000)
+                        {
+                            logger.Warn("Got very a large size for buffer " + size);
+                            Disconnect();
+                            return;
+                        }
                         var bodyBuf = ArrayPool<byte>.Shared.Rent(size);
                         if (!ReadExactly(bodyBuf, 0, size))
                         {
@@ -147,7 +153,8 @@ namespace AppBokerASP
                         var bsm = BinarySmarthomeMessageSerialization.Deserialize(ms);
                         bsm.NodeId = nodeId;
 
-                        logger.Debug($"Recvd: Von: {bsm.NodeId}, Command: {bsm.Command}, MessageType: {bsm.MessageType}, ParamsAmount: {bsm.Parameters.Count}, " + string.Join(", ", bsm.Parameters.Select(x => BitConverter.ToString(x))));
+                        if (bsm.Command != Command.Mesh || bsm.NodeId != 1 || bsm.MessageType != MessageType.Update)
+                            logger.Debug($"Recvd: Von: {bsm.NodeId}, Command: {bsm.Command}, MessageType: {bsm.MessageType}, ParamsAmount: {bsm.Parameters.Count}, " + string.Join(", ", bsm.Parameters.Select(x => BitConverter.ToString(x))));
                         //var msg = Encoding.GetEncoding(437).GetString(bodyBuf, 0, size);
                         //if (string.IsNullOrWhiteSpace("Msg: " + msg))
                         //    continue;
@@ -157,7 +164,7 @@ namespace AppBokerASP
 
                         ReceivedData?.Invoke(this, bsm);
                         ArrayPool<byte>.Shared.Return(bodyBuf);
-                    } 
+                    }
                     catch (Exception e)
                     {
                         logger.Error(e);
@@ -180,8 +187,8 @@ namespace AppBokerASP
                 return;
 
             Span<byte> buffer = stackalloc byte[sizeof(int) + sizeof(byte) + data.Length];
-            BitConverter.TryWriteBytes(buffer, nodeId);
-            BitConverter.TryWriteBytes(buffer[sizeof(int)..], (byte)packageType);
+            _ = BitConverter.TryWriteBytes(buffer, nodeId);
+            _ = BitConverter.TryWriteBytes(buffer[sizeof(int)..], (byte)packageType);
             data.CopyTo(buffer[(sizeof(int) + sizeof(byte))..]);
 
             stream.Write(BitConverter.GetBytes(buffer.Length), 0, HeaderSize);
@@ -202,7 +209,7 @@ namespace AppBokerASP
                     footer = "-----END PRIVATE KEY-----";
                     break;
                 default:
-                    return null;
+                    return Array.Empty<byte>();
             }
 
             int start = pemString.IndexOf(header) + header.Length;
@@ -215,5 +222,10 @@ namespace AppBokerASP
             RsaPrivateKey
         }
 
+        public void Dispose()
+        {
+            Source?.Dispose();
+            stream?.Dispose();
+        }
     }
 }

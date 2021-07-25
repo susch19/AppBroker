@@ -17,7 +17,7 @@ namespace AppBokerASP.Database
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=broker2.db");
+            _ = optionsBuilder.UseSqlite("Data Source=broker2.db");
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

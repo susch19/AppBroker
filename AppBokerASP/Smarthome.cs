@@ -4,12 +4,15 @@ using System.Linq;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading.Tasks;
+
 using AppBokerASP.Database;
 using AppBokerASP.Devices;
 using AppBokerASP.Devices.Zigbee;
 using AppBokerASP.IOBroker;
+
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+
 using PainlessMesh;
 
 namespace AppBokerASP
@@ -32,9 +35,9 @@ namespace AppBokerASP
             return base.OnConnectedAsync();
         }
 
-        public override Task OnDisconnectedAsync(Exception exception)
+        public override Task OnDisconnectedAsync(Exception? exception)
         {
-            ConnectedClients.Remove(Clients.Caller);
+            _ = ConnectedClients.Remove(Clients.Caller);
             return base.OnDisconnectedAsync(exception);
         }
 
@@ -64,12 +67,12 @@ namespace AppBokerASP
             if (Program.DeviceManager.Devices.TryGetValue(id, out var stored))
             {
                 stored.FriendlyName = newName;
-                DbProvider.UpdateDeviceInDb(stored);
+                _ = DbProvider.UpdateDeviceInDb(stored);
                 stored.SendDataToAllSubscribers();
             }
         }
 
-        public dynamic GetConfig(uint deviceId)
+        public dynamic? GetConfig(uint deviceId)
         {
             if (Program.DeviceManager.Devices.TryGetValue(deviceId, out var device))
             {
@@ -144,7 +147,7 @@ namespace AppBokerASP
         public List<Device> Subscribe(IEnumerable<long> DeviceIds)
         {
             var highlightedItemProperty = Clients.Caller.GetType().GetRuntimeFields().FirstOrDefault(pi => pi.Name == "_connectionId");
-            string connectionId = (string)highlightedItemProperty.GetValue(Clients.Caller);
+            string connectionId = (string)highlightedItemProperty!.GetValue(Clients.Caller)!;
             var devices = new List<Device>();
             var subMessage = "User subscribed to ";
             foreach (var deviceId in DeviceIds)
@@ -153,7 +156,7 @@ namespace AppBokerASP
                 if (Program.DeviceManager.Devices.TryGetValue(deviceId, out var device))
                 {
                     if (!device.Subscribers.Any(x => x.ConnectionId == connectionId))
-                        device.Subscribers.Add(new Subscriber { ConnectionId = connectionId, ClientProxy = Clients.Caller });
+                        device.Subscribers.Add(new Subscriber(connectionId, Clients.Caller));
                     devices.Add(device);
                     subMessage += device.Id + "/" + device.FriendlyName + ", ";
                 }

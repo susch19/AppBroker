@@ -59,13 +59,13 @@ namespace PainlessMesh.Ota
         {
             var bin = new byte[1 + 4 + 4 + 4 + 4 + 8 + 2];
             var binSpan = bin.AsSpan();
-            BitConverter.TryWriteBytes(binSpan, Forced);
-            BitConverter.TryWriteBytes(binSpan[1..], FirmwareVersion);
-            BitConverter.TryWriteBytes(binSpan[5..], SizeInBytes);
-            BitConverter.TryWriteBytes(binSpan[9..], PartSize);
-            BitConverter.TryWriteBytes(binSpan[13..], PackageCount);
+            _ = BitConverter.TryWriteBytes(binSpan, Forced);
+            _ = BitConverter.TryWriteBytes(binSpan[1..], FirmwareVersion);
+            _ = BitConverter.TryWriteBytes(binSpan[5..], SizeInBytes);
+            _ = BitConverter.TryWriteBytes(binSpan[9..], PartSize);
+            _ = BitConverter.TryWriteBytes(binSpan[13..], PackageCount);
             Encoding.ASCII.GetBytes(DeviceType).CopyTo(binSpan[17..25]);
-            BitConverter.TryWriteBytes(binSpan[25..], DeviceNr);
+            _ = BitConverter.TryWriteBytes(binSpan[25..], DeviceNr);
             return bin;
         }
 

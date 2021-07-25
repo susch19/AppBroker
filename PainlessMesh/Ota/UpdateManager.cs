@@ -17,24 +17,28 @@ namespace PainlessMesh.Ota
         readonly Dictionary<FirmwareId, Timer> advertismentTimers = new();
 
         readonly Dictionary<string, FileOtaUpdate> fileOtas = new();
-        private FileSystemWatcher watcher;
-        private Logger logger;
+        private readonly FileSystemWatcher watcher;
+        private readonly Logger logger;
 
         public UpdateManager()
         {
-            Directory.CreateDirectory("OTA");
-            watcher = new FileSystemWatcher("OTA", "*.ota");
-            watcher.EnableRaisingEvents = true;
+            _ = Directory.CreateDirectory("OTA");
+            watcher = new FileSystemWatcher("OTA", "*.ota")
+            {
+                EnableRaisingEvents = true
+            };
             watcher.Created += CreateAdvertismentFromFile;
             watcher.Changed += CreateAdvertismentFromFile;
             watcher.Deleted += StopAdvertismentFromFile;
+            watcher.Renamed += StartStopAdvertismentFromFile;
             logger = NLog.LogManager.GetCurrentClassLogger();
             foreach (var path in Directory.GetFiles("OTA", "*.ota"))
             {
-                AddNewAdvertismentFromFilePath(path);
+                CreateAdvertismentFromFile(path);
 
             }
         }
+
 
         private void CreateAdvertismentFromFile(object sender, FileSystemEventArgs e)
         {
@@ -43,10 +47,10 @@ namespace PainlessMesh.Ota
                 logger.Info("Created file that didn't end with .ota, ignoring it: " + e.FullPath);
                 return;
             }
-            AddNewAdvertismentFromFilePath(e.FullPath);
+            CreateAdvertismentFromFile(e.FullPath);
         }
 
-        private void AddNewAdvertismentFromFilePath(string path)
+        private void CreateAdvertismentFromFile(string path)
         {
             var content = File.ReadAllText(path);
             var otaUpdate = JsonConvert.DeserializeObject<FileOtaUpdate>(content);
@@ -68,7 +72,7 @@ namespace PainlessMesh.Ota
             if (fileOtas.TryGetValue(path, out var val))
             {
                 EndAdvertisingUpdate(val.FirmwareMetadata);
-                fileOtas.Remove(path);
+                _ = fileOtas.Remove(path);
             }
 
             fileOtas.Add(path, otaUpdate);
@@ -78,16 +82,26 @@ namespace PainlessMesh.Ota
 
         private void StopAdvertismentFromFile(object sender, FileSystemEventArgs e)
         {
+            StopAdvertismentFromFile(e.FullPath);
+        }
+        private void StopAdvertismentFromFile(string path)
+        {
 
-            if (Path.GetExtension(e.FullPath) != ".ota")
+            if (Path.GetExtension(path) != ".ota")
             {
-                logger.Info("Deleted file that didn't end with .ota, ignoring it: " + e.FullPath);
+                logger.Info("Deleted file that didn't end with .ota, ignoring it: " + path);
                 return;
             }
-            if (!fileOtas.TryGetValue(e.FullPath, out var otaUpdate))
+            if (!fileOtas.TryGetValue(path, out var otaUpdate))
                 return;
 
             EndAdvertisingUpdate(otaUpdate.FirmwareMetadata);
+        }
+
+        private void StartStopAdvertismentFromFile(object sender, RenamedEventArgs e)
+        {
+            StopAdvertismentFromFile(e.OldFullPath);
+            CreateAdvertismentFromFile(e.FullPath);
         }
 
         public bool IsAdvertising(FirmwareMetadata metaData) => currentAdvertisments.ContainsKey(metaData.FirmwareId);
@@ -102,7 +116,7 @@ namespace PainlessMesh.Ota
             static void ReadPart(Stream data, List<byte[]> parts, uint read)
             {
                 byte[] part = new byte[read];
-                data.Read(part);
+                _ = data.Read(part);
                 parts.Add(part);
             }
 
@@ -164,10 +178,10 @@ namespace PainlessMesh.Ota
             if (advertismentTimers.TryGetValue(id, out var timer))
             {
                 timer?.Dispose();
-                advertismentTimers.Remove(id);
+                _ = advertismentTimers.Remove(id);
             }
 
-            currentAdvertisments.Remove(id);
+            _ = currentAdvertisments.Remove(id);
         }
     }
 }

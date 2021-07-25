@@ -19,7 +19,7 @@ namespace AppBokerASP.Devices.Painless
     {
         //{"id":763955710, "m":"Update", "c":"Mode", "p":["SingleColor",55,93,88,30,0,4278190080,1]}
 
-        public string ColorMode { get; set; }
+        public string ColorMode { get; set; } = "";
         public int Delay { get; set; }
         public int NumberOfLeds { get; set; }
         public int Brightness { get; set; }
@@ -45,23 +45,22 @@ namespace AppBokerASP.Devices.Painless
                 var item = e.Parameters[i];
                 if (item is null)
                     continue;
-                var str = System.Text.Encoding.UTF8.GetString(item); 
                 if (i == 0)
-                    ColorMode = str;
-                else if (i == 1 && int.TryParse(str, out var delay))
-                    Delay = delay;
-                else if (i == 2 && int.TryParse(str, out var numled))
-                    NumberOfLeds = numled;
-                else if (i == 3 && int.TryParse(str, out var brightness))
-                    Brightness = brightness;
-                else if (i == 4 && uint.TryParse(str, out var step))
-                    Step = step;
-                else if (i == 5 && bool.TryParse(str, out var reverse))
-                    Reverse = reverse;
-                else if (i == 6 && uint.TryParse(str, out var color))
-                    ColorNumber = color;
-                else if (i == 7 && ushort.TryParse(str, out var version))
-                    Version = version;
+                    ColorMode = System.Text.Encoding.UTF8.GetString(item);
+                else if (i == 1)
+                    Delay = BitConverter.ToInt32(item);
+                else if (i == 2)
+                    NumberOfLeds = BitConverter.ToInt32(item);
+                else if (i == 3)
+                    Brightness = BitConverter.ToInt32(item);
+                else if (i == 4)
+                    Step = BitConverter.ToUInt32(item);
+                else if (i == 5)
+                    Reverse = BitConverter.ToBoolean(item);
+                else if (i == 6)
+                    ColorNumber = BitConverter.ToUInt32(item);
+                else if (i == 7)
+                    Version = BitConverter.ToUInt16(item); ;
             }
 
             //var param = e.Parameters.FirstOrDefault();
@@ -72,20 +71,20 @@ namespace AppBokerASP.Devices.Painless
             //var span = param.ToString().AsSpan();
             //var indices = span.IndexesOf(',');
 
-            
+
 
             SendDataToAllSubscribers();
         }
 
         public override void UpdateFromApp(Command command, List<JToken> parameters)
         {
-            ByteLengthList meshParams = new ();
+            ByteLengthList meshParams = new();
             switch (command)
             {
                 case Command.SingleColor:
-                    if(parameters.Count > 0)
+                    if (parameters.Count > 0)
                     {
-                        var color = Convert.ToInt32(parameters[0].ToString(), 16);
+                        var color = Convert.ToUInt32(parameters[0].ToString(), 16);
                         meshParams.Add(BitConverter.GetBytes(color));
                     }
                     break;
@@ -99,12 +98,20 @@ namespace AppBokerASP.Devices.Painless
 
         public override void OptionsFromApp(Command command, List<JToken> parameters)
         {
-            ByteLengthList meshParams = new ();
+            ByteLengthList meshParams = new();
             switch (command)
             {
                 case Command.SingleColor:
+                case Command.Color:
+                    if (parameters.Count > 0)
+                    {
+                        var color = Convert.ToUInt32(parameters[0].ToString(), 16);
+                        meshParams.Add(BitConverter.GetBytes(color));
+                    }
+                    break;
                 case Command.Brightness:
                 case Command.Calibration:
+                case Command.Delay:
                     if (parameters.Count > 0)
                     {
                         var color = Convert.ToInt32(parameters[0].ToString(), 16);

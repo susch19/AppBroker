@@ -26,12 +26,12 @@ namespace AppBokerASP
 {
     public class DeviceManager
     {
-        public ConcurrentDictionary<long, Device> Devices = new ConcurrentDictionary<long, Device>();
-        private SocketIoClient client;
+        public ConcurrentDictionary<long, Device> Devices = new();
+        private SocketIoClient? client;
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private List<Type> types;
-        Task temp;
+        private readonly List<Type> types;
+        readonly Task temp;
         public DeviceManager()
         {
             types = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device)).ToList();
@@ -41,7 +41,7 @@ namespace AppBokerASP
             temp = ConnectToIOBroker();
         }
 
-        private void MeshManager_ConnectionLost(object sender, uint e)
+        private void MeshManager_ConnectionLost(object? sender, uint e)
         {
             if (Devices.TryGetValue(e, out var device))
             {
@@ -50,7 +50,7 @@ namespace AppBokerASP
                 device.StopDevice();
             }
         }
-        private void MeshManager_ConnectionReastablished(object sender, (uint id, ByteLengthList parameter) e)
+        private void MeshManager_ConnectionReastablished(object? sender, (uint id, ByteLengthList parameter) e)
         {
             if (Devices.TryGetValue(e.id, out var device))
             {
@@ -68,7 +68,7 @@ namespace AppBokerASP
         //    while (!Devices.TryAdd(e.c.NodeId, newDevice)) { }
         //}
 
-        private void Node_NewConnectionEstablished(object sender, (Sub c, ByteLengthList l) e)
+        private void Node_NewConnectionEstablished(object? sender, (Sub c, ByteLengthList l) e)
         {
             if (Devices.TryGetValue(e.c.NodeId, out var device))
             {
@@ -81,11 +81,26 @@ namespace AppBokerASP
                 var type = types.FirstOrDefault(x =>
                        x.Name.Equals(deviceName, StringComparison.InvariantCultureIgnoreCase)
                            || x.GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName == deviceName);
-                var newDevice = (Device)Activator.CreateInstance(type, e.c.NodeId, e.l);
-                logger.Debug($"New Device: {newDevice?.TypeName}, {newDevice?.Id}");
-                Devices.TryAdd(e.c.NodeId, newDevice);
+
+                if (type is null)
+                {
+                    logger.Error($"Failed to get device with {deviceName} name");
+                    return;
+                }
+
+                var newDeviceObj = Activator.CreateInstance(type, e.c.NodeId, e.l);
+
+                if (newDeviceObj is null || !(newDeviceObj is Device newDevice))
+                    return;
+                if (newDevice is null)
+                {
+                    logger.Error($"Failed to get create device {deviceName}");
+                    return;
+                }
+                logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
+                _ = Devices.TryAdd(e.c.NodeId, newDevice);
                 if (!DbProvider.AddDeviceToDb(newDevice))
-                    DbProvider.MergeDeviceWithDbData(newDevice);
+                    _ = DbProvider.MergeDeviceWithDbData(newDevice);
             }
         }
 
@@ -98,7 +113,7 @@ namespace AppBokerASP
                 {
                     var suc = IoBrokerZigbee.TryParse(args.Value, out var zo);
                     //Console.Write(i++ + ", ");
-                    if (suc)
+                    if (suc && zo is not null)
                     {
 
                         if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
@@ -120,25 +135,25 @@ namespace AppBokerASP
             {
                 logger.Error($"AfterException, trying reconnect: {args.Value}");
                 await client.DisconnectAsync();
-                await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
+                _ = await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
             };
 
             client.Connected += (s, e) =>
             {
                 Console.WriteLine("Connected");
                 logger.Debug("Connected Zigbee Client");
-                client.Emit("subscribe", "zigbee.*");
-                client.Emit("subscribeObjects", '*');
+                _ = client.Emit("subscribe", "zigbee.*");
+                _ = client.Emit("subscribeObjects", '*');
                 GetZigbeeDevices();
             };
             var random = new Random();
-            await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
+            _ = await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
             //await client.Emit("setState", new { id = "zigbee.0.d0cf5efffe1fa105.colortemp", val = 400, ack = true, ts = DateTime.Now.Ticks });
         }
 
         public void GetZigbeeDevices()
         {
-            if (Devices.Count > 0)
+            if (!Devices.IsEmpty)
             {
                 logger.Debug($"Cancel {nameof(GetZigbeeDevices)}, because it wasn't the startup");
                 return;
@@ -149,6 +164,12 @@ namespace AppBokerASP
             better = $"[{better[1..^1]}]";
 
             var ioBrokerObject = JsonConvert.DeserializeObject<ZigbeeIOBrokerProperty[]>(better);
+            if (ioBrokerObject is null)
+            {
+                logger.Error($"Error deserializing IOBroker Property");
+
+                return;
+            }
             var idRequest = "http://ZigbeeHub:8087/get/";
             var idsAlreadyInRequest = new List<ulong>();
             var stateRequest = "http://ZigbeeHub:8087/get/";
@@ -172,9 +193,9 @@ namespace AppBokerASP
             content = RequestStringData(idRequest);
 
 
-            var getDeviceResponses = JsonConvert.DeserializeObject<IoBrokerGetDeviceResponse[]>(content);
+            var getDeviceResponses = JsonConvert.DeserializeObject<IoBrokerGetDeviceResponse[]>(content)!;
             content = RequestStringData(stateRequest);
-            var deviceStates = JsonConvert.DeserializeObject<IoBrokerStateResponse[]>(content);
+            var deviceStates = JsonConvert.DeserializeObject<IoBrokerStateResponse[]>(content)!;
 
             foreach (var deviceRes in getDeviceResponses)
             {
@@ -203,15 +224,15 @@ namespace AppBokerASP
                         continue;
                     if (dev is ZigbeeDevice zd)
                         zd.AdapterWithId = deviceRes._id;
-                    Devices.TryAdd(id, dev);
+                    _ = Devices.TryAdd(id, dev);
                     if (!DbProvider.AddDeviceToDb(dev))
-                        DbProvider.MergeDeviceWithDbData(dev);
+                        _ = DbProvider.MergeDeviceWithDbData(dev);
                     if (string.IsNullOrWhiteSpace(dev.FriendlyName))
                         dev.FriendlyName = deviceRes.common.name;
                 }
                 foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
                 {
-                    var ioObject = new IoBrokerObject { ValueName = item.common.name.ToLower().Replace(" ", "_"), ValueParameter = new Parameter { Value = item.val } };
+                    var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item.common.name.ToLower().Replace(" ", "_"), new Parameter(item.val));
                     if (dev is XiaomiTempSensor)
                     {
                         if (ioObject.ValueName == "battery_voltage")
@@ -227,16 +248,16 @@ namespace AppBokerASP
                         else if (ioObject.ValueName == "switch_state")
                             ioObject.ValueName = "state";
                     }
-
-                    (dev as ZigbeeDevice).SetPropFromIoBroker(ioObject, false);
+                    if (dev is ZigbeeDevice zd)
+                        zd.SetPropFromIoBroker(ioObject, false);
                 }
             }
         }
 
         private string RequestStringData(string url)
         {
-            var request = WebRequest.CreateHttp(url);
-            var res = request.GetResponse();
+            var request = WebRequest.CreateHttp(url)!;
+            using var res = request.GetResponse()!;
             using var stream = res.GetResponseStream();
             using var streamreader = new StreamReader(stream);
             return streamreader.ReadToEnd();

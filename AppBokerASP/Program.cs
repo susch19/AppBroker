@@ -40,11 +40,11 @@ namespace AppBokerASP
         public static SmarthomeMeshManager MeshManager { get; private set; }
         public static UpdateManager UpdateManager { get; private set; }
 
-        private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
+        //private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
 
 
 
-        private static Task t;
+        //private static Task t;
 
         //private static TcpListener TcpServer = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), 8801);
 
@@ -80,6 +80,13 @@ namespace AppBokerASP
             RsaPrivateKey
         }
 
+        static Program()
+        {
+            UpdateManager = new();
+            MeshManager = new SmarthomeMeshManager(8801);
+            DeviceManager = new DeviceManager();
+        }
+
         public static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.Unicode;
@@ -99,9 +106,7 @@ namespace AppBokerASP
 
 
             Dostuff();
-            UpdateManager = new();
-            MeshManager = new SmarthomeMeshManager(8801);
-            DeviceManager = new DeviceManager();
+     
 
             MeshManager.Start();
 
@@ -121,7 +126,7 @@ namespace AppBokerASP
 #if DEBUG
                 CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
 #else
-                CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
+                CreateWebHostBuilder(args).UseUrls("http://[::1]:5055", "http://0.0.0.0:5055").Build().Run();
 #endif
             }
         }
@@ -131,7 +136,7 @@ namespace AppBokerASP
             var config = new NLog.Config.LoggingConfiguration();
 
             // Targets where to log to: File and Console
-            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine("Logs", $"{DateTime.Now.ToString("yyyy_MM_dd")}.log") };
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine("Logs", $"{DateTime.Now:yyyy_MM_dd}.log") };
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
 
             // Rules for mapping loggers to targets            
@@ -154,7 +159,7 @@ namespace AppBokerASP
             {
                 Console.WriteLine(sr.ReadToEnd());
             }
-            ClientWebSocket cws = new ClientWebSocket();
+            ClientWebSocket cws = new();
             cws.Options.RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback;
             await cws.ConnectAsync(new Uri("wss://192.168.49.71:8084"), CancellationToken.None);
             //wsc = new WebsocketClient(new Uri("ws://192.168.49.71:8084"));

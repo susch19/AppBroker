@@ -86,7 +86,7 @@ namespace PainlessMesh
             byte[] array = ArrayPool<byte>.Shared.Rent(byteCount);
             try
             {
-                Encoding.UTF8.GetBytes(self, 0, self.Length, array, 0);
+                _ = Encoding.UTF8.GetBytes(self, 0, self.Length, array, 0);
                 stream.Write(array, 0, byteCount);
             }
             finally

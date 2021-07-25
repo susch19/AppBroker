@@ -38,9 +38,9 @@ namespace PainlessMesh.Ota
         {
             var ret = new byte[16];
             var span = ret.AsSpan();
-            BitConverter.TryWriteBytes(span, FirmwareVersion);
+            _ = BitConverter.TryWriteBytes(span, FirmwareVersion);
             Encoding.UTF8.GetBytes(DeviceType).CopyTo(span[4..]);
-            BitConverter.TryWriteBytes(span[12..], PartNo);
+            _ = BitConverter.TryWriteBytes(span[12..], PartNo);
             return ret;
         }
     }

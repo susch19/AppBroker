@@ -6,5 +6,12 @@ namespace AppBokerASP
     {
         public string ConnectionId { get; set; }
         public IClientProxy ClientProxy { get; internal set; }
+        public Subscriber(string connectionId, IClientProxy clientProxy)
+        {
+            ConnectionId = connectionId;
+            ClientProxy = clientProxy;
+        }
+
+
     }
 }

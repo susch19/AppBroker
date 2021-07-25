@@ -29,7 +29,7 @@ namespace AppBokerASP.Devices.Painless.Heater
         }
 
         public static implicit operator TimeTempMessageLE(HeaterConfig hc) 
-            => new TimeTempMessageLE(hc.DayOfWeek, new TimeSpan(hc.TimeOfDay.Hour, hc.TimeOfDay.Minute, 0), (float)hc.Temperature);
+            => new(hc.DayOfWeek, new TimeSpan(hc.TimeOfDay.Hour, hc.TimeOfDay.Minute, 0), (float)hc.Temperature);
         public static implicit operator HeaterConfig(TimeTempMessageLE ttm)
         {
             var dt = DateTime.Now;
