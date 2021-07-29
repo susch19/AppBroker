@@ -1,5 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
+
 using PainlessMesh;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,8 +47,12 @@ namespace AppBokerASP.Devices.Zigbee
                     Brightness = parameters[0].ToObject<byte>();
                     _ = UpdateZigbeeDeviceRequest(nameof(Brightness).ToLower(), Brightness);
                     break;
+                case Command.SingleColor:
+                    State = true;
+                    _ = UpdateZigbeeDeviceRequest(nameof(State).ToLower(), State.ToString().ToLower());
+                    break;
                 case Command.Off:
-                    State = !State;
+                    State = false;
                     _ = UpdateZigbeeDeviceRequest(nameof(State).ToLower(), State.ToString().ToLower());
                     break;
                 default:

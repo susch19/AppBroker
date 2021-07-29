@@ -43,7 +43,7 @@ namespace AppBokerASP
 
         public void Update(JsonSmarthomeMessage message)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(message.NodeId, out var device))
+            if (Program.DeviceManager.Devices.TryGetValue(message.LongNodeId, out var device))
             {
                 switch (message.MessageType)
                 {
