@@ -14,8 +14,8 @@ namespace AppBokerASP.Database.Model
         public long Id { get; set; }
 
         [ForeignKey("ParentId")]
-        public DeviceModel Parent { get; set; }
+        public DeviceModel? Parent { get; set; }
         [ForeignKey("ChildId")]
-        public DeviceModel Child { get; set; }
+        public DeviceModel? Child { get; set; }
     }
 }

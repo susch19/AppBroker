@@ -66,8 +66,8 @@ namespace TranslateTTMToHumanReadable
             set
             {
                 var u = FloatToUShort(value);
-                if (u > 766)
-                    throw new NotSupportedException("This Value is to damn high");
+                //if (u > 766)
+                //    throw new NotSupportedException("This Value is to damn high");
 
                 data[1] = (byte)(((u & 0x3) << 6) | (data[1] & 0x3F));
                 data[2] = (byte)((u >> 2) & 0xFF);
@@ -91,6 +91,29 @@ namespace TranslateTTMToHumanReadable
             for (int i = 0; i < 3; i++)
                 s += Convert.ToString(data[i], 2).PadLeft(8, '0') + " ";
             return s;
+        }
+
+        public byte[] ToBinary()
+        {
+            return new byte[] { data[0], data[1], data[2] };
+        }
+
+        public void FromBinary(ReadOnlySpan<byte> bytes)
+        {
+            if (bytes.Length != 3)
+                throw new ArgumentException(nameof(bytes));
+
+            for (int i = 0; i < 3; i++)
+            {
+                data[i] = bytes[i];
+            }
+        }
+
+        public static TimeTempMessageLE LoadFromBinary(ReadOnlySpan<byte> bytes)
+        {
+            var ttm = new TimeTempMessageLE();
+            ttm.FromBinary(bytes);
+            return ttm;
         }
 
         public override string ToString()
@@ -134,5 +157,6 @@ namespace TranslateTTMToHumanReadable
 
 
         }
+
     }
 }

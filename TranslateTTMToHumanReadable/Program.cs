@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Linq;
+using System.Text;
 
 namespace TranslateTTMToHumanReadable
 {
@@ -11,9 +13,12 @@ namespace TranslateTTMToHumanReadable
                 var s = Console.ReadLine();
                 try
                 {
-                    for (int i = 0; i < (s.Length / 4 * 4); i += 4)
+                    s = s.Replace("-", "");
+                    for (int i = 0; i < (s.Length / 6 * 6); i += 6)
                     {
-                        var ttm = TimeTempMessageLE.FromBase64(s[i..(i + 4)]);
+
+
+                        var ttm = TimeTempMessageLE.LoadFromBinary(StringToByteArray(s[i..(i + 6)]));
                         Console.WriteLine($"Time:{ttm.Time} Temp:{ttm.Temp} Dow:{ttm.DayOfWeek}");
                     }
                 }
@@ -21,6 +26,14 @@ namespace TranslateTTMToHumanReadable
                 {
                     Console.WriteLine(e);
                 }
+            }
+
+            static byte[] StringToByteArray(string hex)
+            {
+                return Enumerable.Range(0, hex.Length)
+                                 .Where(x => x % 2 == 0)
+                                 .Select(x => Convert.ToByte(hex.Substring(x, 2), 16))
+                                 .ToArray();
             }
         }
     }

@@ -18,32 +18,33 @@ namespace AppBokerASP
     {
         public void ConfigureServices(IServiceCollection services)
         {
-            services.Configure<CookiePolicyOptions>(options =>
-            {
+            _ = services.Configure<CookiePolicyOptions>(options =>
+              {
                 // This lambda determines whether user consent for non-essential cookies is needed for a given request.
                 options.MinimumSameSitePolicy = SameSiteMode.None;
-            });
+              });
 
-            services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
-            {
-                builder
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowAnyOrigin();
-            }));
+            _ = services.AddCors(options => options.AddPolicy("CorsPolicy", builder =>
+              {
+                  _ = builder
+                      .AllowAnyMethod()
+                      .AllowAnyHeader()
+                      .AllowAnyOrigin();
+              }));
 
-            services.AddSignalR(
+            _ = services.AddSignalR(
                 opt => opt.EnableDetailedErrors = true
                 ).AddNewtonsoftJsonProtocol(); 
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
-            app.UseWebSockets();
-            app.UseCors("CorsPolicy");
-            app.UseRouting();
-            app.UseEndpoints(e => {
-                e.MapHub<SmartHome>("/SmartHome");
+            _ = app.UseWebSockets();
+            _ = app.UseCors("CorsPolicy");
+            _ = app.UseRouting();
+            _ = app.UseEndpoints(e =>
+            {
+                _ = e.MapHub<SmartHome>("/SmartHome");
             });
         }
 

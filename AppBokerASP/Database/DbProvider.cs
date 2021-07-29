@@ -1,4 +1,7 @@
 ﻿using AppBokerASP.Devices;
+
+using NLog.Fluent;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +11,7 @@ namespace AppBokerASP.Database
 {
     public static class DbProvider
     {
-        public static BrokerDbContext BrokerDbContext => new BrokerDbContext();
+        public static BrokerDbContext BrokerDbContext => new();
         static DbProvider() => _ = BrokerDbContext.Database.EnsureCreated();
 
 
@@ -17,8 +20,8 @@ namespace AppBokerASP.Database
             using var cont = BrokerDbContext;
             if (!cont.Devices.Any(x => x.Id == d.Id))
             {
-                cont.Add(d.GetModel());
-                cont.SaveChanges();
+                _ = cont.Add(d.GetModel());
+                _ = cont.SaveChanges();
                 return true;
             }
             return false;
@@ -31,7 +34,7 @@ namespace AppBokerASP.Database
             if (dbDevice != default)
             {
                 dbDevice.FriendlyName = d.FriendlyName;
-                cont.SaveChanges();
+                _ = cont.SaveChanges();
                 return true;
             }
             return false;
@@ -40,12 +43,24 @@ namespace AppBokerASP.Database
         public static bool MergeDeviceWithDbData(Device d)
         {
             using var cont = BrokerDbContext;
-            var dbDevice = cont.Devices.FirstOrDefault(x => x.Id == d.Id);
-            if (dbDevice != default)
+            try
             {
-                d.FriendlyName = dbDevice.FriendlyName;
-                return true;
+                var dbDevice = cont.Devices.FirstOrDefault(x => x.Id == d.Id);
+                if (dbDevice != default)
+                {
+                    if (string.IsNullOrWhiteSpace(dbDevice.FriendlyName))
+                        d.FriendlyName = dbDevice.Id.ToString();
+                    else
+                        d.FriendlyName = dbDevice.FriendlyName;
+                    return true;
+                }
             }
+            catch
+            {
+                d.FriendlyName = "";
+                
+            }
+         
             return false;
         }
     }

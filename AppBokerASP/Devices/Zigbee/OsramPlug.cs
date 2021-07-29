@@ -11,6 +11,6 @@ namespace AppBokerASP.Devices.Zigbee
         public OsramPlug(long nodeId, string baseUpdateUrl) : base(nodeId, baseUpdateUrl, typeof(OsramPlug))
         {
             ShowInApp = false;
-        }s
+        }
     }
 }

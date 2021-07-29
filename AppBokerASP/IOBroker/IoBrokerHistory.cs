@@ -14,7 +14,8 @@ namespace AppBokerASP.IOBroker
         }
         public IoBrokerHistory()
         {
-
+            HistoryRecords = Array.Empty<HistoryRecord>();
+            PropertyName = "";
         }
 
         public HistoryRecord[] HistoryRecords { get; set; }

@@ -1,6 +1,6 @@
 ﻿using AppBokerASP.Database.Model;
 using AppBokerASP.Devices;
-using AppBokerASP.Devices.Heater;
+using AppBokerASP.Devices.Painless.Heater;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -11,14 +11,15 @@ namespace AppBokerASP.Database
 {
     public class BrokerDbContext : DbContext
     {
-        public DbSet<HeaterConfigModel> HeaterConfigs { get; set; }
+        public DbSet<HeaterConfigModel> HeaterConfigs => Set<HeaterConfigModel>();
         //public DbSet<HeaterConfigModel> HeaterCalibrations { get; set; }
-        public DbSet<DeviceModel> Devices { get; set; }
-        public DbSet<DeviceMappingModel> DeviceToDeviceMappings { get; set; }
+        public DbSet<DeviceModel> Devices => Set<DeviceModel>();
+        public DbSet<DeviceMappingModel> DeviceToDeviceMappings => Set<DeviceMappingModel>();
+        //public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=broker.db");
+            _ = optionsBuilder.UseSqlite("Data Source=broker.db");
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

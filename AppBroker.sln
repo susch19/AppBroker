@@ -7,7 +7,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBokerASP", "AppBokerASP\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PainlessMesh", "PainlessMesh\PainlessMesh.csproj", "{20EB7A97-916E-4E41-8976-4F2C1FB2532A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TranslateTTMToHumanReadable", "TranslateTTMToHumanReadable\TranslateTTMToHumanReadable.csproj", "{76555774-B495-46A0-8075-16977D2DEBD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TranslateTTMToHumanReadable", "TranslateTTMToHumanReadable\TranslateTTMToHumanReadable.csproj", "{76555774-B495-46A0-8075-16977D2DEBD7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbMigrator", "DbMigrator\DbMigrator.csproj", "{77F46A84-21E3-440C-8DC2-893177244FA1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -41,6 +43,14 @@ Global
 		{76555774-B495-46A0-8075-16977D2DEBD7}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{76555774-B495-46A0-8075-16977D2DEBD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{76555774-B495-46A0-8075-16977D2DEBD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77F46A84-21E3-440C-8DC2-893177244FA1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 
-namespace AppBokerASP.Devices.Heater
+namespace AppBokerASP.Devices.Painless.Heater
 {
     public class HeaterConfig
     {
@@ -29,12 +29,12 @@ namespace AppBokerASP.Devices.Heater
         }
 
         public static implicit operator TimeTempMessageLE(HeaterConfig hc) 
-            => new TimeTempMessageLE(hc.DayOfWeek, new TimeSpan(hc.TimeOfDay.Hour, hc.TimeOfDay.Minute, 0), (float)hc.Temperature);
+            => new(hc.DayOfWeek, new TimeSpan(hc.TimeOfDay.Hour, hc.TimeOfDay.Minute, 0), (float)hc.Temperature);
         public static implicit operator HeaterConfig(TimeTempMessageLE ttm)
         {
             var dt = DateTime.Now;
-            dt.AddHours(ttm.Time.Hours - dt.Hour);
-            dt.AddMinutes(ttm.Time.Minutes - dt.Minute);
+            dt = dt.AddHours(ttm.Time.Hours - dt.Hour);
+            dt = dt.AddMinutes(ttm.Time.Minutes - dt.Minute);
             return new HeaterConfig(ttm.DayOfWeek, dt, ttm.Temp);
         }
     }

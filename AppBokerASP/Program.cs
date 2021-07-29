@@ -4,27 +4,32 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Net.WebSockets;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
-using AppBokerASP.Database;
-using AppBokerASP.Database.Model;
-using AppBokerASP.Devices;
-using AppBokerASP.Devices.Heater;
-using AppBokerASP.IOBroker;
+
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 using NLog;
+
 using PainlessMesh;
-using SimpleSocketIoClient;
+using PainlessMesh.Ota;
+
 
 namespace AppBokerASP
 {
@@ -33,12 +38,13 @@ namespace AppBokerASP
         public static DeviceManager DeviceManager { get; private set; }
 
         public static SmarthomeMeshManager MeshManager { get; private set; }
+        public static UpdateManager UpdateManager { get; private set; }
 
-        private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
+        //private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
 
 
 
-        private static Task t;
+        //private static Task t;
 
         //private static TcpListener TcpServer = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), 8801);
 
@@ -68,22 +74,45 @@ namespace AppBokerASP
          * 
          * 
          */
-        public static void Main(string[] args)
+        private enum PemStringType
         {
-            //TimeTempMessageLE.Test();
-            //var ttm = new TimeTempMessageLE(Devices.Heater.DayOfWeek.Sat, TimeSpan.FromMinutes(1985), 55.5f);
-            //Console.WriteLine(ttm.GetBits());
-            Console.OutputEncoding = Encoding.Unicode;
-            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
-            ConfigureLogger();
+            Certificate,
+            RsaPrivateKey
+        }
 
-            Dostuff();
+        static Program()
+        {
+            UpdateManager = new();
             MeshManager = new SmarthomeMeshManager(8801);
             DeviceManager = new DeviceManager();
+        }
+
+        public static void Main(string[] args)
+        {
+            Console.OutputEncoding = Encoding.Unicode;
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
+            //string s = "\"SingleColor\",55,93,88,30,0,4278190080,1";
+
+            //var span = s.AsSpan();
+
+
+            //var jtoken = $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken();
+            //var shm = new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken());
+
+            //ConfigureLogger();
+
+
+
+
+            Dostuff();
+
+
+            MeshManager.Start();
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG
-            MeshManager.SocketClientDataReceived(null, new GeneralSmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, JToken.Parse("\"10.9.254.4\""), JToken.Parse("\"heater\"")));
+            //MeshManager.SocketClientDataReceived(null, new GeneralSmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, JToken.Parse("\"10.9.254.4\""), JToken.Parse("\"heater\"")));
 #endif
 
             int asd = 123;
@@ -107,7 +136,7 @@ namespace AppBokerASP
             var config = new NLog.Config.LoggingConfiguration();
 
             // Targets where to log to: File and Console
-            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine("Logs", $"{DateTime.Now.ToString("yyyy_MM_dd")}.log") };
+            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine("Logs", $"{DateTime.Now:yyyy_MM_dd}.log") };
             var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
 
             // Rules for mapping loggers to targets            
@@ -130,7 +159,7 @@ namespace AppBokerASP
             {
                 Console.WriteLine(sr.ReadToEnd());
             }
-            ClientWebSocket cws = new ClientWebSocket();
+            ClientWebSocket cws = new();
             cws.Options.RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback;
             await cws.ConnectAsync(new Uri("wss://192.168.49.71:8084"), CancellationToken.None);
             //wsc = new WebsocketClient(new Uri("ws://192.168.49.71:8084"));
@@ -152,7 +181,7 @@ namespace AppBokerASP
                 //logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
                 //logging.AddFilter("Microsoft.AspNetCore.SignalR", Microsoft.Extensions.Logging.LogLevel.Trace);
                 //    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", Microsoft.Extensions.Logging.LogLevel.Trace);
-                })
+            })
             .UseStartup<Startup>();
     }
 }

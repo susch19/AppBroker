@@ -6,10 +6,11 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace AppBokerASP.Devices
+namespace AppBokerASP.Devices.Painless
 {
-    public class Bridge : Device
+    public class Bridge : PainlessDevice
     {
         public Bridge(long nodeId, List<string> parameter) : base(nodeId) => ShowInApp = false;
+
     }
 }

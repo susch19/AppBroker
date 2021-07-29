@@ -1,4 +1,5 @@
 ﻿using PainlessMesh;
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,12 +14,13 @@ namespace AppBokerASP
 {
     public class ServerSocket
     {
-        public event EventHandler<BaseClient> OnClientConnected;
+        public event EventHandler<BaseClient>? OnClientConnected;
 
-        private TcpListener tcpListener;
+        private TcpListener? tcpListener;
         private readonly ConcurrentBag<BaseClient> clients;
         private readonly Task sendTask;
         private readonly ConcurrentQueue<SendMessageForQueue> sendQueue;
+        private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public ServerSocket()
         {
@@ -31,14 +33,7 @@ namespace AppBokerASP
         {
             tcpListener = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), port);
             tcpListener.Start();
-            tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
-        }
-        public void Start(string host, int port)
-        {
-            var address = Dns.GetHostAddresses(host).FirstOrDefault(
-                a => a.AddressFamily == tcpListener.Server.AddressFamily);
-
-            Start(address, port);
+            _ = tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
         public void Stop()
@@ -47,33 +42,32 @@ namespace AppBokerASP
                 item.Disconnect();
             clients.Clear();
 
-            tcpListener.Stop();
+            tcpListener?.Stop();
         }
 
 
         private void OnClientAccepted(IAsyncResult ar)
         {
-            var tmpListen = tcpListener.EndAcceptTcpClient(ar);
+            var tmpListen = tcpListener!.EndAcceptTcpClient(ar);
             var tmpClient = new BaseClient(tmpListen);
             clients.Add(tmpClient);
             OnClientConnected?.Invoke(this, tmpClient);
 
-            tmpClient.Start();
+            _ = tmpClient.Start();
 
-            tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
+            _ = tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
-        public void SendToAllClients(PackageType packageType, string data, long nodeId)
-            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = nodeId });
+        public void SendToAllClients(PackageType packageType, Memory<byte> data, uint nodeId, bool logMessage = true)
+            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = nodeId, LogMessage = logMessage });
 
-        public void SendToAllClients(PackageType packageType, string data)
-            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = 0 });
+        public void SendToAllClients(PackageType packageType, Memory<byte> data, bool logMessage = true)
+            => sendQueue.Enqueue(new SendMessageForQueue { PackageType = packageType, Data = data, NodeId = 0, LogMessage = logMessage });
 
         private void SendMessagesFromQueue()
         {
             while (true)
             {
-                Thread.Sleep(500);
                 if (sendQueue.TryDequeue(out var msg))
                 {
                     foreach (var client in clients)
@@ -82,17 +76,25 @@ namespace AppBokerASP
                         {
                             if (client.Source.IsCancellationRequested)
                             {
-                                clients.TryTake(out var a);
+                                _ = clients.TryTake(out var a);
                                 continue;
                             }
-                            client.Send(msg.PackageType, msg.Data, msg.NodeId);
+                            //if (msg.LogMessage)
+                            //    logger.Debug($"Send to NodeId: {msg.NodeId}, Type: {msg.PackageType}, Data: {msg.Data}");
+                            client.Send(msg.PackageType, msg.Data.Span, msg.NodeId);
                         }
                         catch (Exception e)
                         {
                             Console.WriteLine(e);
-                            clients.TryTake(out var a);
+                            logger.Error(e);
+                            _ = clients.TryTake(out var a);
                         }
                     }
+                    Thread.Sleep(100);
+                }
+                else
+                {
+                    Thread.Sleep(16);
                 }
             }
         }
@@ -100,8 +102,9 @@ namespace AppBokerASP
         private class SendMessageForQueue
         {
             public PackageType PackageType { get; set; }
-            public string Data { get; set; }
-            public long NodeId { get; set; }
+            public Memory<byte> Data { get; set; }
+            public uint NodeId { get; set; }
+            public bool LogMessage { get; internal set; }
         }
     }
 }

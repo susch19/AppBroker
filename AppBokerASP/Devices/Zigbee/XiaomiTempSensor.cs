@@ -11,9 +11,9 @@ namespace AppBokerASP.Devices.Zigbee
 {
     public class XiaomiTempSensor : ZigbeeDevice
     {
-        public event EventHandler<float> TemperatureChanged;
+        public event EventHandler<float>? TemperatureChanged;
         public new bool IsConnected => Available;
-        public bool Available
+        public new bool Available
         {
             get => available; set
             {
