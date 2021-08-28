@@ -12,9 +12,7 @@ using AppBokerASP.IOBroker;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
-
 using PainlessMesh;
-
 namespace AppBokerASP
 {
 
@@ -92,55 +90,47 @@ namespace AppBokerASP
 
         public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
 
-        public List<IoBrokerHistory> GetIoBrokerHistories(long id, string dt)
+        public Task<List<IoBrokerHistory>> GetIoBrokerHistories(long id, string dt)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
-                if (device is ZigbeeDevice d)
-                    return d.ReadHistoryJSON(DateTime.Parse(dt));
-            return new List<IoBrokerHistory>();
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            {
+                var date = DateTime.Parse(dt).Date;
+                return d.GetHistory(date, date.AddDays(1).AddSeconds(-1));
+            }
+            return Task.FromResult(new List<IoBrokerHistory>());
         }
 
-        public IoBrokerHistory GetIoBrokerHistory(long id, string dt, string propertyName)
+        public Task<IoBrokerHistory> GetIoBrokerHistory(long id, string dt, string propertyName)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
-                if (device is ZigbeeDevice d)
-                    return d.ReadHistoryJSON(DateTime.Parse(dt), propertyName);
-            return new IoBrokerHistory();
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            {
+                var date = DateTime.Parse(dt).Date;
+                return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), Enum.Parse<HistoryType>(propertyName));
+            }
+            return Task.FromResult(new IoBrokerHistory());
         }
 
-        public List<IoBrokerHistory> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
+        public Task<List<IoBrokerHistory>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
-                if (device is ZigbeeDevice d)
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            {
+                return d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
+            }
+
+            return Task.FromResult(new List<IoBrokerHistory>());
+        }
+
+        // TODO: remove list, just return one item
+        public async Task<List<IoBrokerHistory>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
+        {
+            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            {
+                return new List<IoBrokerHistory>()
                 {
-                    var from = DateTime.Parse(dt);
-                    var to = DateTime.Parse(dt2);
-                    var histories = new List<IoBrokerHistory>();
-                    while (from < to)
-                    {
-                        histories.AddRange(d.ReadHistoryJSON(from));
-                        from = from.AddDays(1);
-                    }
-                    return histories;
-                }
-            return new List<IoBrokerHistory>();
-        }
+                    await d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), Enum.Parse<HistoryType>(propertyName))
+                };
+            }
 
-        public List<IoBrokerHistory> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
-        {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device))
-                if (device is ZigbeeDevice d)
-                {
-                    var from = DateTime.Parse(dt);
-                    var to = DateTime.Parse(dt2);
-                    var histories = new List<IoBrokerHistory>();
-                    while (from < to)
-                    {
-                        histories.Add(d.ReadHistoryJSON(from, propertyName));
-                        from = from.AddDays(1);
-                    }
-                    return histories;
-                }
             return new List<IoBrokerHistory>();
         }
 

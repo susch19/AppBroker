@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
-
+using SocketIOClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,7 +19,7 @@ namespace AppBokerASP.Devices.Zigbee
         [JsonPropertyName("transitionTime")]
         public float Transition_Time { get; set; }
 
-        public ZigbeeLamp(long nodeId, string baseUpdateUrl, Type t) : base(nodeId, baseUpdateUrl, t)
+        public ZigbeeLamp(long nodeId, string baseUpdateUrl, Type t, SocketIO socket) : base(nodeId, baseUpdateUrl, t, socket)
         {
             ShowInApp = true;
         }

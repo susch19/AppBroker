@@ -1,6 +1,8 @@
 ﻿using AppBokerASP.Configuration;
 using AppBokerASP.IOBroker;
+using SocketIOClient;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -14,16 +16,18 @@ namespace AppBokerASP.Devices.Zigbee
 {
     public abstract class ZigbeeDevice : Device
     {
+        protected readonly SocketIO Socket;
         public DateTime LastReceived { get; set; }
         [JsonPropertyName("linkQuality")]
         public byte Link_Quality { get; set; }
-        public bool Available { get; set; } 
+        public bool Available { get; set; }
         public string AdapterWithId { get; set; } = "";
 
         private readonly ReadOnlyCollection<PropertyInfo> propertyInfos;
 
-        public ZigbeeDevice(long nodeId, Type type) : base(nodeId)
+        public ZigbeeDevice(long nodeId, Type type, SocketIO socket) : base(nodeId)
         {
+            Socket = socket;
             propertyInfos =
                 Array.AsReadOnly(type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Concat(typeof(ZigbeeDevice).GetProperties(BindingFlags.Public | BindingFlags.Instance))
@@ -47,30 +51,57 @@ namespace AppBokerASP.Devices.Zigbee
                 LastReceived = DateTime.Now;
             SendDataToAllSubscribers();
         }
-        public virtual List<IoBrokerHistory> ReadHistoryJSON(DateTime date)
-        {
-#if DEBUG
-            var files = Directory.GetFiles($"{Program.DeviceManager.Config.HistoryPath}\\{date:yyyyMMdd}\\", $"history.{AdapterWithId}*");
-#else
-            var files = Directory.GetFiles($"{Program.DeviceManager.Config.HistoryPath}/{date.ToString("yyyyMMdd")}/", $"history.{AdapterWithId}*");
-#endif
 
-            var list = new List<IoBrokerHistory>();
-            foreach (var file in files)
+        public async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
+        {
+            var result = new List<IoBrokerHistory>
             {
-                var hist = Newtonsoft.Json.JsonConvert.DeserializeObject<HistoryRecord[]>(File.ReadAllText(file))!;
-
-                list.Add(new IoBrokerHistory(hist, file!.Split('.').SkipLast(1).Last()));
-            }
-            return list;
-            //return Newtonsoft.Json.JsonConvert.DeserializeObject<IoBrokerHistory>(File.ReadAllText($"/home/pi/ioBrokerHistory/{date.ToString("yyyyMMdd")}/history.{AdapterWithId}.{property}.json"));
+                await GetHistory(start, end, HistoryType.temperature),
+                await GetHistory(start, end, HistoryType.humidity),
+                await GetHistory(start, end, HistoryType.pressure)
+            };
+            return result;
         }
 
-        public virtual IoBrokerHistory ReadHistoryJSON(DateTime date, string property)
+        public async Task<IoBrokerHistory> GetHistory(DateTimeOffset start, DateTimeOffset end, HistoryType type)
         {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<IoBrokerHistory>(File.ReadAllText($"{Program.DeviceManager.Config.HistoryPath}/{date:yyyyMMdd}/history.{AdapterWithId}.{property}.json"))!;
+            return new(await GetHistoryRecords(start, end, type), type.ToString());
         }
 
+        private async Task<HistoryRecord[]> GetHistoryRecords(DateTimeOffset start, DateTimeOffset end, HistoryType type)
+        {
+            var tcs = new TaskCompletionSource<HistoryRecord[]>(TaskCreationOptions.RunContinuationsAsynchronously);
+            var i = AdapterWithId + "." + type.ToString().ToLower();
+            await Socket.EmitAsync("getHistory", response =>
+            {
+                try
+                {
+                    var a = response.GetValue<HistoryRecord[]>(1);
+                    tcs.SetResult(a);
+                }
+                catch (Exception ex)
+                {
+                    tcs.SetException(ex);
+                }
+            },
+            i,
+            new
+            {
+                id = i, // probably not necessary to put it here again
+                start = start.ToUnixTimeMilliseconds(),
+                end = end.ToUnixTimeMilliseconds(),
+                ignoreNull = true,
+                aggregate = "onchange" //minmax
+            });
+            await Task.Yield();
+            return await tcs.Task;
+        }
+    }
 
+    public enum HistoryType
+    {
+        temperature,
+        humidity,
+        pressure
     }
 }

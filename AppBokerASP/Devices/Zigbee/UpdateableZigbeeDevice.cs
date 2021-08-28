@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SocketIOClient;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -9,7 +10,7 @@ namespace AppBokerASP.Devices.Zigbee
     public abstract class UpdateableZigbeeDevice : ZigbeeDevice
     {
         private readonly string baseUpdateUrl;
-        public UpdateableZigbeeDevice(long nodeId, string baseUpdateUrl, Type type) : base(nodeId, type)
+        public UpdateableZigbeeDevice(long nodeId, string baseUpdateUrl, Type type, SocketIO socket) : base(nodeId, type, socket)
         {
             this.baseUpdateUrl = baseUpdateUrl;
         }
