@@ -163,6 +163,7 @@ namespace AppBokerASP
 
         public async Task GetZigbeeDevices()
         {
+            
             if (!Devices.IsEmpty)
             {
                 logger.Debug($"Cancel {nameof(GetZigbeeDevices)}, because it wasn't the startup");
