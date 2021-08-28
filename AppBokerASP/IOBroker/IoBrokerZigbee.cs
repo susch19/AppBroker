@@ -77,6 +77,7 @@ namespace AppBokerASP.IOBroker
             if (!Enum.TryParse<BrokerEvent>(s[2..i], out var en))
                 return false;
 
+
             i = s[++i..].IndexOf('"') + 1;
             var split = s[i..s[i..].IndexOf('"')].Split('.');
 

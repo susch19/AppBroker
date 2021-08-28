@@ -18,10 +18,14 @@ using PainlessMesh;
 namespace AppBokerASP
 {
 
-    public class SmartHome : Hub
+    public interface ISmartHomeClient 
+    {
+        Task Update(Device device);
+    }
+
+    public class SmartHome : Hub<ISmartHomeClient>
     {
 
-        public static List<IClientProxy> ConnectedClients { get; internal set; } = new List<IClientProxy>();
 
         public SmartHome()
         {
@@ -29,16 +33,9 @@ namespace AppBokerASP
 
         public override Task OnConnectedAsync()
         {
-            ConnectedClients.Add(Clients.Caller);
             foreach (var item in Program.DeviceManager.Devices.Values)
                 item.SendLastData(Clients.Caller);
             return base.OnConnectedAsync();
-        }
-
-        public override Task OnDisconnectedAsync(Exception? exception)
-        {
-            _ = ConnectedClients.Remove(Clients.Caller);
-            return base.OnDisconnectedAsync(exception);
         }
 
         public void Update(JsonSmarthomeMessage message)
@@ -84,10 +81,8 @@ namespace AppBokerASP
 
         public async void SendUpdate(Device device)
         {
-            foreach (var client in ConnectedClients)
-            {
-                await client.SendAsync("Update", device);
-            }
+
+            await (Clients.All?.Update(device) ?? Task.CompletedTask);
         }
 
         public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
@@ -146,8 +141,18 @@ namespace AppBokerASP
 
         public List<Device> Subscribe(IEnumerable<long> DeviceIds)
         {
-            var highlightedItemProperty = Clients.Caller.GetType().GetRuntimeFields().FirstOrDefault(pi => pi.Name == "_connectionId");
-            string connectionId = (string)highlightedItemProperty!.GetValue(Clients.Caller)!;
+            var proxyFieldInfo = Clients
+                .Caller
+                .GetType()
+                .GetRuntimeFields()
+                .First(x => x.Name == "_proxy");
+            var proxy = proxyFieldInfo!.GetValue(Clients.Caller)!;
+            var highlightedItemProperty =
+                proxy
+                .GetType()
+                .GetRuntimeFields()
+                .First(pi => pi.Name == "_connectionId");
+            string connectionId = (string)highlightedItemProperty.GetValue(proxy)!;
             var devices = new List<Device>();
             var subMessage = "User subscribed to ";
             foreach (var deviceId in DeviceIds)

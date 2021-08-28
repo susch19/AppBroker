@@ -158,6 +158,7 @@ namespace AppBokerASP
 
         public void GetZigbeeDevices()
         {
+            
             if (!Devices.IsEmpty)
             {
                 logger.Debug($"Cancel {nameof(GetZigbeeDevices)}, because it wasn't the startup");

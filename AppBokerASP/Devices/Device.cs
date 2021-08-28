@@ -40,9 +40,9 @@ namespace AppBokerASP.Devices
 
         public virtual dynamic? GetConfig() { return null; }
 
-        public virtual async void SendLastData(IClientProxy client) => await client.SendAsync("Update", this);
-        public virtual void SendLastData(List<IClientProxy> clients) => clients.ForEach(async x => await x.SendAsync("Update", this));
-        public virtual void SendDataToAllSubscribers() => Subscribers.ForEach(x => SendLastData(x.ClientProxy));
+        public virtual async void SendLastData(ISmartHomeClient client) => await client.Update(this);
+        public virtual void SendLastData(List<ISmartHomeClient> clients) => clients.ForEach(async x => await x.Update(this));
+        public virtual void SendDataToAllSubscribers() => Subscribers.ForEach(x => SendLastData(x.SmarthomeClient));
 
         public virtual void StopDevice() => IsConnected = false;
         public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
