@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SocketIOClient;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,7 +10,7 @@ namespace AppBokerASP.Devices.Zigbee
     {
         public bool State { get; set; }
 
-        public OsramPlug(long nodeId, string baseUpdateUrl) : base(nodeId, baseUpdateUrl, typeof(OsramPlug))
+        public OsramPlug(long nodeId, string baseUpdateUrl, SocketIO socket) : base(nodeId, baseUpdateUrl, typeof(OsramPlug), socket)
         {
             ShowInApp = true;
         }

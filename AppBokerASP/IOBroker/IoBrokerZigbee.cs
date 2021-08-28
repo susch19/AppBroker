@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -20,32 +21,25 @@ namespace AppBokerASP.IOBroker
             Id = id;
         }
 
-        public static bool TryParse(string s, out IoBrokerZigbee? obj)
+        public static bool TryParse(string eventName, string s, out IoBrokerZigbee? obj)
         {
             obj = null;
-            var i = s[2..].IndexOf('"') + 2;
-            if (!Enum.TryParse<BrokerEvent>(s[2..i], true, out var en))
+
+            if (!Enum.TryParse<BrokerEvent>(eventName, true, out var en))
                 return false;
 
-            i = s[++i..].IndexOf('"') + 1 + i;
-            var split = s[i..(s[i..].IndexOf('"') + i)].Split('.');
+            var array = JArray.Parse(s);
+            var split = array[0].ToString().Split(".");
+            var valueParameter = array[1].ToObject<Parameter>();
 
-            int splitIndex = -1;
-            byte instanceNum;
-            while (!byte.TryParse(split[++splitIndex], out instanceNum) && splitIndex + 1 < split.Length)
-            { }
-            if (splitIndex + 1 == split.Length)
+
+            if (!byte.TryParse(split[1], out var instance))
                 return false;
-            var adapterInstance = instanceNum;
-            var adapterName = string.Join('.', split[..(splitIndex)]);
 
-            if (!long.TryParse(split[splitIndex + 1], System.Globalization.NumberStyles.HexNumber, null, out var id))
+            if (!long.TryParse(split[2], NumberStyles.HexNumber, null, out var id))
                 return false;
-            var valueName = split.Last();
 
-            var valueParameter = s[(s[i..].IndexOf(',') + i + 1)..^1].ToDeObject<Parameter>();
-
-            obj = new IoBrokerZigbee(id, en, adapterName, adapterInstance, valueName, valueParameter);
+            obj = new IoBrokerZigbee(id, en, split[0], instance, split[3], valueParameter!);
 
             return true;
         }
@@ -69,33 +63,6 @@ namespace AppBokerASP.IOBroker
         public byte AdapterInstance { get; set; }
         public string ValueName { get; set; }
         public Parameter ValueParameter { get; set; }
-
-        public static bool TryParse(string s, out IoBrokerObject? obj)
-        {
-            obj = null;
-            var i = s[2..].IndexOf('"');
-            if (!Enum.TryParse<BrokerEvent>(s[2..i], out var en))
-                return false;
-
-
-            i = s[++i..].IndexOf('"') + 1;
-            var split = s[i..s[i..].IndexOf('"')].Split('.');
-
-            int splitIndex = 0;
-            byte instanceNum;
-            while (!byte.TryParse(split[splitIndex++], out instanceNum) || splitIndex < split.Length)
-            { }
-            if (splitIndex < split.Length)
-                return false;
-            var adapterName = string.Join('.', split[..(splitIndex - 1)]);
-
-            var valueName = split.Last();
-
-            var valueParameter = s[s[i..].IndexOf(',')..].ToDeObject<Parameter>();
-
-            obj = new IoBrokerObject(en, adapterName, instanceNum, valueName, valueParameter);
-            return true;
-        }
     }
 
 

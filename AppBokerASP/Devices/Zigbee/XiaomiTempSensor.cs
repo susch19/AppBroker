@@ -1,4 +1,5 @@
 ﻿using AppBokerASP.IOBroker;
+using SocketIOClient;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
@@ -64,7 +65,7 @@ namespace AppBokerASP.Devices.Zigbee
         private byte battery;
 
 
-        public XiaomiTempSensor(long id) : base(id, typeof(XiaomiTempSensor))
+        public XiaomiTempSensor(long id, SocketIO socket) : base(id, typeof(XiaomiTempSensor), socket)
         {
             ShowInApp = true;
             Available = true;

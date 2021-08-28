@@ -16,12 +16,13 @@ using AppBokerASP.Devices.Zigbee;
 using AppBokerASP.IOBroker;
 
 using Microsoft.AspNetCore.SignalR;
-using H.Socket.IO;
 using Newtonsoft.Json;
 
 using PainlessMesh;
 using Microsoft.Extensions.Configuration;
 using AppBokerASP.Configuration;
+using System.Net.Http;
+using SocketIOClient;
 
 namespace AppBokerASP
 {
@@ -29,10 +30,11 @@ namespace AppBokerASP
     {
         public ZigbeeConfig Config { get; }
         public ConcurrentDictionary<long, Device> Devices = new();
-        private SocketIoClient? client;
+        private SocketIO? client;
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly List<Type> types;
         readonly Task temp;
+        private static readonly HttpClient http = new();
 
         public DeviceManager()
         {
@@ -112,11 +114,14 @@ namespace AppBokerASP
         private async Task ConnectToIOBroker()
         {
 
-            client = new SocketIoClient();
+            client = new SocketIO(new Uri(Config.SocketIOUrl), new SocketIOOptions()
+            {
+                EIO = Config.NewSocketIoversion ? 4 : 3
+            });
             //int i = 0;
-            client.EventReceived += (sender, args) =>
+            client.OnAny(async (eventName, response) =>
                 {
-                    var suc = IoBrokerZigbee.TryParse(args.Value, out var zo);
+                    var suc = IoBrokerZigbee.TryParse(eventName, response.ToString(), out var zo);
                     //Console.Write(i++ + ", ");
                     if (suc && zo is not null)
                     {
@@ -133,30 +138,30 @@ namespace AppBokerASP
                             }
                         }
                         else
-                            GetZigbeeDevices();
+                            await GetZigbeeDevices();
                     }
-                };
-            client.ExceptionOccurred += async (sender, args) =>
+                });
+            client.OnError += async (sender, args) =>
             {
-                logger.Error($"AfterException, trying reconnect: {args.Value}");
+                logger.Error($"AfterException, trying reconnect: {args}");
                 await client.DisconnectAsync();
-                _ = await client.ConnectAsync(new Uri(Config.SocketIOUrl));
+                await client.ConnectAsync();
             };
 
-            client.Connected += (s, e) =>
+            client.OnConnected += async (s, e) =>
             {
                 Console.WriteLine("Connected");
                 logger.Debug("Connected Zigbee Client");
-                _ = client.Emit("subscribe", "zigbee.*");
-                _ = client.Emit("subscribeObjects", '*');
-                GetZigbeeDevices();
+                await client.EmitAsync("subscribe", "zigbee.*");
+                await client.EmitAsync("subscribeObjects", '*');
+                await GetZigbeeDevices();
             };
             var random = new Random();
-            _ = await client.ConnectAsync(new Uri(Config.SocketIOUrl));
+            await client.ConnectAsync();
             //await client.Emit("setState", new { id = "zigbee.0.d0cf5efffe1fa105.colortemp", val = 400, ack = true, ts = DateTime.Now.Ticks });
         }
 
-        public void GetZigbeeDevices()
+        public async Task GetZigbeeDevices()
         {
             
             if (!Devices.IsEmpty)
@@ -165,7 +170,7 @@ namespace AppBokerASP
                 return;
             }
 
-            string content = RequestStringData(@$"{Config.HttpUrl}/objects?pattern=zigbee.0*");
+            string content = await http.GetStringAsync(@$"{Config.HttpUrl}/objects?pattern=zigbee.0*");
             var better = Regex.Replace(content, "\"zigbee[.\\w\\s\\d]+\":", "");
             better = $"[{better[1..^1]}]";
 
@@ -196,11 +201,11 @@ namespace AppBokerASP
                 }
             }
 
-            content = RequestStringData(idRequest);
+            content = await http.GetStringAsync(idRequest);
 
 
             var getDeviceResponses = JsonConvert.DeserializeObject<IoBrokerGetDeviceResponse[]>(content)!;
-            content = RequestStringData(stateRequest);
+            content = await http.GetStringAsync(stateRequest);
             var deviceStates = JsonConvert.DeserializeObject<IoBrokerStateResponse[]>(content)!;
 
             foreach (var deviceRes in getDeviceResponses)
@@ -213,17 +218,17 @@ namespace AppBokerASP
                     switch (deviceRes.common.type)
                     {
                         case "WSDCGQ11LM":
-                        case "lumi.weather": dev = new XiaomiTempSensor(id); break;
-                        case "lumi.router": dev = new LumiRouter(id); break;
+                        case "lumi.weather": dev = new XiaomiTempSensor(id, client!); break;
+                        case "lumi.router": dev = new LumiRouter(id, client!); break;
                         case "L1529":
-                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, @$"{Config.HttpUrl}/set/" + deviceRes._id); break;
+                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
                         case "E1524/E1810":
 
-                        case "TRADFRI remote control": dev = new TradfriRemoteControl(id); break;
+                        case "TRADFRI remote control": dev = new TradfriRemoteControl(id, client!); break;
                         case "AB32840":
-                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, @$"{Config.HttpUrl}/set/" + deviceRes._id); break;
+                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
                         case "AB3257001NJ":
-                        case "Plug 01": dev = new OsramPlug(id, @$"{Config.HttpUrl}/set/" + deviceRes._id); break;
+                        case "Plug 01": dev = new OsramPlug(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
                         default: break;
                     }
                     if (dev == default(Device))
@@ -233,7 +238,9 @@ namespace AppBokerASP
                     _ = Devices.TryAdd(id, dev);
                     if (!DbProvider.AddDeviceToDb(dev))
                         _ = DbProvider.MergeDeviceWithDbData(dev);
-                    if (string.IsNullOrWhiteSpace(dev.FriendlyName))
+
+                    // If name is only numbers, try to get better name
+                    if (string.IsNullOrWhiteSpace(dev.FriendlyName) || long.TryParse(dev.FriendlyName, out _))
                         dev.FriendlyName = deviceRes.common.name;
                 }
                 foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
@@ -258,15 +265,6 @@ namespace AppBokerASP
                         zd.SetPropFromIoBroker(ioObject, false);
                 }
             }
-        }
-
-        private string RequestStringData(string url)
-        {
-            var request = WebRequest.CreateHttp(url)!;
-            using var res = request.GetResponse()!;
-            using var stream = res.GetResponseStream();
-            using var streamreader = new StreamReader(stream);
-            return streamreader.ReadToEnd();
         }
     }
 }

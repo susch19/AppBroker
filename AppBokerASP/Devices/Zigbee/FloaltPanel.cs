@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using PainlessMesh;
+using SocketIOClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ namespace AppBokerASP.Devices.Zigbee
 {
     public class FloaltPanel : ZigbeeLamp
     {
-        public FloaltPanel(long nodeId, string baseUpdateUrl) : base(nodeId, baseUpdateUrl, typeof(FloaltPanel))
+        public FloaltPanel(long nodeId, string baseUpdateUrl, SocketIO socket) : base(nodeId, baseUpdateUrl, typeof(FloaltPanel), socket)
         {
         }
     }
