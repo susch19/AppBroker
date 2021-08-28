@@ -1,33 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
-using System.Net.NetworkInformation;
-using System.Net.Security;
-using System.Net.Sockets;
 using System.Net.WebSockets;
-using System.Reflection;
-using System.Security.Cryptography;
-using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 
+using AppBokerASP.Configuration;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using NLog;
-
-using PainlessMesh;
 using PainlessMesh.Ota;
 
 
@@ -38,42 +21,16 @@ namespace AppBokerASP
         public static DeviceManager DeviceManager { get; private set; }
 
         public static SmarthomeMeshManager MeshManager { get; private set; }
+
+        public static IConfigurationRoot Configuration { get; private set; }
+
+
         public static UpdateManager UpdateManager { get; private set; }
 
-        //private static NLog.Logger Logger { get; } = NLog.LogManager.GetCurrentClassLogger();
+        private static readonly PainlessMeshSettings painlessMeshSettings;
+        
 
 
-
-        //private static Task t;
-
-        //private static TcpListener TcpServer = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), 8801);
-
-
-        /*
-         * 
-         * 
-    [JsonPropertyName("id"), nj.JsonProperty("id")]
-    public uint NodeId { get; set; }
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter)), JsonPropertyName("m"), nj.JsonProperty("m")]
-    public MessageType MessageType { get; set; }
-    [System.Text.Json.Serialization.JsonConverter(typeof(JsonStringEnumConverter)), JsonPropertyName("c"), nj.JsonProperty("c")]
-    public Command Command { get; set; }
-    [JsonPropertyName("p"), nj.JsonProperty("p")/*, nj.JsonConverter(typeof(SingleOrListConverter<JsonElement>))]
-    public List<JObject> Parameters { get; set; }
-    public GeneralSmarthomeMessage(uint nodeId, MessageType messageType, Command command, params JObject[] parameters)
-    {
-        NodeId = nodeId;
-        MessageType = messageType;
-        Command = command;
-        Parameters = parameters.ToList();
-    }
-    public GeneralSmarthomeMessage()
-    {
-    }
-         * 
-         * 
-         * 
-         */
         private enum PemStringType
         {
             Certificate,
@@ -82,13 +39,22 @@ namespace AppBokerASP
 
         static Program()
         {
+            var configBuilder = new ConfigurationBuilder();
+            configBuilder.AddJsonFile("appsettings.json");
+            Configuration = configBuilder.Build();
+            var settings = new PainlessMeshSettings();
+            Configuration.GetSection(PainlessMeshSettings.ConfigName).Bind(settings);
+            painlessMeshSettings = Configuration.Get<PainlessMeshSettings>();
+
             UpdateManager = new();
-            MeshManager = new SmarthomeMeshManager(8801);
+            MeshManager = new SmarthomeMeshManager(painlessMeshSettings.ListenPort);
             DeviceManager = new DeviceManager();
         }
 
+
         public static void Main(string[] args)
         {
+
             Console.OutputEncoding = Encoding.Unicode;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
@@ -106,9 +72,8 @@ namespace AppBokerASP
 
 
             Dostuff();
-
-
-            MeshManager.Start();
+            if (painlessMeshSettings.Enabled)
+                MeshManager.Start();
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG
@@ -126,7 +91,7 @@ namespace AppBokerASP
 #if DEBUG
                 CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
 #else
-                CreateWebHostBuilder(args).UseUrls("http://[::1]:5055", "http://0.0.0.0:5055").Build().Run();
+                CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
 #endif
             }
         }

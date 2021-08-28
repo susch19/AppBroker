@@ -1,4 +1,5 @@
-﻿using AppBokerASP.IOBroker;
+﻿using AppBokerASP.Configuration;
+using AppBokerASP.IOBroker;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -49,9 +50,9 @@ namespace AppBokerASP.Devices.Zigbee
         public virtual List<IoBrokerHistory> ReadHistoryJSON(DateTime date)
         {
 #if DEBUG
-            var files = Directory.GetFiles($"F:\\Temp\\Neuer Ordner\\{date:yyyyMMdd}\\", $"history.{AdapterWithId}*");
+            var files = Directory.GetFiles($"{Program.DeviceManager.Config.HistoryPath}\\{date:yyyyMMdd}\\", $"history.{AdapterWithId}*");
 #else
-            var files = Directory.GetFiles($"/home/pi/IoBrokerHistory/{date.ToString("yyyyMMdd")}/", $"history.{AdapterWithId}*");
+            var files = Directory.GetFiles($"{Program.DeviceManager.Config.HistoryPath}/{date.ToString("yyyyMMdd")}/", $"history.{AdapterWithId}*");
 #endif
 
             var list = new List<IoBrokerHistory>();
@@ -67,7 +68,7 @@ namespace AppBokerASP.Devices.Zigbee
 
         public virtual IoBrokerHistory ReadHistoryJSON(DateTime date, string property)
         {
-            return Newtonsoft.Json.JsonConvert.DeserializeObject<IoBrokerHistory>(File.ReadAllText($"/home/pi/ioBrokerHistory/{date:yyyyMMdd}/history.{AdapterWithId}.{property}.json"))!;
+            return Newtonsoft.Json.JsonConvert.DeserializeObject<IoBrokerHistory>(File.ReadAllText($"{Program.DeviceManager.Config.HistoryPath}/{date:yyyyMMdd}/history.{AdapterWithId}.{property}.json"))!;
         }
 
 

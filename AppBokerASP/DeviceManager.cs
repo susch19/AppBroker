@@ -20,20 +20,25 @@ using H.Socket.IO;
 using Newtonsoft.Json;
 
 using PainlessMesh;
-
+using Microsoft.Extensions.Configuration;
+using AppBokerASP.Configuration;
 
 namespace AppBokerASP
 {
     public class DeviceManager
     {
+        public ZigbeeConfig Config { get; }
         public ConcurrentDictionary<long, Device> Devices = new();
         private SocketIoClient? client;
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-
         private readonly List<Type> types;
         readonly Task temp;
+
         public DeviceManager()
         {
+            Config = new ZigbeeConfig();
+            Program.Configuration.GetSection(ZigbeeConfig.ConfigName).Bind(Config);
+
             types = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device)).ToList();
             Program.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
             Program.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
@@ -135,7 +140,7 @@ namespace AppBokerASP
             {
                 logger.Error($"AfterException, trying reconnect: {args.Value}");
                 await client.DisconnectAsync();
-                _ = await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
+                _ = await client.ConnectAsync(new Uri(Config.SocketIOUrl));
             };
 
             client.Connected += (s, e) =>
@@ -147,7 +152,7 @@ namespace AppBokerASP
                 GetZigbeeDevices();
             };
             var random = new Random();
-            _ = await client.ConnectAsync(new Uri("http://ZigbeeHub:8084"));
+            _ = await client.ConnectAsync(new Uri(Config.SocketIOUrl));
             //await client.Emit("setState", new { id = "zigbee.0.d0cf5efffe1fa105.colortemp", val = 400, ack = true, ts = DateTime.Now.Ticks });
         }
 
@@ -159,7 +164,7 @@ namespace AppBokerASP
                 return;
             }
 
-            string content = RequestStringData(@"http://ZigbeeHub:8087/objects?pattern=zigbee.0*");
+            string content = RequestStringData(@$"{Config.HttpUrl}/objects?pattern=zigbee.0*");
             var better = Regex.Replace(content, "\"zigbee[.\\w\\s\\d]+\":", "");
             better = $"[{better[1..^1]}]";
 
@@ -170,9 +175,9 @@ namespace AppBokerASP
 
                 return;
             }
-            var idRequest = "http://ZigbeeHub:8087/get/";
+            var idRequest = @$"{Config.HttpUrl}/get/";
             var idsAlreadyInRequest = new List<ulong>();
-            var stateRequest = "http://ZigbeeHub:8087/get/";
+            var stateRequest = @$"{Config.HttpUrl}/get/";
             foreach (var item in ioBrokerObject)
             {
                 var matches = item._id.Split('.');
@@ -210,14 +215,14 @@ namespace AppBokerASP
                         case "lumi.weather": dev = new XiaomiTempSensor(id); break;
                         case "lumi.router": dev = new LumiRouter(id); break;
                         case "L1529":
-                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, "http://ZigbeeHub:8087/set/" + deviceRes._id); break;
+                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, @$"{Config.HttpUrl}/set/" + deviceRes._id); break;
                         case "E1524/E1810":
 
                         case "TRADFRI remote control": dev = new TradfriRemoteControl(id); break;
                         case "AB32840":
-                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, "http://ZigbeeHub:8087/set/" + deviceRes._id); break;
+                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, @$"{Config.HttpUrl}/set/" + deviceRes._id); break;
                         case "AB3257001NJ":
-                        case "Plug 01": dev = new OsramPlug(id, "http://ZigbeeHub:8087/set/" + deviceRes._id); break;
+                        case "Plug 01": dev = new OsramPlug(id, @$"{Config.HttpUrl}/set/" + deviceRes._id); break;
                         default: break;
                     }
                     if (dev == default(Device))

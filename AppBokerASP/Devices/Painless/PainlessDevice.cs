@@ -14,6 +14,8 @@ using System.Threading.Tasks;
 
 namespace AppBokerASP.Devices.Painless
 {
+  
+
     public abstract class PainlessDevice : Device
     {
         public string IP { get; protected set; } = "";
@@ -31,7 +33,7 @@ namespace AppBokerASP.Devices.Painless
             Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             Program.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
-
+            
         }
 
 
@@ -79,7 +81,7 @@ namespace AppBokerASP.Devices.Painless
                         str = memoryStream.ToArray();
                     }
 
-                    Program.MeshManager.SendSingle((uint)Id, str);
+                    Task.Delay(str.Length / 8).ContinueWith(x=>Program.MeshManager.SendSingle((uint)Id, str));
 
                     break;
                 case Command.OtaPart:

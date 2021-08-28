@@ -74,9 +74,9 @@ namespace AppBokerASP
             serverSocket.OnClientConnected += ServerSocket_OnClientConnected;
             serverSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
 
-            timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(10d), WaitBeforeWhoIAmSendAgain));
-            timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1d), TimeSpan.FromHours(1d)));
-            timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10d), TimeSpan.FromSeconds(10d)));
+            timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(1.0), WaitBeforeWhoIAmSendAgain));
+            timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1.0), TimeSpan.FromHours(1d)));
+            timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10.0), TimeSpan.FromSeconds(10d)));
             Program.UpdateManager.Advertisment += OtaAdvertisment;
         }
 
@@ -319,9 +319,9 @@ namespace AppBokerASP
         {
             try
             {
+                logger.Debug($"{PackageType.SINGLE}: NodeId: {destination}, Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
                 using var ms = new MemoryStream();
                 message.Serialize(ms);
-                logger.Debug($"{PackageType.SINGLE}: NodeId: {destination}, Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
                 serverSocket.SendToAllClients(PackageType.SINGLE, ms.ToArray(), destination);
             }
             catch (Exception e)

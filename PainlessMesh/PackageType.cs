@@ -28,6 +28,8 @@
 
     public enum Command
     {
+        Off,
+        On,
         WhoIAm,
         IP,
         Time,
@@ -40,7 +42,6 @@
         OnNewConnection,
         Mesh,
         Delay,
-        Off,
         RGB,
         Strobo,
         RGBCycle,

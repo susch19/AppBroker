@@ -35,6 +35,8 @@ namespace AppBokerASP.Devices.Painless.Heater
 
         private readonly List<HeaterConfig> timeTemps = new();
 
+        public bool DisableHeating { get; set; }
+        public bool DisableLed { get; set; }
 
         private readonly Task? heaterSensorMapping;
 
@@ -93,6 +95,11 @@ namespace AppBokerASP.Devices.Painless.Heater
                     logger.Error(e, $"Heater {LogName} has transmitted wrong temps");
                 }
             }
+            if (parameters.Count > 5)
+            {
+                DisableHeating = BitConverter.ToBoolean(parameters[4]);
+                DisableLed = BitConverter.ToBoolean(parameters[5]);
+            }
         }
 
         private byte[] GetSendableTimeTemps(IEnumerable<HeaterConfig> timeTemps)
@@ -149,9 +156,16 @@ namespace AppBokerASP.Devices.Painless.Heater
                 case Command.Temp:
                     HandleTimeTempMessageUpdate(e.Parameters[0]);
                     break;
+                case Command.Off:
+                    DisableHeating = true;
+                    break;
+                case Command.On:
+                    DisableHeating = false;
+                    break;
                 default:
                     break;
             }
+            SendDataToAllSubscribers();
         }
 
         protected override void OptionMessageReceived(BinarySmarthomeMessage e)
@@ -162,9 +176,22 @@ namespace AppBokerASP.Devices.Painless.Heater
                     //CurrentConfig = TimeTempMessageLE.FromBase64((string)e.Parameters[0]);
                     //SendDataToAllSubscribers();
                     break;
+                case Command.Off:
+                    DisableLed = true;
+                    break;
+                case Command.On:
+                    DisableLed = false;
+                    break;
+                case Command.Mode:
+                    //if (e.Parameters.Count < 1)
+                    //    return;
+                    //DisableLed = BitConverter.ToBoolean(e.Parameters[0]);
+                    break;
                 default:
+
                     break;
             }
+            SendDataToAllSubscribers();
         }
 
         private void HandleTimeTempMessageUpdate(byte[] messages)
@@ -185,8 +212,6 @@ namespace AppBokerASP.Devices.Painless.Heater
                 logger.Error($"Heater {LogName} has Exception inside HandleTimeTempMessageUpdate\r\n {e} ");
                 Console.WriteLine(e);
             }
-
-            SendDataToAllSubscribers();
         }
 
 
@@ -194,17 +219,26 @@ namespace AppBokerASP.Devices.Painless.Heater
         {
 
             logger.Debug("UpdateFromApp " + command + " <> " + parameters.ToJson());
+            BinarySmarthomeMessage msg;
             switch (command)
             {
                 case Command.Temp:
                     var temp = (float)parameters[0];
                     var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
                     //logger.Debug("Send new ttm: " + )
-                    var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, ttm.ToBinary());
+                    msg = new((uint)Id, MessageType.Update, command, ttm.ToBinary());
                     Program.MeshManager.SendSingle((uint)Id, msg);
                     break;
                 case Command.DeviceMapping:
                     UpdateDeviceMappingInDb((long)parameters[0], (long)parameters[1]);
+                    break;
+                case Command.Off:
+                    msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
+                    Program.MeshManager.SendSingle((uint)Id, msg);
+                    break;
+                case Command.On:
+                    msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
+                    Program.MeshManager.SendSingle((uint)Id, msg);
                     break;
                 default:
                     break;
@@ -229,13 +263,20 @@ namespace AppBokerASP.Devices.Painless.Heater
                         var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
                         var s = ttm.SelectMany(x => x.ToBinary()).ToArray();
 
-                        msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, s);
+                        msg = new ((uint)Id, MessageType.Options, command, s);
                         Program.MeshManager.SendSingle((uint)Id, msg);
                         break;
                     }
-
+                case Command.Off:
+                    msg = new ((uint)Id, MessageType.Options, command, new ByteLengthList());
+                    Program.MeshManager.SendSingle((uint)Id, msg);
+                    break;
+                case Command.On:
+                    msg = new ((uint)Id, MessageType.Options, command, new ByteLengthList());
+                    Program.MeshManager.SendSingle((uint)Id, msg);
+                    break;
                 case Command.Mode:
-                    msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command);
+                    msg = new ((uint)Id, MessageType.Options, command);
                     Program.MeshManager.SendSingle((uint)Id, msg);
                     break;
             }
