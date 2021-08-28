@@ -32,7 +32,7 @@ namespace AppBokerASP.Devices.Zigbee
 
         public void SetPropFromIoBroker(IoBrokerObject ioBrokerObject, bool setLastReceived)
         {
-            var prop = propertyInfos.FirstOrDefault(x => x.Name.ToLower() == ioBrokerObject.ValueName);
+            var prop = propertyInfos.FirstOrDefault(x => ioBrokerObject.ValueName.Contains(x.Name.ToLower()));
             if (prop == default || ioBrokerObject.ValueParameter.Value == null)
                 return;
             if ((prop.PropertyType == typeof(float) || prop.PropertyType == typeof(double)) && ioBrokerObject.ValueParameter.Value.ToObject<string>()!.Contains(","))

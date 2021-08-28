@@ -71,7 +71,7 @@ namespace AppBokerASP
 
 
 
-            Dostuff();
+            //Dostuff();
             if (painlessMeshSettings.Enabled)
                 MeshManager.Start();
 
