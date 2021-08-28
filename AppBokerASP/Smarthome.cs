@@ -105,7 +105,7 @@ namespace AppBokerASP
             if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
             {
                 var date = DateTime.Parse(dt).Date;
-                return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), Enum.Parse<HistoryType>(propertyName));
+                return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), Enum.Parse<HistoryType>(propertyName, true));
             }
             return Task.FromResult(new IoBrokerHistory());
         }
@@ -127,7 +127,7 @@ namespace AppBokerASP
             {
                 return new List<IoBrokerHistory>()
                 {
-                    await d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), Enum.Parse<HistoryType>(propertyName))
+                    await d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), Enum.Parse<HistoryType>(propertyName, true))
                 };
             }
 

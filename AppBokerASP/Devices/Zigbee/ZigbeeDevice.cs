@@ -56,16 +56,16 @@ namespace AppBokerASP.Devices.Zigbee
         {
             var result = new List<IoBrokerHistory>
             {
-                await GetHistory(start, end, HistoryType.temperature),
-                await GetHistory(start, end, HistoryType.humidity),
-                await GetHistory(start, end, HistoryType.pressure)
+                await GetHistory(start, end, HistoryType.Temperature),
+                await GetHistory(start, end, HistoryType.Humidity),
+                await GetHistory(start, end, HistoryType.Pressure)
             };
             return result;
         }
 
         public async Task<IoBrokerHistory> GetHistory(DateTimeOffset start, DateTimeOffset end, HistoryType type)
         {
-            return new(await GetHistoryRecords(start, end, type), type.ToString());
+            return new(await GetHistoryRecords(start, end, type), type.ToString().ToLower());
         }
 
         private async Task<HistoryRecord[]> GetHistoryRecords(DateTimeOffset start, DateTimeOffset end, HistoryType type)
@@ -100,8 +100,8 @@ namespace AppBokerASP.Devices.Zigbee
 
     public enum HistoryType
     {
-        temperature,
-        humidity,
-        pressure
+        Temperature,
+        Humidity,
+        Pressure
     }
 }
