@@ -77,7 +77,7 @@ namespace AppBokerASP
             timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(1.0), WaitBeforeWhoIAmSendAgain));
             timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1.0), TimeSpan.FromHours(1d)));
             timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10.0), TimeSpan.FromSeconds(10d)));
-            Program.UpdateManager.Advertisment += OtaAdvertisment;
+            InstanceContainer.UpdateManager.Advertisment += OtaAdvertisment;
         }
 
         public void Stop()
@@ -114,7 +114,7 @@ namespace AppBokerASP
 
         private void OtaAdvertisment(object? sender, PainlessMesh.Ota.FirmwareMetadata e)
         {
-            foreach (var item in Program.DeviceManager.Devices.Values)
+            foreach (var item in InstanceContainer.DeviceManager.Devices.Values)
             {
                 if (item is PainlessDevice pd)
                     pd.OtaAdvertisment(e);
@@ -272,7 +272,7 @@ namespace AppBokerASP
                         if (item.MissedConnections > 0)
                         {
                             item.MissedConnections = 0;
-                            if (Program.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
+                            if (InstanceContainer.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
                                 SendSingle((uint)dev.Id, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                             else
                                 lostSubs.Add(item.Id);

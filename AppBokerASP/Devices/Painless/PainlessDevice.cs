@@ -30,9 +30,9 @@ namespace AppBokerASP.Devices.Painless
         protected PainlessDevice(long nodeId) : base(nodeId)
         {
             DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
-            Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-            Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
-            Program.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+            InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+            InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+            InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
             
         }
 
@@ -41,9 +41,9 @@ namespace AppBokerASP.Devices.Painless
         {
             DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
             InterpretParameters(parameter);
-            Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-            Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
-            Program.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+            InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+            InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+            InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
 
         }
 
@@ -58,11 +58,11 @@ namespace AppBokerASP.Devices.Painless
                 case Command.Ota:
                     var request = new RequestFirmwarePart(e.Parameters[0], Id);
                     // Deserialize RequestFirmwarePart, send base64 as non json
-                    var b64 = Program.UpdateManager.GetPart(request);
+                    var b64 = InstanceContainer.UpdateManager.GetPart(request);
                     if (b64.Length == 0)
                     {
                         request.TargetId = 0;
-                        b64 = Program.UpdateManager.GetPart(request);
+                        b64 = InstanceContainer.UpdateManager.GetPart(request);
                     }
                     if (b64.Length == 0)
                     {
@@ -81,7 +81,7 @@ namespace AppBokerASP.Devices.Painless
                         str = memoryStream.ToArray();
                     }
 
-                    Task.Delay(str.Length / 8).ContinueWith(x=>Program.MeshManager.SendSingle((uint)Id, str));
+                    Task.Delay(str.Length / 8).ContinueWith(x=>InstanceContainer.MeshManager.SendSingle((uint)Id, str));
 
                     break;
                 case Command.OtaPart:
@@ -125,7 +125,7 @@ namespace AppBokerASP.Devices.Painless
 
             //Do OTA
             var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, Command.Ota, metadata.ToBinary());
-            Program.MeshManager.SendSingle((uint)Id, msg);
+            InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
         }
 
         protected virtual void InterpretParameters(ByteLengthList parameter)
@@ -157,9 +157,9 @@ namespace AppBokerASP.Devices.Painless
         public override void StopDevice()
         {
             base.StopDevice();
-            Program.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-            Program.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-            Program.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
+            InstanceContainer.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+            InstanceContainer.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+            InstanceContainer.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
         }
 
         public override void Reconnect(ByteLengthList parameter)
@@ -168,12 +168,12 @@ namespace AppBokerASP.Devices.Painless
 
             InterpretParameters(parameter);
 
-            Program.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-            Program.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-            Program.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
-            Program.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
-            Program.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-            Program.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+            InstanceContainer.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+            InstanceContainer.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+            InstanceContainer.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
+            InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+            InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+            InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
 
         }
         protected virtual void GetMessageReceived(BinarySmarthomeMessage e) { }

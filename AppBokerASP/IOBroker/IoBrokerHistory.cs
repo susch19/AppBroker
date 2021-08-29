@@ -22,6 +22,11 @@ namespace AppBokerASP.IOBroker
         
         public string PropertyName { get; set; }
 
+        public IoBrokerHistory(string propertyName) : this()
+        {
+            PropertyName = propertyName;
+        }
+
         public class HistoryRecord
         {
             public float? val { get; set; }

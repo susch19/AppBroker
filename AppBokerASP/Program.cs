@@ -18,17 +18,7 @@ namespace AppBokerASP
 {
     public class Program
     {
-        public static DeviceManager DeviceManager { get; private set; }
-
-        public static SmarthomeMeshManager MeshManager { get; private set; }
-
-        public static IConfigurationRoot Configuration { get; private set; }
-
-
-        public static UpdateManager UpdateManager { get; private set; }
-
-        private static readonly PainlessMeshSettings painlessMeshSettings;
-        
+   
 
 
         private enum PemStringType
@@ -37,20 +27,7 @@ namespace AppBokerASP
             RsaPrivateKey
         }
 
-        static Program()
-        {
-            var configBuilder = new ConfigurationBuilder();
-            configBuilder.AddJsonFile("appsettings.json");
-            Configuration = configBuilder.Build();
-            var settings = new PainlessMeshSettings();
-            Configuration.GetSection(PainlessMeshSettings.ConfigName).Bind(settings);
-            painlessMeshSettings = Configuration.Get<PainlessMeshSettings>();
-
-            UpdateManager = new();
-            MeshManager = new SmarthomeMeshManager(painlessMeshSettings.ListenPort);
-            DeviceManager = new DeviceManager();
-        }
-
+     
 
         public static void Main(string[] args)
         {
@@ -72,8 +49,8 @@ namespace AppBokerASP
 
 
             //Dostuff();
-            if (painlessMeshSettings.Enabled)
-                MeshManager.Start();
+            if (InstanceContainer.ConfigManager.PainlessMeshConfig.Enabled)
+                InstanceContainer.MeshManager.Start();
 
             //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
 #if DEBUG

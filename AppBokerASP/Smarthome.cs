@@ -31,14 +31,14 @@ namespace AppBokerASP
 
         public override Task OnConnectedAsync()
         {
-            foreach (var item in Program.DeviceManager.Devices.Values)
+            foreach (var item in InstanceContainer.DeviceManager.Devices.Values)
                 item.SendLastData(Clients.Caller);
             return base.OnConnectedAsync();
         }
 
         public void Update(JsonSmarthomeMessage message)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(message.LongNodeId, out var device))
+            if (InstanceContainer.DeviceManager.Devices.TryGetValue(message.LongNodeId, out var device))
             {
                 switch (message.MessageType)
                 {
@@ -59,7 +59,7 @@ namespace AppBokerASP
 
         public void UpdateDevice(long id, string newName)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var stored))
+            if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var stored))
             {
                 stored.FriendlyName = newName;
                 _ = DbProvider.UpdateDeviceInDb(stored);
@@ -69,7 +69,7 @@ namespace AppBokerASP
 
         public dynamic? GetConfig(uint deviceId)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+            if (InstanceContainer.DeviceManager.Devices.TryGetValue(deviceId, out var device))
             {
                 return device.GetConfig();
                 //Console.WriteLine($"User send command {message.Command} to {device} with {message.Parameters}");
@@ -83,11 +83,12 @@ namespace AppBokerASP
             await (Clients.All?.Update(device) ?? Task.CompletedTask);
         }
 
-        public List<Device> GetAllDevices() => Program.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
+
+        public List<Device> GetAllDevices() => InstanceContainer.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
 
         public Task<List<IoBrokerHistory>> GetIoBrokerHistories(long id, string dt)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
             {
                 var date = DateTime.Parse(dt).Date;
                 return d.GetHistory(date, date.AddDays(1).AddSeconds(-1));
@@ -97,7 +98,7 @@ namespace AppBokerASP
 
         public Task<IoBrokerHistory> GetIoBrokerHistory(long id, string dt, string propertyName)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
             {
                 var date = DateTime.Parse(dt).Date;
                 return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), Enum.Parse<HistoryType>(propertyName, true));
@@ -107,7 +108,7 @@ namespace AppBokerASP
 
         public Task<List<IoBrokerHistory>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
             {
                 return d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
             }
@@ -118,7 +119,7 @@ namespace AppBokerASP
         // TODO: remove list, just return one item
         public async Task<List<IoBrokerHistory>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
         {
-            if (Program.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+            if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
             {
                 return new List<IoBrokerHistory>()
                 {
@@ -148,7 +149,7 @@ namespace AppBokerASP
             foreach (var deviceId in DeviceIds)
             {
 
-                if (Program.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+                if (InstanceContainer.DeviceManager.Devices.TryGetValue(deviceId, out var device))
                 {
                     if (!device.Subscribers.Any(x => x.ConnectionId == connectionId))
                         device.Subscribers.Add(new Subscriber(connectionId, Clients.Caller));
@@ -162,7 +163,7 @@ namespace AppBokerASP
 
         public void UpdateTime()
         {
-            Program.MeshManager.UpdateTime();
+            InstanceContainer.MeshManager.UpdateTime();
         }
     }
 }

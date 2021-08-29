@@ -38,13 +38,12 @@ namespace AppBokerASP
 
         public DeviceManager()
         {
-            Config = new ZigbeeConfig();
-            Program.Configuration.GetSection(ZigbeeConfig.ConfigName).Bind(Config);
-
+            Config = InstanceContainer.ConfigManager.ZigbeeConfig;
+ 
             types = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device)).ToList();
-            Program.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
-            Program.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
-            Program.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
+            InstanceContainer.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
+            InstanceContainer.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
+            InstanceContainer.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
             temp = ConnectToIOBroker();
         }
 

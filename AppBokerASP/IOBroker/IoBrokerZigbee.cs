@@ -32,6 +32,8 @@ namespace AppBokerASP.IOBroker
             var split = array[0].ToString().Split(".");
             var valueParameter = array[1].ToObject<Parameter>();
 
+            if (split.Length < 4)
+                return false;
 
             if (!byte.TryParse(split[1], out var instance))
                 return false;
