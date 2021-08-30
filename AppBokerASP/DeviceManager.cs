@@ -228,7 +228,13 @@ namespace AppBokerASP
                         case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
                         case "AB3257001NJ":
                         case "Plug 01": dev = new OsramPlug(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
-                        default: break;
+                        case "LED1624G9":
+                        case "TRADFRI bulb E14 CWS opal 600lm":
+                        case "TRADFRI bulb E27 CWS opal 600lm":
+                            dev = new TradfriLedBulb(id, "", client!); break;
+                        default:
+                            logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
+                            break;
                     }
                     if (dev == default(Device))
                         continue;
