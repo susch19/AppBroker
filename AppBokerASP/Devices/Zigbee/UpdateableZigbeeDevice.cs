@@ -1,7 +1,5 @@
 ﻿using SocketIOClient;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -18,6 +16,11 @@ namespace AppBokerASP.Devices.Zigbee
         {
             var request = WebRequest.CreateHttp(string.Format("{0}.{1}?value={2}", baseUpdateUrl, valuename, value));
             return request.GetResponse();
+        }
+
+        protected Task SetValue(string property, object value)
+        {
+            return Socket.EmitAsync("setState", $"{AdapterWithId}.{property.ToLower()}", value);
         }
     }
 }
