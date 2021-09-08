@@ -31,7 +31,7 @@ namespace AppBokerASP.Devices.Zigbee
         public bool State { get; set; }
 
         public TradfriLedBulb(long nodeId, string baseUpdateUrl, SocketIO socket) :
-            base(nodeId, baseUpdateUrl, typeof(TradfriLedBulb), socket)
+            base(nodeId, typeof(TradfriLedBulb), socket)
         {
             ShowInApp = true;
         }

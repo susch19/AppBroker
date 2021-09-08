@@ -4,10 +4,7 @@ using PainlessMesh;
 using SocketIOClient;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 
 namespace AppBokerASP.Devices.Zigbee
 {
@@ -19,41 +16,41 @@ namespace AppBokerASP.Devices.Zigbee
         [JsonPropertyName("transitionTime")]
         public float Transition_Time { get; set; }
 
-        public ZigbeeLamp(long nodeId, string baseUpdateUrl, Type t, SocketIO socket) : base(nodeId, baseUpdateUrl, t, socket)
+        public ZigbeeLamp(long nodeId, Type t, SocketIO socket) : base(nodeId, t, socket)
         {
             ShowInApp = true;
         }
 
-        public override void OptionsFromApp(Command command, List<JToken> parameters)
+        public override async void OptionsFromApp(Command command, List<JToken> parameters)
         {
             switch (command)
             {
                 case Command.Delay:
                     Transition_Time = parameters[0].ToObject<float>();
-                    _ = UpdateZigbeeDeviceRequest(nameof(Transition_Time).ToLower(), Transition_Time);
+                    await SetValue(nameof(Transition_Time), Transition_Time);
                     break;
             }
         }
 
-        public override void UpdateFromApp(Command command, List<JToken> parameters)
+        public override async void UpdateFromApp(Command command, List<JToken> parameters)
         {
             switch (command)
             {
                 case Command.Temp:
                     ColorTemp = parameters[0].ToObject<int>();
-                    _ = UpdateZigbeeDeviceRequest(nameof(ColorTemp).ToLower(), ColorTemp);
+                    await SetValue(nameof(ColorTemp), ColorTemp);
                     break;
                 case Command.Brightness:
                     Brightness = parameters[0].ToObject<byte>();
-                    _ = UpdateZigbeeDeviceRequest(nameof(Brightness).ToLower(), Brightness);
+                    await SetValue(nameof(Brightness), Brightness);
                     break;
                 case Command.SingleColor:
                     State = true;
-                    _ = UpdateZigbeeDeviceRequest(nameof(State).ToLower(), State.ToString().ToLower());
+                    await SetValue(nameof(State), State.ToString().ToLower());
                     break;
                 case Command.Off:
                     State = false;
-                    _ = UpdateZigbeeDeviceRequest(nameof(State).ToLower(), State.ToString().ToLower());
+                    await SetValue(nameof(State), State.ToString().ToLower());
                     break;
                 default:
                     break;
