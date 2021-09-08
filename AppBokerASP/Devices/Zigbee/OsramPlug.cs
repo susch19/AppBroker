@@ -4,6 +4,7 @@ using PainlessMesh;
 
 using SocketIOClient;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AppBokerASP.Devices.Zigbee
 {
@@ -16,7 +17,7 @@ namespace AppBokerASP.Devices.Zigbee
             ShowInApp = true;
         }
 
-        public override async void UpdateFromApp(Command command, List<JToken> parameters)
+        public override async Task UpdateFromApp(Command command, List<JToken> parameters)
         {
             switch (command)
             {

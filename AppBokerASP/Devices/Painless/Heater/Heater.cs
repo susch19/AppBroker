@@ -215,7 +215,7 @@ namespace AppBokerASP.Devices.Painless.Heater
         }
 
 
-        public override void UpdateFromApp(Command command, List<JToken> parameters)
+        public override Task UpdateFromApp(Command command, List<JToken> parameters)
         {
 
             logger.Debug("UpdateFromApp " + command + " <> " + parameters.ToJson());
@@ -243,6 +243,8 @@ namespace AppBokerASP.Devices.Painless.Heater
                 default:
                     break;
             }
+
+            return Task.CompletedTask;
         }
 
 
