@@ -165,6 +165,12 @@ namespace AppBokerASP
                 return;
             }
 
+            if (client is null)
+            {
+                logger.Error("SocketIO Client is null");
+                return;
+            }
+
             var allObjectsResponse = await socket.Emit("getObjects");
             var allObjectscontentNew = allObjectsResponse?.GetValue(1).ToString();
 
@@ -224,24 +230,24 @@ namespace AppBokerASP
                     switch (deviceRes.common.type)
                     {
                         case "WSDCGQ11LM":
-                        case "lumi.weather": dev = new XiaomiTempSensor(id, client!); break;
-                        case "lumi.router": dev = new LumiRouter(id, client!); break;
+                        case "lumi.weather": dev = new XiaomiTempSensor(id, client); break;
+                        case "lumi.router": dev = new LumiRouter(id, client); break;
                         case "L1529":
-                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, client!); break;
+                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, client); break;
                         case "E1524/E1810":
-                        case "TRADFRI remote control": dev = new TradfriRemoteControl(id, client!); break;
+                        case "TRADFRI remote control": dev = new TradfriRemoteControl(id, client); break;
                         case "AB32840":
-                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, client!); break;
+                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, client); break;
                         case "AB3257001NJ":
-                        case "Plug 01": dev = new OsramPlug(id, client!); break;
+                        case "Plug 01": dev = new OsramPlug(id, client); break;
                         case "LED1624G9":
                         case "TRADFRI bulb E14 CWS opal 600lm":
                         case "TRADFRI bulb E27 CWS opal 600lm":
-                            dev = new TradfriLedBulb(id, client!); break;
+                            dev = new TradfriLedBulb(id, client); break;
                         case "E1603/E1702":
-                            dev = new TradfriControlOutlet(id, client!); break;
+                            dev = new TradfriControlOutlet(id, client); break;
                         case "E1525/E1745":
-                            dev = new TradfriMotionSensor(id, client!); break;
+                            dev = new TradfriMotionSensor(id, client); break;
                         default:
                             logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
                             break;
