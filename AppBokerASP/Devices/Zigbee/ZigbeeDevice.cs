@@ -1,6 +1,6 @@
 ﻿using AppBokerASP.Extension;
 using AppBokerASP.IOBroker;
-
+using Newtonsoft.Json;
 using SocketIOClient;
 
 using System;
@@ -9,7 +9,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text.Json.Serialization;
+
 using System.Threading.Tasks;
 
 using static AppBokerASP.IOBroker.IoBrokerHistory;
@@ -20,27 +20,42 @@ namespace AppBokerASP.Devices.Zigbee
     {
         protected readonly SocketIO Socket;
         public DateTime LastReceived { get; set; }
-        [JsonPropertyName("linkQuality")]
-        public byte Link_Quality { get; set; }
+        [JsonProperty("link_quality")]
+        public byte LinkQuality { get; set; }
         public bool Available { get; set; }
         public string AdapterWithId { get; set; } = "";
 
-        private readonly ReadOnlyCollection<PropertyInfo> propertyInfos;
+        private readonly ReadOnlyCollection<(string[] Names, PropertyInfo Info)> propertyInfos;
 
-        public ZigbeeDevice(long nodeId, Type type, SocketIO socket) : base(nodeId)
+        public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId)
         {
             Socket = socket;
+
             propertyInfos =
-                Array.AsReadOnly(type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Concat(typeof(ZigbeeDevice).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                Array.AsReadOnly(
+                    GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .Concat(typeof(ZigbeeDevice).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                    .Select(x =>
+                    {
+                        var attr = x.GetCustomAttribute<JsonPropertyAttribute>();
+                        return
+                        (string.IsNullOrEmpty(attr?.PropertyName)
+                        ? (new string[] { x.Name })
+                        : (new string[] { x.Name, attr.PropertyName }),
+                        x);
+                    })
                 .ToArray());
         }
 
         public void SetPropFromIoBroker(IoBrokerObject ioBrokerObject, bool setLastReceived)
         {
-            var prop = propertyInfos.FirstOrDefault(x => ioBrokerObject.ValueName.Contains(x.Name.ToLower()));
-            if (prop == default || ioBrokerObject.ValueParameter.Value == null)
+            if (ioBrokerObject.ValueParameter.Value is null)
                 return;
+
+            var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => ioBrokerObject.ValueName.Contains(y, StringComparison.OrdinalIgnoreCase))).Info;
+            if (prop == default)
+                return;
+
             if ((prop.PropertyType == typeof(float) || prop.PropertyType == typeof(double)) && ioBrokerObject.ValueParameter.Value.ToObject<string>()!.Contains(","))
             {
                 var strValue = ioBrokerObject.ValueParameter.Value.ToObject<string>();
@@ -98,9 +113,9 @@ namespace AppBokerASP.Devices.Zigbee
             var i = AdapterWithId + "." + type.ToString().ToLower();
 
             var endMs = end.ToUnixTimeMilliseconds();
-            var history = await Socket.Emit("getHistory", 
+            var history = await Socket.Emit("getHistory",
                 i,
-                new                
+                new
                 {
                     id = i, // probably not necessary to put it here again
                     start = start.ToUnixTimeMilliseconds(),

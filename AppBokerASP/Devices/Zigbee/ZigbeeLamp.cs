@@ -1,10 +1,9 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
 using SocketIOClient;
-using System;
 using System.Collections.Generic;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace AppBokerASP.Devices.Zigbee
@@ -14,10 +13,10 @@ namespace AppBokerASP.Devices.Zigbee
         public byte Brightness { get; set; }
         public bool State { get; set; }
         public int ColorTemp { get; set; }
-        [JsonPropertyName("transitionTime")]
-        public float Transition_Time { get; set; }
+        [JsonProperty("transition_time")]
+        public float TransitionTime { get; set; }
 
-        public ZigbeeLamp(long nodeId, Type t, SocketIO socket) : base(nodeId, t, socket)
+        public ZigbeeLamp(long nodeId, SocketIO socket) : base(nodeId, socket)
         {
             ShowInApp = true;
         }
@@ -27,8 +26,8 @@ namespace AppBokerASP.Devices.Zigbee
             switch (command)
             {
                 case Command.Delay:
-                    Transition_Time = parameters[0].ToObject<float>();
-                    await SetValue(nameof(Transition_Time), Transition_Time);
+                    TransitionTime = parameters[0].ToObject<float>();
+                    await SetValue(nameof(TransitionTime), TransitionTime);
                     break;
             }
         }

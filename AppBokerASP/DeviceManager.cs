@@ -1,12 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 using AppBokerASP.Database;
@@ -14,8 +11,6 @@ using AppBokerASP.Devices;
 using AppBokerASP.Devices.Painless;
 using AppBokerASP.Devices.Zigbee;
 using AppBokerASP.IOBroker;
-
-using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
 using PainlessMesh;
@@ -234,7 +229,6 @@ namespace AppBokerASP
                         case "L1529":
                         case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, client!); break;
                         case "E1524/E1810":
-
                         case "TRADFRI remote control": dev = new TradfriRemoteControl(id, client!); break;
                         case "AB32840":
                         case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, client!); break;
@@ -243,7 +237,11 @@ namespace AppBokerASP
                         case "LED1624G9":
                         case "TRADFRI bulb E14 CWS opal 600lm":
                         case "TRADFRI bulb E27 CWS opal 600lm":
-                            dev = new TradfriLedBulb(id, "", client!); break;
+                            dev = new TradfriLedBulb(id, client!); break;
+                        case "E1603/E1702":
+                            dev = new TradfriControlOutlet(id, client!); break;
+                        case "E1525/E1745":
+                            dev = new TradfriMotionSensor(id, client!); break;
                         default:
                             logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
                             break;
