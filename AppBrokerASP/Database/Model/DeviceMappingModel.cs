@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DbMigrator.V1ToV2.Database.Model
+namespace AppBrokerASP.Database.Model
 {
     public class DeviceMappingModel
     {
@@ -14,8 +14,8 @@ namespace DbMigrator.V1ToV2.Database.Model
         public long Id { get; set; }
 
         [ForeignKey("ParentId")]
-        public DeviceModel Parent { get; set; }
+        public DeviceModel? Parent { get; set; }
         [ForeignKey("ChildId")]
-        public DeviceModel Child { get; set; }
+        public DeviceModel? Child { get; set; }
     }
 }

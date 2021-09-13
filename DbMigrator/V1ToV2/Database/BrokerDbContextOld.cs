@@ -1,13 +1,12 @@
-﻿using AppBokerASP.Database.Model;
-using AppBokerASP.Devices;
-using AppBokerASP.Devices.Heater;
+﻿using AppBrokerASP.Database.Model;
+using AppBrokerASP.Devices;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace AppBokerASP.Database
+namespace AppBrokerASP.Database
 {
     public class BrokerDbContextOld : DbContext
     {

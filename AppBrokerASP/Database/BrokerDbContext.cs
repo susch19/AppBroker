@@ -1,21 +1,21 @@
-﻿using DbMigrator.V1ToV2.Database.Model;
+﻿using AppBrokerASP.Database.Model;
 using AppBrokerASP.Devices;
-using AppBrokerASP.Devices.Heater;
+using AppBrokerASP.Devices.Painless.Heater;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace DbMigrator.V1ToV2.Database
+namespace AppBrokerASP.Database
 {
     public class BrokerDbContext : DbContext
     {
-        public DbSet<HeaterConfigModel> HeaterConfigs { get; set; }
+        public DbSet<HeaterConfigModel> HeaterConfigs => Set<HeaterConfigModel>();
         //public DbSet<HeaterConfigModel> HeaterCalibrations { get; set; }
-        public DbSet<DeviceModel> Devices { get; set; }
-        public DbSet<DeviceMappingModel> DeviceToDeviceMappings { get; set; }
-        public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
+        public DbSet<DeviceModel> Devices => Set<DeviceModel>();
+        public DbSet<DeviceMappingModel> DeviceToDeviceMappings => Set<DeviceMappingModel>();
+        //public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

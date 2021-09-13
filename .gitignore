@@ -261,10 +261,10 @@ __pycache__/
 *.pyc
 *.pem
 *.db
-/AppBokerASP/.vscode
+.vscode
 *.bat
 *.ps1
-/AppBokerASP/jwt.key
+jwt.key
 *.bin
 *.ota
-/AppBokerASP/OTA/*
+OTA/*
