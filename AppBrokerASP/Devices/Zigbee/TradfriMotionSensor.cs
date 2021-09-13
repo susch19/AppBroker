@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SocketIOClient;
 
-namespace AppBokerASP.Devices.Zigbee
+namespace AppBrokerASP.Devices.Zigbee
 {
     [DeviceName("E1525/E1745")]
     public class TradfriMotionSensor : ZigbeeDevice

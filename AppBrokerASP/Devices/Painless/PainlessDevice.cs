@@ -1,20 +1,16 @@
-﻿using Newtonsoft.Json;
-
+﻿
 using PainlessMesh;
 using PainlessMesh.Ota;
 
 using System;
-using System.Buffers.Text;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless
 {
-  
+
 
     public abstract class PainlessDevice : Device
     {

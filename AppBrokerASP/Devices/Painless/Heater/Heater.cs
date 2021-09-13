@@ -1,30 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.WebSockets;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.SignalR;
 using PainlessMesh;
-using Newtonsoft.Json;
 using AppBrokerASP.Database;
 using AppBrokerASP.Database.Model;
 using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore;
 using AppBrokerASP.Devices.Zigbee;
-using System.Buffers.Text;
-using NLog;
+using AppBrokerASP.Devices;
 
 namespace AppBrokerASP.Devices.Painless.Heater
 {
     [DeviceName("heater")]
-
     public class Heater : PainlessDevice, IDisposable
     {
 

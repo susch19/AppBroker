@@ -1,4 +1,3 @@
-using AppBrokerASP.Configuration;
 using AppBrokerASP.IOBroker;
 using AppBrokerASP.Extension;
 
@@ -14,6 +13,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using static AppBrokerASP.IOBroker.IoBrokerHistory;
+using Newtonsoft.Json;
 
 namespace AppBrokerASP.Devices.Zigbee
 {

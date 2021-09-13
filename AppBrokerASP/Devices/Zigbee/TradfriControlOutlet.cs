@@ -1,6 +1,6 @@
 ﻿using SocketIOClient;
 
-namespace AppBokerASP.Devices.Zigbee
+namespace AppBrokerASP.Devices.Zigbee
 {
     [DeviceName("E1603/E1702")]
     public class TradfriControlOutlet : ZigbeeSwitch

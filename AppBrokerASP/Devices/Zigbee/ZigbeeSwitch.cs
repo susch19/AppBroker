@@ -1,10 +1,11 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using AppBrokerASP.Devices.Zigbee;
+using Newtonsoft.Json.Linq;
 using PainlessMesh;
 using SocketIOClient;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace AppBokerASP.Devices.Zigbee
+namespace AppBrokerASP.Devices.Zigbee
 {
     public abstract class ZigbeeSwitch : UpdateableZigbeeDevice
     {

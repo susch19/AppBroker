@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AppBokerASP.Devices
+namespace AppBrokerASP.Devices
 {
     [AttributeUsage(AttributeTargets.Class)]
     internal class DeviceNameAttribute : Attribute
