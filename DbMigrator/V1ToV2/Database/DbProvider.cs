@@ -1,9 +1,4 @@
-﻿using AppBokerASP.Database;
-using AppBokerASP.Devices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using AppBrokerASP.Database;
 
 namespace DbMigrator.V1ToV2.Database
 {
