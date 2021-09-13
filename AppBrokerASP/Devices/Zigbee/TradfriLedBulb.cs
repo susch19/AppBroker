@@ -4,6 +4,7 @@ using PainlessMesh;
 using SocketIOClient;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
@@ -31,12 +32,12 @@ namespace AppBrokerASP.Devices.Zigbee
         public bool State { get; set; }
 
         public TradfriLedBulb(long nodeId, string baseUpdateUrl, SocketIO socket) :
-            base(nodeId, baseUpdateUrl, typeof(TradfriLedBulb), socket)
+            base(nodeId, typeof(TradfriLedBulb), socket)
         {
             ShowInApp = true;
         }
 
-        public override async void UpdateFromApp(Command command, List<JToken> parameters)
+        public override async Task UpdateFromApp(Command command, List<JToken> parameters)
         {
             switch (command)
             {

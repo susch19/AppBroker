@@ -1,11 +1,6 @@
 ﻿using DbMigrator.V1ToV2.Database.Model;
-using AppBrokerASP.Devices;
-using AppBrokerASP.Devices.Heater;
+
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace DbMigrator.V1ToV2.Database
 {

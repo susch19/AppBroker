@@ -23,6 +23,8 @@ using Microsoft.Extensions.Configuration;
 using AppBrokerASP.Configuration;
 using System.Net.Http;
 using SocketIOClient;
+using AppBrokerASP.Extension;
+using Newtonsoft.Json.Linq;
 
 namespace AppBrokerASP
 {
@@ -39,7 +41,7 @@ namespace AppBrokerASP
         public DeviceManager()
         {
             Config = InstanceContainer.ConfigManager.ZigbeeConfig;
- 
+
             types = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device)).ToList();
             InstanceContainer.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
             InstanceContainer.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
@@ -137,7 +139,7 @@ namespace AppBrokerASP
                             }
                         }
                         else
-                            await GetZigbeeDevices();
+                            await GetZigbeeDevices(client);
                     }
                 });
             client.OnError += async (sender, args) =>
@@ -153,27 +155,35 @@ namespace AppBrokerASP
                 logger.Debug("Connected Zigbee Client");
                 await client.EmitAsync("subscribe", "zigbee.*");
                 await client.EmitAsync("subscribeObjects", '*');
-                await GetZigbeeDevices();
+                await GetZigbeeDevices(client);
             };
             var random = new Random();
             await client.ConnectAsync();
             //await client.Emit("setState", new { id = "zigbee.0.d0cf5efffe1fa105.colortemp", val = 400, ack = true, ts = DateTime.Now.Ticks });
         }
 
-        public async Task GetZigbeeDevices()
+        public async Task GetZigbeeDevices(SocketIO socket)
         {
-            
             if (!Devices.IsEmpty)
             {
                 logger.Debug($"Cancel {nameof(GetZigbeeDevices)}, because it wasn't the startup");
                 return;
             }
 
-            string content = await http.GetStringAsync(@$"{Config.HttpUrl}/objects?pattern=zigbee.0*");
-            var better = Regex.Replace(content, "\"zigbee[.\\w\\s\\d]+\":", "");
-            better = $"[{better[1..^1]}]";
+            var allObjectsResponse = await socket.Emit("getObjects");
+            var allObjectscontentNew = allObjectsResponse?.GetValue(1).ToString();
 
-            var ioBrokerObject = JsonConvert.DeserializeObject<ZigbeeIOBrokerProperty[]>(better);
+            if (allObjectscontentNew is null)
+            {
+                logger.Error("getObjects response is empty");
+                return;
+            }
+
+            var ioBrokerObject = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(allObjectscontentNew)?
+                .Where(x => x.Key.StartsWith("zigbee.0."))!
+                .ToDictionary(x => x.Key, x => x.Value.ToObject<ZigbeeIOBrokerProperty>())
+                .Values.AsEnumerable();
+
             if (ioBrokerObject is null)
             {
                 logger.Error($"Error deserializing IOBroker Property");
@@ -185,6 +195,9 @@ namespace AppBrokerASP
             var stateRequest = @$"{Config.HttpUrl}/get/";
             foreach (var item in ioBrokerObject)
             {
+                if (item is null)
+                    continue;
+
                 var matches = item._id.Split('.');
                 if (matches.Length > 2)
                 {
@@ -200,8 +213,7 @@ namespace AppBrokerASP
                 }
             }
 
-            content = await http.GetStringAsync(idRequest);
-
+            var content = await http.GetStringAsync(idRequest);
 
             var getDeviceResponses = JsonConvert.DeserializeObject<IoBrokerGetDeviceResponse[]>(content)!;
             content = await http.GetStringAsync(stateRequest);
@@ -220,14 +232,14 @@ namespace AppBrokerASP
                         case "lumi.weather": dev = new XiaomiTempSensor(id, client!); break;
                         case "lumi.router": dev = new LumiRouter(id, client!); break;
                         case "L1529":
-                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
+                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, client!); break;
                         case "E1524/E1810":
 
                         case "TRADFRI remote control": dev = new TradfriRemoteControl(id, client!); break;
                         case "AB32840":
-                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
+                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, client!); break;
                         case "AB3257001NJ":
-                        case "Plug 01": dev = new OsramPlug(id, @$"{Config.HttpUrl}/set/" + deviceRes._id, client!); break;
+                        case "Plug 01": dev = new OsramPlug(id, client!); break;
                         case "LED1624G9":
                         case "TRADFRI bulb E14 CWS opal 600lm":
                         case "TRADFRI bulb E27 CWS opal 600lm":

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace AppBrokerASP.IOBroker
 {
+    [DebuggerDisplay("{_id}")]
     public class IoBrokerGetDeviceResponse
     {
         public IoBrokerGetDeviceResponse(string type, Common common, Native native, string from, long ts, string id, Acl acl)

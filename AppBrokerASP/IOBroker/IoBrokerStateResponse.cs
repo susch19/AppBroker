@@ -2,12 +2,14 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 
 namespace AppBrokerASP.IOBroker
 {
 
+    [DebuggerDisplay("{_id}")]
     public class IoBrokerStateResponse
     {
         public IoBrokerStateResponse(JToken val, bool ack, long ts, int q, string from, long lc, string type, Common common, string id, Acl acl)

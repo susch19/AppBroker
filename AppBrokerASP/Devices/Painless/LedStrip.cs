@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 using AppBrokerASP.Extension;
 
@@ -13,7 +14,7 @@ using Newtonsoft.Json.Linq;
 using PainlessMesh;
 
 namespace AppBrokerASP.Devices.Painless
-{//2021-01-08 22:39:51.9215|DEBUG|AppBrokerASP.BaseClient|{"id":763955710, "m":"Update", "c":"Mode", "p":["SingleColor",16,94,239,86,0,4278190080,1]}
+{
     [PainlessMeshName("ledstri")]
     public class LedStrip : PainlessDevice
     {
@@ -76,7 +77,7 @@ namespace AppBrokerASP.Devices.Painless
             SendDataToAllSubscribers();
         }
 
-        public override void UpdateFromApp(Command command, List<JToken> parameters)
+        public override Task UpdateFromApp(Command command, List<JToken> parameters)
         {
             ByteLengthList meshParams = new();
             switch (command)
@@ -94,6 +95,7 @@ namespace AppBrokerASP.Devices.Painless
 
             var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, meshParams);
             InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+            return Task.CompletedTask;
         }
 
         public override void OptionsFromApp(Command command, List<JToken> parameters)

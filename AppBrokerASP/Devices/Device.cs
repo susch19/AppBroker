@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
 using System.Text.Json;
 using AppBrokerASP.Devices.Painless;
+using System.Threading.Tasks;
 
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json.Linq;
@@ -35,7 +36,7 @@ namespace AppBrokerASP.Devices
             FriendlyName = "";
         }
 
-        public virtual void UpdateFromApp(Command command, List<JToken> parameters) { }
+        public virtual Task UpdateFromApp(Command command, List<JToken> parameters) => Task.CompletedTask;
         public virtual void OptionsFromApp(Command command, List<JToken> parameters) { }
 
         public virtual dynamic? GetConfig() { return null; }

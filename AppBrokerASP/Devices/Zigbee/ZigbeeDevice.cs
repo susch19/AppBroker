@@ -1,17 +1,16 @@
 ﻿using AppBrokerASP.Configuration;
 using AppBrokerASP.IOBroker;
+using AppBrokerASP.Extension;
 
 using SocketIOClient;
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using System.Threading;
 using System.Threading.Tasks;
 
 using static AppBrokerASP.IOBroker.IoBrokerHistory;
@@ -83,8 +82,6 @@ namespace AppBrokerASP.Devices.Zigbee
             return history;
         }
 
-
-
         public virtual IoBrokerHistory? ReadHistoryJSON(DateTime date, IoBrokerHistory history)
         {
             var filePath = Path.Combine(InstanceContainer.ConfigManager.ZigbeeConfig.HistoryPath, $"{date:yyyyMMdd}", $"history.{AdapterWithId}.{history.PropertyName}.json");
@@ -102,26 +99,19 @@ namespace AppBrokerASP.Devices.Zigbee
             var i = AdapterWithId + "." + type.ToString().ToLower();
 
             var endMs = end.ToUnixTimeMilliseconds();
-            HistoryRecord[]? a = null;
-            using var slim = new ManualResetEventSlim(false);
-            await Socket.EmitAsync("getHistory", response =>
-            {
-                a = response.GetValue<HistoryRecord[]>(1);
-                slim.Set();
-            },
-            i,
-            new
-            {
-                id = i, // probably not necessary to put it here again
-                start = start.ToUnixTimeMilliseconds(),
+            var history = await Socket.Emit("getHistory", 
+                i,
+                new                
+                {
+                    id = i, // probably not necessary to put it here again
+                    start = start.ToUnixTimeMilliseconds(),
+                    //end = end.ToUnixTimeMilliseconds(),
+                    ignoreNull = true,
+                    aggregate = "none",
+                    count = 200
+                });
 
-                //end = end.ToUnixTimeMilliseconds(),
-                ignoreNull = true,
-                aggregate = "none",
-                count = 200
-            });
-            slim.Wait();
-            return a == null ? Array.Empty<HistoryRecord>() : a.Where(x => x.ts < endMs).ToArray();
+            return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.ts < endMs).ToArray();
         }
     }
 
