@@ -3,6 +3,7 @@ using System;
 
 namespace AppBokerASP.Devices.Zigbee
 {
+    [DeviceName("lumi.weather", "WSDCGQ11LM")]
     public class XiaomiTempSensor : ZigbeeDevice
     {
         public event EventHandler<float>? TemperatureChanged;

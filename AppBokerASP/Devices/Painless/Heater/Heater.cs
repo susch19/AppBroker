@@ -23,7 +23,7 @@ using NLog;
 
 namespace AppBokerASP.Devices.Painless.Heater
 {
-    [PainlessMeshName("heater")]
+    [DeviceName("heater")]
 
     public class Heater : PainlessDevice, IDisposable
     {

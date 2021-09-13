@@ -29,7 +29,7 @@ namespace AppBokerASP.Devices.Painless
 
         protected PainlessDevice(long nodeId) : base(nodeId)
         {
-            DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
+            DeviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
             InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
@@ -39,7 +39,7 @@ namespace AppBokerASP.Devices.Painless
 
         protected PainlessDevice(long nodeId, ByteLengthList parameter) : base(nodeId)
         {
-            DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
+            DeviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
             InterpretParameters(parameter);
             InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;

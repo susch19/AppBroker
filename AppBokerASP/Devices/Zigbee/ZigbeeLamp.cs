@@ -46,11 +46,11 @@ namespace AppBokerASP.Devices.Zigbee
                     break;
                 case Command.SingleColor:
                     State = true;
-                    await SetValue(nameof(State), State.ToString().ToLower());
+                    await SetValue(nameof(State), State);
                     break;
                 case Command.Off:
                     State = false;
-                    await SetValue(nameof(State), State.ToString().ToLower());
+                    await SetValue(nameof(State), State);
                     break;
                 default:
                     break;

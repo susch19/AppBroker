@@ -3,6 +3,7 @@ using SocketIOClient;
 
 namespace AppBokerASP.Devices.Zigbee
 {
+    [DeviceName("E1525/E1745")]
     public class TradfriMotionSensor : ZigbeeDevice
     {
         [JsonProperty("available")]

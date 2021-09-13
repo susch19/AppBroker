@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 
 using AppBokerASP.Database;
 using AppBokerASP.Devices;
-using AppBokerASP.Devices.Painless;
 using AppBokerASP.Devices.Zigbee;
 using AppBokerASP.IOBroker;
 using Newtonsoft.Json;
@@ -30,6 +29,7 @@ namespace AppBokerASP
         private SocketIO? client;
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly List<Type> types;
+        private readonly Dictionary<string, Type> alternativeNamesForTypes = new(StringComparer.OrdinalIgnoreCase);
         readonly Task temp;
         private static readonly HttpClient http = new();
 
@@ -38,18 +38,41 @@ namespace AppBokerASP
             Config = InstanceContainer.ConfigManager.ZigbeeConfig;
 
             types = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device)).ToList();
+
+            foreach (var type in types)
+            {
+                var names = GetAllNamesFor(type);
+                foreach (var name in names)
+                {
+                    alternativeNamesForTypes[name] = type;
+                }
+            }
+
             InstanceContainer.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
             InstanceContainer.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
             InstanceContainer.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
+
             temp = ConnectToIOBroker();
+        }
+
+        private List<string> GetAllNamesFor(Type y)
+        {
+            var names = new List<string>();
+            var attribute = y.GetCustomAttribute<DeviceNameAttribute>();
+
+            if (attribute is not null)
+            {
+                names.Add(attribute.PreferredName);
+                names.AddRange(attribute.AlternativeNames);
+            }
+            names.Add(y.Name);
+            return names;
         }
 
         private void MeshManager_ConnectionLost(object? sender, uint e)
         {
             if (Devices.TryGetValue(e, out var device))
             {
-                //while (!Devices.TryRemove(e, out var d)) { }
-                //Console.WriteLine($"Removed device {device.Id} - {device.FriendlyName} - {device.GetType()}");
                 device.StopDevice();
             }
         }
@@ -57,19 +80,9 @@ namespace AppBokerASP
         {
             if (Devices.TryGetValue(e.id, out var device))
             {
-                //while (!Devices.TryRemove(e, out var d)) { }
-                //Console.WriteLine($"Removed device {device.Id} - {device.FriendlyName} - {device.GetType()}");
                 device.Reconnect(e.parameter);
             }
         }
-
-        //private void DeviceReconnect((Sub c, List<string> l) e, List<Subscriber> clients)
-        //{
-        //    var newDevice = (Device)Activator.CreateInstance(types.FirstOrDefault(x => x.Name.ToLower() == e.l[1].ToLower()), e.c.NodeId);
-        //    newDevice.Subscribers = clients;
-        //    logger.Info($"Device reconnected: {newDevice.TypeName}, {newDevice.Id} | Subscribers: {newDevice.Subscribers.Count}");
-        //    while (!Devices.TryAdd(e.c.NodeId, newDevice)) { }
-        //}
 
         private void Node_NewConnectionEstablished(object? sender, (Sub c, ByteLengthList l) e)
         {
@@ -80,63 +93,69 @@ namespace AppBokerASP
             else
             {
                 var deviceName = Encoding.UTF8.GetString(e.l[1]);
-                logger.Debug($"Trying to get device with {deviceName} name");
-                var type = types.FirstOrDefault(x =>
-                       x.Name.Equals(deviceName, StringComparison.InvariantCultureIgnoreCase)
-                           || x.GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName == deviceName);
+                var newDevice = CreateDeviceFromName(deviceName, e.c.NodeId, e.l);
 
-                if (type is null)
-                {
-                    logger.Error($"Failed to get device with {deviceName} name");
-                    return;
-                }
-
-                var newDeviceObj = Activator.CreateInstance(type, e.c.NodeId, e.l);
-
-                if (newDeviceObj is null || !(newDeviceObj is Device newDevice))
-                    return;
                 if (newDevice is null)
-                {
-                    logger.Error($"Failed to get create device {deviceName}");
                     return;
-                }
+
                 logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
                 _ = Devices.TryAdd(e.c.NodeId, newDevice);
+
                 if (!DbProvider.AddDeviceToDb(newDevice))
                     _ = DbProvider.MergeDeviceWithDbData(newDevice);
             }
         }
 
+        private Device? CreateDeviceFromName(string deviceName, params object[] ctorArgs)
+        {
+            logger.Trace($"Trying to get device with {deviceName} name");
+
+            if (!alternativeNamesForTypes.TryGetValue(deviceName, out var type) || type is null)
+            {
+                logger.Error($"Failed to get device with name {deviceName}");
+                return null;
+            }
+
+            var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
+
+            if (newDeviceObj is null || newDeviceObj is not Device newDevice)
+            {
+                logger.Error($"Failed to get create device {deviceName}");
+                return null;
+            }
+
+            return newDevice;
+        }
+
         private async Task ConnectToIOBroker()
         {
-
             client = new SocketIO(new Uri(Config.SocketIOUrl), new SocketIOOptions()
             {
                 EIO = Config.NewSocketIoversion ? 4 : 3
             });
-            //int i = 0;
-            client.OnAny(async (eventName, response) =>
-                {
-                    var suc = IoBrokerZigbee.TryParse(eventName, response.ToString(), out var zo);
-                    //Console.Write(i++ + ", ");
-                    if (suc && zo is not null)
-                    {
 
-                        if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
+            client.OnAny(async (eventName, response) =>
+            {
+                if (IoBrokerZigbee.TryParse(eventName, response.ToString(), out var zo) && zo is not null)
+                {
+                    if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
+                    {
+                        try
                         {
-                            try
-                            {
-                                zigbeeDev.SetPropFromIoBroker(zo, true);
-                            }
-                            catch (Exception e)
-                            {
-                                logger.Error(e);
-                            }
+                            zigbeeDev.SetPropFromIoBroker(zo, true);
                         }
-                        else
-                            await GetZigbeeDevices(client);
+                        catch (Exception e)
+                        {
+                            logger.Error(e);
+                        }
                     }
-                });
+                    else
+                    {
+                        await GetZigbeeDevices(client);
+                    }
+                }
+            });
+
             client.OnError += async (sender, args) =>
             {
                 logger.Error($"AfterException, trying reconnect: {args}");
@@ -146,15 +165,13 @@ namespace AppBokerASP
 
             client.OnConnected += async (s, e) =>
             {
-                Console.WriteLine("Connected");
                 logger.Debug("Connected Zigbee Client");
                 await client.EmitAsync("subscribe", "zigbee.*");
                 await client.EmitAsync("subscribeObjects", '*');
                 await GetZigbeeDevices(client);
             };
-            var random = new Random();
+
             await client.ConnectAsync();
-            //await client.Emit("setState", new { id = "zigbee.0.d0cf5efffe1fa105.colortemp", val = 400, ack = true, ts = DateTime.Now.Ticks });
         }
 
         public async Task GetZigbeeDevices(SocketIO socket)
@@ -227,36 +244,19 @@ namespace AppBokerASP
 
                 if (!Devices.TryGetValue(id, out var dev))
                 {
-                    switch (deviceRes.common.type)
+                    dev = CreateDeviceFromName(deviceRes.common.type, id, client);
+
+                    if (dev is null or default(Device))
                     {
-                        case "WSDCGQ11LM":
-                        case "lumi.weather": dev = new XiaomiTempSensor(id, client); break;
-                        case "lumi.router": dev = new LumiRouter(id, client); break;
-                        case "L1529":
-                        case "FLOALT panel WS 60x60": dev = new FloaltPanel(id, client); break;
-                        case "E1524/E1810":
-                        case "TRADFRI remote control": dev = new TradfriRemoteControl(id, client); break;
-                        case "AB32840":
-                        case "Classic B40 TW - LIGHTIFY": dev = new OsramB40RW(id, client); break;
-                        case "AB3257001NJ":
-                        case "Plug 01": dev = new OsramPlug(id, client); break;
-                        case "LED1624G9":
-                        case "TRADFRI bulb E14 CWS opal 600lm":
-                        case "TRADFRI bulb E27 CWS opal 600lm":
-                            dev = new TradfriLedBulb(id, client); break;
-                        case "E1603/E1702":
-                            dev = new TradfriControlOutlet(id, client); break;
-                        case "E1525/E1745":
-                            dev = new TradfriMotionSensor(id, client); break;
-                        default:
-                            logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
-                            break;
-                    }
-                    if (dev == default(Device))
+                        logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
                         continue;
+                    }
+
                     if (dev is ZigbeeDevice zd)
                         zd.AdapterWithId = deviceRes._id;
+
                     _ = Devices.TryAdd(id, dev);
+
                     if (!DbProvider.AddDeviceToDb(dev))
                         _ = DbProvider.MergeDeviceWithDbData(dev);
 
@@ -264,6 +264,7 @@ namespace AppBokerASP
                     if (string.IsNullOrWhiteSpace(dev.FriendlyName) || long.TryParse(dev.FriendlyName, out _))
                         dev.FriendlyName = deviceRes.common.name;
                 }
+
                 foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
                 {
                     var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item.common.name.ToLower().Replace(" ", "_"), new Parameter(item.val));

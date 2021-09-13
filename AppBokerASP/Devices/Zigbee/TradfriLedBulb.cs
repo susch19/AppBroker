@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace AppBokerASP.Devices.Zigbee
 {
+    [DeviceName("TRADFRI bulb E27 CWS opal 600lm", "TRADFRI bulb E14 CWS opal 600lm", "LED1624G9")]
     public class TradfriLedBulb : UpdateableZigbeeDevice
     {
         private byte brightness;

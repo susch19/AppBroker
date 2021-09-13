@@ -21,12 +21,12 @@ namespace AppBokerASP.Devices.Zigbee
             {
                 case Command.On:
                     State = true;
-                    await SetValue(nameof(State), State.ToString().ToLower());
+                    await SetValue(nameof(State), State);
                     break;
 
                 case Command.Off:
                     State = false;
-                    await SetValue(nameof(State), State.ToString().ToLower());
+                    await SetValue(nameof(State), State);
                     break;
             }
         }
