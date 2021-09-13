@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SocketIOClient;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -77,6 +78,27 @@ namespace AppBokerASP.Extension
                     return values;
                 oldi += i + 1;
             }
+        }
+
+        public static async Task<SocketIOResponse> Emit(this SocketIO socket, string eventName, params object[] data)
+        {
+            var task = new TaskCompletionSource<SocketIOResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
+            await socket.EmitAsync(eventName, response =>
+            {
+                try
+                {
+                    task.SetResult(response);
+                }
+                catch (Exception ex)
+                {
+                    task.SetException(ex);
+                }
+            }, data);
+
+            // Ensure follwoing tasks will run async
+            await Task.Yield();
+
+            return await task.Task;
         }
     }
 }

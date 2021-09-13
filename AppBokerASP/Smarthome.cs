@@ -36,7 +36,7 @@ namespace AppBokerASP
             return base.OnConnectedAsync();
         }
 
-        public void Update(JsonSmarthomeMessage message)
+        public async Task Update(JsonSmarthomeMessage message)
         {
             if (InstanceContainer.DeviceManager.Devices.TryGetValue(message.LongNodeId, out var device))
             {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text.Json;
-
+using System.Threading.Tasks;
 using AppBokerASP.Extension;
 
 using Microsoft.AspNetCore.SignalR;
@@ -76,7 +76,7 @@ namespace AppBokerASP.Devices.Painless
             SendDataToAllSubscribers();
         }
 
-        public override void UpdateFromApp(Command command, List<JToken> parameters)
+        public override Task UpdateFromApp(Command command, List<JToken> parameters)
         {
             ByteLengthList meshParams = new();
             switch (command)
@@ -94,6 +94,7 @@ namespace AppBokerASP.Devices.Painless
 
             var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, meshParams);
             InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+            return Task.CompletedTask;
         }
 
         public override void OptionsFromApp(Command command, List<JToken> parameters)
