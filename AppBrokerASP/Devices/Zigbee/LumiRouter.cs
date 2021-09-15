@@ -1,14 +1,11 @@
 ﻿using SocketIOClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
+    [DeviceName("lumi.router")]
     public class LumiRouter : ZigbeeDevice
     {
-        public LumiRouter(long nodeId, SocketIO socket) : base(nodeId, typeof(LumiRouter), socket)
+        public LumiRouter(long nodeId, SocketIO socket) : base(nodeId, socket)
         {
             ShowInApp = false;
         }

@@ -1,17 +1,13 @@
 ﻿using SocketIOClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
+    [DeviceName("TRADFRI remote control", "E1524/E1810")]
     public class TradfriRemoteControl : ZigbeeDevice
     {
-        public TradfriRemoteControl(long nodeId, SocketIO socket) : base(nodeId, typeof(TradfriRemoteControl), socket)
+        public TradfriRemoteControl(long nodeId, SocketIO socket) : base(nodeId, socket)
         {
             ShowInApp = false;
-
         }
     }
 }

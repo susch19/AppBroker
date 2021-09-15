@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
+    [DeviceName("TRADFRI bulb E27 CWS opal 600lm", "TRADFRI bulb E14 CWS opal 600lm", "LED1624G9")]
     public class TradfriLedBulb : UpdateableZigbeeDevice
     {
         private byte brightness;
@@ -31,8 +32,8 @@ namespace AppBrokerASP.Devices.Zigbee
         [JsonProperty("state")]
         public bool State { get; set; }
 
-        public TradfriLedBulb(long nodeId, string baseUpdateUrl, SocketIO socket) :
-            base(nodeId, typeof(TradfriLedBulb), socket)
+        public TradfriLedBulb(long nodeId, SocketIO socket) :
+            base(nodeId, socket)
         {
             ShowInApp = true;
         }

@@ -1,13 +1,12 @@
 ﻿using SocketIOClient;
-using System;
 using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
     public abstract class UpdateableZigbeeDevice : ZigbeeDevice
     {
-        public UpdateableZigbeeDevice(long nodeId, Type type, SocketIO socket) : 
-            base(nodeId, type, socket)
+        public UpdateableZigbeeDevice(long nodeId, SocketIO socket) :
+            base(nodeId, socket)
         {
 
         }

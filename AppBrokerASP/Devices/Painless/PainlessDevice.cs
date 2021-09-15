@@ -1,20 +1,16 @@
-﻿using Newtonsoft.Json;
-
+﻿
 using PainlessMesh;
 using PainlessMesh.Ota;
 
 using System;
-using System.Buffers.Text;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless
 {
-  
+
 
     public abstract class PainlessDevice : Device
     {
@@ -29,7 +25,7 @@ namespace AppBrokerASP.Devices.Painless
 
         protected PainlessDevice(long nodeId) : base(nodeId)
         {
-            DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
+            DeviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
             InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
@@ -39,7 +35,7 @@ namespace AppBrokerASP.Devices.Painless
 
         protected PainlessDevice(long nodeId, ByteLengthList parameter) : base(nodeId)
         {
-            DeviceName = GetType().GetCustomAttribute<PainlessMeshNameAttribute>()?.AlternateName ?? TypeName;
+            DeviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
             InterpretParameters(parameter);
             InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;

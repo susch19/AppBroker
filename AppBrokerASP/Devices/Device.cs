@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Reflection;
-using System.Text.Json;
-using AppBrokerASP.Devices.Painless;
 using System.Threading.Tasks;
-
-using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json.Linq;
 using PainlessMesh;
 

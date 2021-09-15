@@ -1,37 +1,13 @@
-﻿using Newtonsoft.Json.Linq;
-
-using PainlessMesh;
-
-using SocketIOClient;
-using System.Collections.Generic;
-using System.Threading.Tasks;
+﻿using SocketIOClient;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
-    public class OsramPlug : UpdateableZigbeeDevice
+    [DeviceName("Plug 01", "AB3257001NJ")]
+    public class OsramPlug : ZigbeeSwitch
     {
-        public bool State { get; set; }
-
-        public OsramPlug(long nodeId, SocketIO socket) : base(nodeId, typeof(OsramPlug), socket)
+        public OsramPlug(long nodeId, SocketIO socket) : base(nodeId, socket)
         {
             ShowInApp = true;
-        }
-
-        public override async Task UpdateFromApp(Command command, List<JToken> parameters)
-        {
-            switch (command)
-            {
-                case Command.On:
-                    State = true;
-                    await SetValue(nameof(State), State.ToString().ToLower());
-                    break;
-                case Command.Off:
-                    State = false;
-                    await SetValue(nameof(State), State.ToString().ToLower());
-                    break;
-                default:
-                    break;
-            }
         }
     }
 }
