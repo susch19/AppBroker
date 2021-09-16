@@ -21,7 +21,7 @@ namespace AppBrokerASP.Devices.Zigbee
     {
         protected readonly SocketIO Socket;
         public DateTime LastReceived { get; set; }
-        [JsonProperty("link_quality")]
+        [JsonProperty("link_Quality")]
         public byte LinkQuality { get; set; }
         public bool Available { get; set; }
         public string AdapterWithId { get; set; } = "";
