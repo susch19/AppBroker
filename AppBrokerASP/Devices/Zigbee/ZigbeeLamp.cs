@@ -13,7 +13,7 @@ namespace AppBrokerASP.Devices.Zigbee
         public byte Brightness { get; set; }
         public bool State { get; set; }
         public int ColorTemp { get; set; }
-        [JsonProperty("transition_time")]
+        [JsonProperty("transition_Time")]
         public float TransitionTime { get; set; }
 
         public ZigbeeLamp(long nodeId, SocketIO socket) : base(nodeId, socket)
