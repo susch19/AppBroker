@@ -8,11 +8,8 @@ using System.Threading.Tasks;
 
 using AppBrokerASP.Database;
 using AppBrokerASP.Devices;
-using AppBrokerASP.Devices.Painless;
 using AppBrokerASP.Devices.Zigbee;
 using AppBrokerASP.IOBroker;
-
-using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
 using PainlessMesh;
@@ -25,11 +22,12 @@ using Newtonsoft.Json.Linq;
 
 namespace AppBrokerASP
 {
-    public class DeviceManager
+    public class DeviceManager : IDisposable
     {
         public ZigbeeConfig Config { get; }
         public ConcurrentDictionary<long, Device> Devices = new();
         private SocketIO? client;
+        private bool disposed;
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
         private readonly List<Type> types;
         private readonly Dictionary<string, Type> alternativeNamesForTypes = new(StringComparer.OrdinalIgnoreCase);
@@ -40,7 +38,11 @@ namespace AppBrokerASP
         {
             Config = InstanceContainer.ConfigManager.ZigbeeConfig;
 
-            types = Assembly.GetExecutingAssembly().GetTypes().Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device)).ToList();
+            types = Assembly
+                .GetExecutingAssembly()
+                .GetTypes()
+                .Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device))
+                .ToList();
 
             foreach (var type in types)
             {
@@ -58,7 +60,7 @@ namespace AppBrokerASP
             temp = ConnectToIOBroker();
         }
 
-        private List<string> GetAllNamesFor(Type y)
+        private static List<string> GetAllNamesFor(Type y)
         {
             var names = new List<string>();
             var attribute = y.GetCustomAttribute<DeviceNameAttribute>();
@@ -290,6 +292,33 @@ namespace AppBrokerASP
                         zd.SetPropFromIoBroker(ioObject, false);
                 }
             }
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                    foreach (var device in Devices.Values)
+                    {
+                        device.Dispose();
+                    }
+                    Devices.Clear();
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

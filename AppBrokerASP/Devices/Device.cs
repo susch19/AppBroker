@@ -6,12 +6,9 @@ using PainlessMesh;
 
 namespace AppBrokerASP.Devices
 {
-    public abstract class Device
+    public abstract class Device : IDisposable
     {
-        public event EventHandler<Device>? PrintableInfoChanged;
-
         public long Id { get; set; }
-        //public List<string> PrintableInformation { get; set; } = new List<string>();
         public List<Subscriber> Subscribers { get; set; } = new List<Subscriber>();
         public string TypeName { get; set; }
         public bool ShowInApp { get; set; }
@@ -19,6 +16,7 @@ namespace AppBrokerASP.Devices
         public bool IsConnected { get; set; }
 
         protected readonly NLog.Logger logger;
+        protected bool Disposed;
 
         public Device(long nodeId)
         {
@@ -40,5 +38,27 @@ namespace AppBrokerASP.Devices
 
         public virtual void StopDevice() => IsConnected = false;
         public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!Disposed)
+            {
+                if (disposing)
+                {
+                    // TODO: dispose managed state (managed objects)
+                }
+
+                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
+                // TODO: set large fields to null
+                Disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }
