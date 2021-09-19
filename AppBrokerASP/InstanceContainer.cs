@@ -1,12 +1,5 @@
 ﻿using AppBrokerASP.Configuration;
-
-using Microsoft.Extensions.Configuration;
 using PainlessMesh.Ota;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AppBrokerASP
 {
@@ -22,13 +15,17 @@ namespace AppBrokerASP
 
         static InstanceContainer()
         {
-
-
             ConfigManager = new ConfigManager();
             UpdateManager = new();
             MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.ListenPort);
             DeviceManager = new DeviceManager();
         }
 
+
+        public static void Dispose()
+        {
+            DeviceManager.Dispose();
+            MeshManager.Dispose();
+        }
     }
 }

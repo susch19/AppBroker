@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.WebSockets;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using AppBrokerASP.Devices;
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AppBrokerASP
@@ -47,7 +38,5 @@ namespace AppBrokerASP
                 _ = e.MapHub<SmartHome>("/SmartHome");
             });
         }
-
-
     }
 }
