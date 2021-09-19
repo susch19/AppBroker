@@ -14,7 +14,7 @@ using System.Diagnostics.CodeAnalysis;
 namespace AppBrokerASP.Devices.Painless.Heater
 {
     [DeviceName("heater")]
-    public class Heater : PainlessDevice
+    public class Heater : PainlessDevice, IDisposable
     {
         public HeaterConfig? Temperature { get; set; }
         public long XiaomiTempSensor { get; set; } = 0;
@@ -27,6 +27,7 @@ namespace AppBrokerASP.Devices.Painless.Heater
         public bool DisableLed { get; set; }
 
         private readonly Task? heaterSensorMapping;
+        private bool disposed;
 
         //2020-02-01 20:14:48.1075|DEBUG|AppBrokerASP.BaseClient|{"id":3257233774, "m":"Update", "c":"WhoIAm", "p":["10.12.206.9","heater","RmlybXdhcmUgVjIgRmViICAxIDIwMjA=","YAk3oJQqQBo3QKkqYQk3oZQqQRo3QakqYgk3opQqQho3QqkqYwk3o5QqQxo3Q6kqZAk3pJQqRBo3RKkqJQ03RakqJg03Rqkq"]}
         [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Dynamicly created")]
@@ -350,21 +351,31 @@ namespace AppBrokerASP.Devices.Painless.Heater
 
         public override dynamic GetConfig() => timeTemps.ToJson();
 
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                heaterSensorMapping?.Dispose();
-            }
-
-            base.Dispose(disposing);
-        }
-
         private void SendLastTempData()
         {
             if (InstanceContainer.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out var device)
                     && device is XiaomiTempSensor sensor && sensor.Temperature > 5f)
                 XiaomiTempSensorTemperaturChanged(this, sensor.Temperature);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    heaterSensorMapping?.Dispose();
+                }
+
+                disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

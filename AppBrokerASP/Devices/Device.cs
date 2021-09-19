@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using PainlessMesh;
 
 namespace AppBrokerASP.Devices
 {
-    public abstract class Device : IDisposable
+    public abstract class Device
     {
         public long Id { get; set; }
         public List<Subscriber> Subscribers { get; set; } = new List<Subscriber>();
@@ -38,27 +37,5 @@ namespace AppBrokerASP.Devices
 
         public virtual void StopDevice() => IsConnected = false;
         public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!Disposed)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects)
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
-                Disposed = true;
-            }
-        }
-
-        public void Dispose()
-        {
-            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-            Dispose(disposing: true);
-            GC.SuppressFinalize(this);
-        }
     }
 }
