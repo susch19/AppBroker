@@ -300,16 +300,13 @@ namespace AppBrokerASP
             {
                 if (disposing)
                 {
-                    // TODO: dispose managed state (managed objects)
-                    foreach (var device in Devices.Values)
+                    foreach (var device in Devices.Values.OfType<IDisposable>())
                     {
-                        device.Dispose();
+                        device?.Dispose();
                     }
                     Devices.Clear();
                 }
 
-                // TODO: free unmanaged resources (unmanaged objects) and override finalizer
-                // TODO: set large fields to null
                 disposed = true;
             }
         }
