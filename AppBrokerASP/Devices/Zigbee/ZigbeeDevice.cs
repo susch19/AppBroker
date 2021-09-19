@@ -50,7 +50,7 @@ namespace AppBrokerASP.Devices.Zigbee
 
         public void SetPropFromIoBroker(IoBrokerObject ioBrokerObject, bool setLastReceived)
         {
-            if (ioBrokerObject.ValueParameter.Value is null)
+            if (ioBrokerObject.ValueParameter?.Value is null)
                 return;
 
             var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => ioBrokerObject.ValueName.Contains(y, StringComparison.OrdinalIgnoreCase))).Info;
