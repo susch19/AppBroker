@@ -1,15 +1,24 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 using AppBrokerASP.Configuration;
 
+using Makaretu.Dns;
+
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
+
+using NLog;
 
 using PainlessMesh.Ota;
 
@@ -18,7 +27,14 @@ namespace AppBrokerASP
 {
     public class Program
     {
-   
+#if DEBUG
+        public const bool IsDebug = true;
+        private const int port = 5056;
+#else
+        public const bool IsDebug = false;
+        private const int port = 5055;
+#endif
+
 
 
         private enum PemStringType
@@ -27,93 +43,87 @@ namespace AppBrokerASP
             RsaPrivateKey
         }
 
-     
 
         public static void Main(string[] args)
         {
 
+
+            var mainLogger = NLog.LogManager.GetCurrentClassLogger();
+
+
             Console.OutputEncoding = Encoding.Unicode;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-            //string s = "\"SingleColor\",55,93,88,30,0,4278190080,1";
-
-            //var span = s.AsSpan();
-
-
-            //var jtoken = $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken();
-            //var shm = new GeneralSmarthomeMessage(0, MessageType.Update, Command.Time, $"{{\"Date\":\"{DateTime.Now:dd.MM.yyyy HH:mm:ss}\"}}".ToJToken());
-
-            //ConfigureLogger();
-
-
-
-
-            //Dostuff();
             if (InstanceContainer.ConfigManager.PainlessMeshConfig.Enabled)
                 InstanceContainer.MeshManager.Start();
 
-            //{"id":3257171131, "m":"Update", "c":"WhoIAm", "p":["10.9.254.4","heater","jC7/P5Uu/z+Y"]}
-#if DEBUG
-            //MeshManager.SocketClientDataReceived(null, new GeneralSmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, JToken.Parse("\"10.9.254.4\""), JToken.Parse("\"heater\"")));
-#endif
+            ushort tempPort = port;
+            if (InstanceContainer.ConfigManager.ServerConfig.ListenPort == 0)
+                mainLogger.Info($"ListenPort is not configured in the appsettings serverconfig section and therefore default port {port} will be used, when no port was passed into listen url.");
+            else
+                tempPort = InstanceContainer.ConfigManager.ServerConfig.ListenPort;
 
-            int asd = 123;
-            var bytes = BitConverter.GetBytes(asd);
-            if (args.Length > 0)
+            string[] listenUrls;
+            if (InstanceContainer.ConfigManager.ServerConfig.ListenUrls.Any())
             {
-                CreateWebHostBuilder(args).UseUrls(args).Build().Run();
+                listenUrls = new string[InstanceContainer.ConfigManager.ServerConfig.ListenUrls.Count];
+                for (int i = 0; i < InstanceContainer.ConfigManager.ServerConfig.ListenUrls.Count; i++)
+                {
+                    string? item = InstanceContainer.ConfigManager.ServerConfig.ListenUrls[i];
+                    try
+                    {
+                        var builder = new UriBuilder(item);
+                        //TODO only override default ports? How do we advertise multiple ports or will there be a main port, multiple advertisments or what is the plan?
+                        //if ((builder.Scheme == "http" && builder.Port == 80) || (builder.Scheme == "https" && builder.Port == 443))
+                        //{
+                        builder.Port = tempPort;
+                        //}
+                        listenUrls[i] = builder.ToString();
+                    }
+                    catch (UriFormatException ex)
+                    {
+                        mainLogger.Error($"Error during process of {item}", ex);
+                    }
+
+                }
             }
             else
             {
-#if DEBUG
-                CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
-#else
-                CreateWebHostBuilder(args).UseUrls("http://[::1]:5056", "http://0.0.0.0:5056").Build().Run();
-#endif
+                listenUrls = new[] { $"http://[::1]:{tempPort}", $"http://0.0.0.0:{tempPort}" };
             }
+            AdvertiseServerPortsViaMDNS(tempPort);
+
+            mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
+
+            CreateWebHostBuilder(args).UseUrls(listenUrls).Build().Run();
         }
 
-        private static void ConfigureLogger()
+
+        private static void AdvertiseServerPortsViaMDNS(ushort port)
         {
-            var config = new NLog.Config.LoggingConfiguration();
+            MulticastService mdns = new MulticastService();
+            ServiceDiscovery sd = new ServiceDiscovery(mdns);
 
-            // Targets where to log to: File and Console
-            var logfile = new NLog.Targets.FileTarget("logfile") { FileName = Path.Combine("Logs", $"{DateTime.Now:yyyy_MM_dd}.log") };
-            var logconsole = new NLog.Targets.ConsoleTarget("logconsole");
+            var hostEntry 
+                = Dns.GetHostEntry(Environment.MachineName)
+                .AddressList
+                .Where(x => x.AddressFamily == AddressFamily.InterNetwork
+                    || (x.AddressFamily == AddressFamily.InterNetworkV6
+                        && !x.IsIPv6SiteLocal
+                        && !x.IsIPv6LinkLocal
+                        && !x.IsIPv6UniqueLocal
+                        && !x.IsIPv6Teredo))
+                .ToArray();
 
-            // Rules for mapping loggers to targets            
-            config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logconsole);
-            config.AddRule(NLog.LogLevel.Debug, NLog.LogLevel.Fatal, logfile);
+            var serv = new ServiceProfile(InstanceContainer.ConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
+            serv.AddProperty("Min App Version", "0.0.2");
+            serv.AddProperty("Debug", IsDebug.ToString());
+            sd.Advertise(serv);
 
-            // Apply config           
-            NLog.LogManager.Configuration = config;
+            mdns.Start();
         }
 
-        private static async void Dostuff()
-        {
-
-
-            return;
-            var wc = WebRequest.Create(@"https://192.168.49.71:8087/objects?pattern=system.adapter.zigbee.0*&prettyPrint");
-
-            ServicePointManager.ServerCertificateValidationCallback = (sender, certificate, chain, sslPolicyErrors) => true;
-            using (var sr = new StreamReader(wc.GetResponse().GetResponseStream()))
-            {
-                Console.WriteLine(sr.ReadToEnd());
-            }
-            ClientWebSocket cws = new();
-            cws.Options.RemoteCertificateValidationCallback = ServicePointManager.ServerCertificateValidationCallback;
-            await cws.ConnectAsync(new Uri("wss://192.168.49.71:8084"), CancellationToken.None);
-            //wsc = new WebsocketClient(new Uri("ws://192.168.49.71:8084"));
-            //wsc.MessageReceived.Subscribe((s) =>
-            //s.Clone());
-            //wsc.Start();
-            //while(!wsc.IsRunning)
-            //{
-            //    Thread.Sleep
-            //}
-            //await wsc.Send("getStates");
-        }
+   
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost
