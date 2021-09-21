@@ -15,7 +15,6 @@ namespace AppBrokerASP.Devices
         public bool IsConnected { get; set; }
 
         protected readonly NLog.Logger logger;
-        protected bool Disposed;
 
         public Device(long nodeId)
         {
