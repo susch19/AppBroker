@@ -4,10 +4,32 @@ using PainlessMesh;
 using SocketIOClient;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
+    public enum TradfriEffect
+    {
+        [Description("blink")]
+        Blink,
+
+        [Description("breathe")]
+        Breathe,
+
+        [Description("okay")]
+        Okay,
+
+        [Description("channel_change")]
+        ChannelChange,
+
+        [Description("finish_effect")]
+        Finish,
+
+        [Description("stop_effect")]
+        Stop
+    }
+
     [DeviceName("TRADFRI bulb E27 CWS opal 600lm", "TRADFRI bulb E14 CWS opal 600lm", "LED1624G9")]
     public class TradfriLedBulb : UpdateableZigbeeDevice
     {
@@ -31,6 +53,9 @@ namespace AppBrokerASP.Devices.Zigbee
 
         [JsonProperty("state")]
         public bool State { get; set; }
+
+        [JsonProperty("transition_time")]
+        public int TransitionTime { get; set; }
 
         public TradfriLedBulb(long nodeId, SocketIO socket) :
             base(nodeId, socket)
