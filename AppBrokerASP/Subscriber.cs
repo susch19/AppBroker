@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.SignalR;
-
-namespace AppBrokerASP
+﻿namespace AppBrokerASP
 {
     public class Subscriber
     {

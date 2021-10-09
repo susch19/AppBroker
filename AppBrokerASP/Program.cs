@@ -1,26 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
-using System.Net.WebSockets;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-
-using AppBrokerASP.Configuration;
+using System.Threading.Tasks;
 
 using Makaretu.Dns;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Configuration;
-
-using NLog;
-
-using PainlessMesh.Ota;
 
 
 namespace AppBrokerASP
@@ -35,19 +24,15 @@ namespace AppBrokerASP
         private const int port = 5055;
 #endif
 
-
-
+       
         private enum PemStringType
         {
             Certificate,
             RsaPrivateKey
         }
 
-
         public static void Main(string[] args)
         {
-
-
             var mainLogger = NLog.LogManager.GetCurrentClassLogger();
 
 
@@ -104,7 +89,7 @@ namespace AppBrokerASP
             MulticastService mdns = new MulticastService();
             ServiceDiscovery sd = new ServiceDiscovery(mdns);
 
-            var hostEntry 
+            var hostEntry
                 = Dns.GetHostEntry(Environment.MachineName)
                 .AddressList
                 .Where(x => x.AddressFamily == AddressFamily.InterNetwork
@@ -116,14 +101,18 @@ namespace AppBrokerASP
                 .ToArray();
 
             var serv = new ServiceProfile(InstanceContainer.ConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
-            serv.AddProperty("Min App Version", "0.0.2");
-            serv.AddProperty("Debug", IsDebug.ToString());
+
+            //serv.AddProperty("Min App Version", "0.0.2"); //Currently not needed, but supported by flutter app
+            if (IsDebug)
+                serv.AddProperty("Debug", IsDebug.ToString());
+            if (string.IsNullOrWhiteSpace(InstanceContainer.ConfigManager.ServerConfig.ClusterId))
+                serv.AddProperty("ClusterId", InstanceContainer.ConfigManager.ServerConfig.ClusterId);
             sd.Advertise(serv);
 
             mdns.Start();
         }
 
-   
+
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost

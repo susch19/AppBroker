@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
-using DayOfWeek = AppBrokerASP.Devices.Painless.Heater.DayOfWeek;
+﻿using System.Runtime.InteropServices;
 
 namespace AppBrokerASP.Devices.Painless.Heater
 {

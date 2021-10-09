@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using PainlessMesh;
 using AppBrokerASP.Database;
@@ -9,7 +6,6 @@ using AppBrokerASP.Database.Model;
 using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore;
 using AppBrokerASP.Devices.Zigbee;
-using AppBrokerASP.Devices;
 
 namespace AppBrokerASP.Devices.Painless.Heater
 {

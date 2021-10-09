@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace AppBrokerASP.Devices
+﻿namespace AppBrokerASP.Devices
 {
     [AttributeUsage(AttributeTargets.Class)]
     internal class DeviceNameAttribute : Attribute

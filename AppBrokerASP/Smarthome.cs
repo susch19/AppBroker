@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text.Json;
+﻿using System.Reflection;
 using System.Threading.Tasks;
 
 using AppBrokerASP.Database;
@@ -10,8 +6,8 @@ using AppBrokerASP.Devices;
 using AppBrokerASP.Devices.Zigbee;
 using AppBrokerASP.IOBroker;
 
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.SignalR;
+
 using PainlessMesh;
 namespace AppBrokerASP
 {

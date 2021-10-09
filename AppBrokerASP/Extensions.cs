@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Text.Json.Serialization;
-using AppBrokerASP.Database.Model;
+﻿using AppBrokerASP.Database.Model;
 using AppBrokerASP.Devices;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Text;
 
 namespace AppBrokerASP
 {

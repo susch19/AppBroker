@@ -1,11 +1,6 @@
 ﻿using AppBrokerASP.Database.Model;
-using AppBrokerASP.Devices;
-using AppBrokerASP.Devices.Painless.Heater;
+
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace AppBrokerASP.Database
 {
