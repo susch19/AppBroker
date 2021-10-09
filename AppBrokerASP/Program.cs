@@ -117,12 +117,6 @@ namespace AppBrokerASP
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost
             .CreateDefaultBuilder(args)
-            .ConfigureLogging(logging =>
-            {
-                //logging.SetMinimumLevel(Microsoft.Extensions.Logging.LogLevel.Trace);
-                //logging.AddFilter("Microsoft.AspNetCore.SignalR", Microsoft.Extensions.Logging.LogLevel.Trace);
-                //    logging.AddFilter("Microsoft.AspNetCore.Http.Connections", Microsoft.Extensions.Logging.LogLevel.Trace);
-            })
             .UseStartup<Startup>();
     }
 }

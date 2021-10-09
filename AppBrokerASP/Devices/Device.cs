@@ -8,10 +8,7 @@ namespace AppBrokerASP.Devices
 {
     public abstract class Device
     {
-        public event EventHandler<Device>? PrintableInfoChanged;
-
         public long Id { get; set; }
-        //public List<string> PrintableInformation { get; set; } = new List<string>();
         public List<Subscriber> Subscribers { get; set; } = new List<Subscriber>();
         public string TypeName { get; set; }
         public bool ShowInApp { get; set; }

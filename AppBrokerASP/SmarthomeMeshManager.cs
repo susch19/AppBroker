@@ -10,7 +10,6 @@ using PainlessMesh;
 
 namespace AppBrokerASP
 {
-
     public class SmarthomeMeshManager : IDisposable
     {
         private class NodeSync

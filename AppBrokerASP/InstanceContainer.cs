@@ -16,13 +16,17 @@ namespace AppBrokerASP
 
         static InstanceContainer()
         {
-
-
             ConfigManager = new ConfigManager();
             UpdateManager = new();
             MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.ListenPort);
             DeviceManager = new DeviceManager();
         }
 
+
+        public static void Dispose()
+        {
+            DeviceManager.Dispose();
+            MeshManager.Dispose();
+        }
     }
 }

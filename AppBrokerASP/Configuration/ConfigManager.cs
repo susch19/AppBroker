@@ -4,8 +4,6 @@ namespace AppBrokerASP.Configuration
 {
     public class ConfigManager
     {
-        private IConfigurationRoot configuration;
-
         public ZigbeeConfig ZigbeeConfig { get; }
         public PainlessMeshSettings PainlessMeshConfig { get; }
         public ServerConfig ServerConfig {  get; }
@@ -22,7 +20,6 @@ namespace AppBrokerASP.Configuration
             configBuilder.AddJsonFile(fileName);
             var configuration = configBuilder.Build();
 
-            this.configuration = configuration;
             PainlessMeshConfig = new PainlessMeshSettings();
             configuration.GetSection(PainlessMeshSettings.ConfigName).Bind(PainlessMeshConfig);
 
@@ -32,6 +29,5 @@ namespace AppBrokerASP.Configuration
             configuration.GetSection(ServerConfig.ConfigName).Bind(ServerConfig);
 
         }
-
     }
 }

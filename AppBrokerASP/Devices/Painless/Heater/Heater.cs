@@ -6,13 +6,13 @@ using AppBrokerASP.Database.Model;
 using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore;
 using AppBrokerASP.Devices.Zigbee;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AppBrokerASP.Devices.Painless.Heater
 {
     [DeviceName("heater")]
     public class Heater : PainlessDevice, IDisposable
     {
-
         public HeaterConfig? Temperature { get; set; }
         public long XiaomiTempSensor { get; set; } = 0;
         public HeaterConfig? CurrentConfig { get; set; }
@@ -24,8 +24,10 @@ namespace AppBrokerASP.Devices.Painless.Heater
         public bool DisableLed { get; set; }
 
         private readonly Task? heaterSensorMapping;
+        private bool disposed;
 
         //2020-02-01 20:14:48.1075|DEBUG|AppBrokerASP.BaseClient|{"id":3257233774, "m":"Update", "c":"WhoIAm", "p":["10.12.206.9","heater","RmlybXdhcmUgVjIgRmViICAxIDIwMjA=","YAk3oJQqQBo3QKkqYQk3oZQqQRo3QakqYgk3opQqQho3QqkqYwk3o5QqQxo3Q6kqZAk3pJQqRBo3RKkqJQ03RakqJg03Rqkq"]}
+        [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Dynamicly created")]
         public Heater(long id, ByteLengthList parameters) : base(id)
         {
             using var cont = DbProvider.BrokerDbContext;
@@ -87,7 +89,7 @@ namespace AppBrokerASP.Devices.Painless.Heater
             }
         }
 
-        private byte[] GetSendableTimeTemps(IEnumerable<HeaterConfig> timeTemps)
+        private static byte[] GetSendableTimeTemps(IEnumerable<HeaterConfig> timeTemps)
         {
             return timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).SelectMany(x => ((TimeTempMessageLE)x).ToBinary()).ToArray();
         }
@@ -330,13 +332,6 @@ namespace AppBrokerASP.Devices.Painless.Heater
             InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
         }
 
-        public void Update(string message)
-        {
-
-        }
-
-
-
         public override void Reconnect(ByteLengthList parameter)
         {
             base.Reconnect(parameter);
@@ -351,18 +346,33 @@ namespace AppBrokerASP.Devices.Painless.Heater
             SendLastTempData();
         }
 
-
         public override dynamic GetConfig() => timeTemps.ToJson();
-        public void Dispose()
-        {
-            heaterSensorMapping?.Dispose();
-        }
 
         private void SendLastTempData()
         {
             if (InstanceContainer.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out var device)
                     && device is XiaomiTempSensor sensor && sensor.Temperature > 5f)
                 XiaomiTempSensorTemperaturChanged(this, sensor.Temperature);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposed)
+            {
+                if (disposing)
+                {
+                    heaterSensorMapping?.Dispose();
+                }
+
+                disposed = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
     }
 }

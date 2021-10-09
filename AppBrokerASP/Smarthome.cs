@@ -9,9 +9,9 @@ using AppBrokerASP.IOBroker;
 using Microsoft.AspNetCore.SignalR;
 
 using PainlessMesh;
+
 namespace AppBrokerASP
 {
-
     public interface ISmartHomeClient 
     {
         Task Update(Device device);
@@ -19,8 +19,6 @@ namespace AppBrokerASP
 
     public class SmartHome : Hub<ISmartHomeClient>
     {
-
-
         public SmartHome()
         {
         }
@@ -29,6 +27,7 @@ namespace AppBrokerASP
         {
             foreach (var item in InstanceContainer.DeviceManager.Devices.Values)
                 item.SendLastData(Clients.Caller);
+
             return base.OnConnectedAsync();
         }
 
@@ -41,7 +40,7 @@ namespace AppBrokerASP
                     case MessageType.Get:
                         break;
                     case MessageType.Update:
-                        device.UpdateFromApp(message.Command, message.Parameters);
+                        await device.UpdateFromApp(message.Command, message.Parameters);
                         break;
                     case MessageType.Options:
                         device.OptionsFromApp(message.Command, message.Parameters);

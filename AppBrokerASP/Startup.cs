@@ -38,7 +38,5 @@ namespace AppBrokerASP
                 _ = e.MapHub<SmartHome>("/SmartHome");
             });
         }
-
-
     }
 }
