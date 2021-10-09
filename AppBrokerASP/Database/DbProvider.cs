@@ -1,5 +1,4 @@
 ﻿using AppBrokerASP.Devices;
-using System.Linq;
 
 namespace AppBrokerASP.Database
 {

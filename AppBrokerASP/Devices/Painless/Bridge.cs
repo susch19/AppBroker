@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace AppBrokerASP.Devices.Painless
+﻿namespace AppBrokerASP.Devices.Painless
 {
     public class Bridge : PainlessDevice
     {

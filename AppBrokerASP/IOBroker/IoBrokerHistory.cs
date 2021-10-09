@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace AppBrokerASP.IOBroker
+﻿namespace AppBrokerASP.IOBroker
 {
     public class IoBrokerHistory
     {

@@ -1,4 +1,0 @@
-﻿namespace AppBrokerASP.ContainerClasses
-{
-
-}

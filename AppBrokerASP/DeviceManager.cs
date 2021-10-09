@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -156,7 +152,15 @@ namespace AppBrokerASP
                     }
                     else
                     {
-                        await GetZigbeeDevices(client);
+                        try
+                        {
+
+                            await GetZigbeeDevices(client);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.Error(ex);
+                        }
                     }
                 }
             });
@@ -173,7 +177,15 @@ namespace AppBrokerASP
                 logger.Debug("Connected Zigbee Client");
                 await client.EmitAsync("subscribe", "zigbee.*");
                 await client.EmitAsync("subscribeObjects", '*');
-                await GetZigbeeDevices(client);
+                try
+                {
+
+                    await GetZigbeeDevices(client);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex);
+                }
             };
 
             await client.ConnectAsync();

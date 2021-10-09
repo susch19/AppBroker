@@ -2,12 +2,7 @@ using AppBrokerASP.IOBroker;
 using AppBrokerASP.Extension;
 
 using SocketIOClient;
-
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Linq;
 using System.Reflection;
 
 using System.Threading.Tasks;
@@ -50,24 +45,57 @@ namespace AppBrokerASP.Devices.Zigbee
 
         public void SetPropFromIoBroker(IoBrokerObject ioBrokerObject, bool setLastReceived)
         {
-            if (ioBrokerObject.ValueParameter?.Value is null)
-                return;
+            try
+            {
 
-            var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => ioBrokerObject.ValueName.Contains(y, StringComparison.OrdinalIgnoreCase))).Info;
-            if (prop == default)
-                return;
+                if (ioBrokerObject.ValueParameter.Value is null)
+                    return;
 
+                var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => ioBrokerObject.ValueName.Contains(y, StringComparison.OrdinalIgnoreCase))).Info;
+                if (prop == default)
+                    return;
+
+                SetProperty(ioBrokerObject, prop);
+                if (setLastReceived)
+                    LastReceived = DateTime.Now;
+                SendDataToAllSubscribers();
+
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                logger.Info(JsonConvert.SerializeObject(ioBrokerObject, Formatting.Indented));
+            }
+        }
+
+        private void SetProperty(IoBrokerObject ioBrokerObject, PropertyInfo prop)
+        {
             if ((prop.PropertyType == typeof(float) || prop.PropertyType == typeof(double)) && ioBrokerObject.ValueParameter.Value.ToObject<string>()!.Contains(","))
             {
                 var strValue = ioBrokerObject.ValueParameter.Value.ToObject<string>();
                 if (double.TryParse(strValue, out var val))
                     prop.SetValue(this, Convert.ChangeType(val, prop.PropertyType));
             }
+            else if (prop.PropertyType == typeof(sbyte))
+                SetValueOnProperty<sbyte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+            else if (prop.PropertyType == typeof(byte))
+                SetValueOnProperty<byte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+            else if (prop.PropertyType == typeof(short))
+                SetValueOnProperty<short>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+            else if (prop.PropertyType == typeof(ushort))
+                SetValueOnProperty<ushort>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+            else if (prop.PropertyType == typeof(int))
+                SetValueOnProperty<int>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+            else if (prop.PropertyType == typeof(uint))
+                SetValueOnProperty<uint>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
             else
                 prop.SetValue(this, Convert.ChangeType(ioBrokerObject.ValueParameter.Value.ToObject(prop.PropertyType), prop.PropertyType));
-            if (setLastReceived)
-                LastReceived = DateTime.Now;
-            SendDataToAllSubscribers();
+        }
+
+
+        private void SetValueOnProperty<T>(PropertyInfo prop, long v1) where T : INumber<T>, IMinMaxValue<T>
+        {
+            prop.SetValue(this, T.CreateSaturating(v1));
         }
 
         public async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)

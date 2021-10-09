@@ -2,8 +2,6 @@
 using PainlessMesh;
 using PainlessMesh.Ota;
 
-using System;
-using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -117,7 +115,6 @@ namespace AppBrokerASP.Devices.Painless
                 return;
 
             logger.Debug(LogName + $" v{FirmwareVersionNr} starting Ota with " + metadata.ToJson());
-            //DeviceType ���?�������?, FirmwareVersion 6678942, Forced 0, PartSize 0, Size 0, Cound 0, PartNo 1073740960
 
             //Do OTA
             var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, Command.Ota, metadata.ToBinary());

@@ -1,6 +1,6 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+
 using AppBrokerASP.Devices.Painless.Heater;
 
 namespace AppBrokerASP.Database.Model

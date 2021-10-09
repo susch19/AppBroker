@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using AppBrokerASP.Database.Model;
+﻿using AppBrokerASP.Database.Model;
 using AppBrokerASP.Devices;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

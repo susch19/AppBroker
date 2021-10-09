@@ -6,6 +6,8 @@ namespace AppBrokerASP.Configuration
     {
         public ZigbeeConfig ZigbeeConfig { get; }
         public PainlessMeshSettings PainlessMeshConfig { get; }
+        public ServerConfig ServerConfig {  get; }
+
 
         public ConfigManager()
         {
@@ -23,6 +25,9 @@ namespace AppBrokerASP.Configuration
 
             ZigbeeConfig = new ZigbeeConfig();
             configuration.GetSection(ZigbeeConfig.ConfigName).Bind(ZigbeeConfig);
+            ServerConfig = new ServerConfig();
+            configuration.GetSection(ServerConfig.ConfigName).Bind(ServerConfig);
+
         }
     }
 }
