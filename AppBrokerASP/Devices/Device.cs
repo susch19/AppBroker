@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.ComponentModel;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json.Linq;
 
@@ -14,7 +15,6 @@ namespace AppBrokerASP.Devices
         public bool ShowInApp { get; set; }
         public string FriendlyName { get; set; }
         public bool IsConnected { get; set; }
-
         protected readonly NLog.Logger logger;
 
         public Device(long nodeId)
