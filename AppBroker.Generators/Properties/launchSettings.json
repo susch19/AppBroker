@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "AppBrokerManual": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Programme\\Microsoft Visual Studio\\2022\\Preview\\MSBuild\\Current\\Bin\\Roslyn\\csc.exe",
+      "commandLineArgs": "@\"C:\\Users\\susch\\source\\repos\\AppBroker\\AppBroker.Generators\\Properties\\AppBrokerManual.rsp\"",
+      "workingDirectory": "C:\\Users\\susch\\source\\repos\\AppBroker\\AppBrokerASP"
+    },
+    "TestManual": {
+      "commandName": "Executable",
+      "executablePath": "C:\\Programme\\Microsoft Visual Studio\\2022\\Preview\\MSBuild\\Current\\Bin\\Roslyn\\csc.exe",
+      "commandLineArgs": "@\"C:\\Users\\susch\\source\\repos\\AppBroker\\AppBroker.Generators\\Properties\\TestGenerator.rsp\"",
+      "workingDirectory": "C:\\Users\\susch\\source\\repos\\AppBroker\\TestGenerator"
+    },
+    "AppBroker": {
+      "commandName": "DebugRoslynComponent",
+      "targetProject": "C:\\Users\\susch\\source\\repos\\AppBroker\\AppBrokerASP\\AppBrokerASP.csproj"
+    }
+  }
+}

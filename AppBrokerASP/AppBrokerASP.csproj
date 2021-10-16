@@ -41,6 +41,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Update="cert.pem">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
