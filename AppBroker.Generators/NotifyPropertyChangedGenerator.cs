@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Diagnostics;
+using System.Collections.Immutable;
 
 namespace AppBroker.Generators
 {
@@ -24,6 +25,24 @@ namespace AppBroker
         public IgnoreChangedAppbrokerAttribute()
         {
         }
+    }
+}
+";
+
+        private const string copyPropertyAttributesFromAttribute = @"
+using System;
+namespace AppBroker
+{
+    [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+    [System.Diagnostics.Conditional(""PropertyChangedAvaloniaGenerator_DEBUG"")]
+    sealed class CopyPropertyAttributesFromAttribute : Attribute
+    {
+        public CopyPropertyAttributesFromAttribute(string propertyName)
+        {
+            PropertyName = propertyName;
+        }
+
+        public string PropertyName { get; set; }
     }
 }
 ";
@@ -82,6 +101,7 @@ namespace AppBroker
                 i.AddSource("IgnoreChangedAppbrokerAttribute", ignoreFieldAttribute);
                 i.AddSource("ClassPropertyChangedAppbrokerAttribute", classAttribute);
                 i.AddSource("PropertyChangedAppbrokerAttribute", propertyChangedFieldAttribute);
+                i.AddSource("CopyPropertyAttributesFromAttribute", copyPropertyAttributesFromAttribute);
             });
 
             // Register a syntax receiver that will be created for each generation pass
@@ -97,6 +117,7 @@ namespace AppBroker
             // get the added attribute, and INotifyPropertyChanged
             INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
             INamedTypeSymbol ignoreAttributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedAppbrokerAttribute");
+            INamedTypeSymbol abc = context.Compilation.GetTypeByMetadataName("System.Text.Json.Serialization.JsonPropertyNameAttribute");
 
             foreach (var group in receiver.Classes)
             {
@@ -123,16 +144,17 @@ namespace {namespaceName}
 
             // if the class doesn't implement INotifyPropertyChanged already, add it
 
-            source.Append($@"{{
-            protected T RaiseAndSetIfChanged<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
-            {{
-                if (System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
-                    return value;
-                {(thingy.CallPropertyChanging ? "OnPropertyChanging(ref field, value, propertyName);": "")}
-                field = value;
-                {(thingy.CallPropertyChanged ? "OnPropertyChanged(propertyName);" : "")}
+            source.Append($@"
+    {{
+        protected T RaiseAndSetIfChanged<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
+        {{
+            if (System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
                 return value;
-            }}
+            {(thingy.CallPropertyChanging ? "OnPropertyChanging(ref field, value, propertyName);" : "")}
+            field = value;
+            {(thingy.CallPropertyChanged ? "OnPropertyChanged(propertyName);" : "")}
+            return value;
+        }}
             ");
 
 
@@ -145,15 +167,17 @@ namespace {namespaceName}
             // create properties for each field 
             foreach (IFieldSymbol fieldSymbol in thingy.Fields)
             {
-                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol);
+                thingy.AdditionalAttributesForGeneratedProp.TryGetValue(fieldSymbol, out var additionalAttributes);
+
+                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, additionalAttributes);
             }
 
-            source.Append("} }");
+            source.Append(" }\n}");
             return source.ToString();
         }
 
 
-        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol)
+        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, ImmutableArray<AttributeData> additionalAttributes)
         {
             // get the name and type of the field
             string fieldName = fieldSymbol.Name;
@@ -173,6 +197,16 @@ namespace {namespaceName}
                 //TODO: issue a diagnostic that we can't process this field
                 return;
             }
+
+            if (additionalAttributes != null && additionalAttributes.Length > 0)
+                foreach (var additionalAttribute in additionalAttributes)
+                {
+                    if(additionalAttribute.ApplicationSyntaxReference.GetSyntax() is AttributeSyntax ass)
+                    {
+                        source.AppendLine($"        [{additionalAttribute.AttributeClass.ToDisplayString()}{ass.ArgumentList.ToFullString()}]");
+                    }
+
+                }
 
             source.Append($@"
         public {fieldType} {propertyName} 
@@ -201,25 +235,6 @@ namespace {namespaceName}
 
         }
 
-        private void ProcessProp(StringBuilder source, IPropertySymbol propSymbol)
-        {
-            // get the name and type of the field
-            string propName = propSymbol.Name;
-            ITypeSymbol fieldType = propSymbol.Type;
-
-            string fieldName = "_" + char.ToLower(propName[0]) + propName.Substring(1);
-
-            source.Append($@"
-        public {fieldType} {propName} 
-        {{
-            get => this.{fieldName};
-            set => this.RaiseAndSetIfChanged(ref {fieldName}, value);
-        }}
-
-        private {fieldType} {fieldName};
-");
-        }
-
 
         /// <summary>
         /// Created on demand before each generation pass
@@ -236,8 +251,12 @@ namespace {namespaceName}
                 public bool CallPropertyChanged { get; set; }
                 public bool CallPropertyChanging { get; set; }
 
-                public List<IPropertySymbol> Properties { get; } = new List<IPropertySymbol>();
+
+
                 public List<IFieldSymbol> Fields { get; } = new List<IFieldSymbol>();
+
+                public Dictionary<IFieldSymbol, System.Collections.Immutable.ImmutableArray<AttributeData>> AdditionalAttributesForGeneratedProp = new();
+
             }
             public Dictionary<ISymbol, ClassThingy> Classes { get; } = new();
             /// <summary>
@@ -299,28 +318,42 @@ namespace {namespaceName}
                                 case "callPropertyChanged":
                                     thingy.CallPropertyChanged = (bool)parameterValue;
                                     break;
-                                case "callPropertyChanging": 
+                                case "callPropertyChanging":
                                     thingy.CallPropertyChanging = (bool)parameterValue;
                                     break;
                                 default:
                                     break;
                             }
-                     
                         }
 
                         var symbol2 = context.SemanticModel.GetDeclaredSymbol(tmp) as INamedTypeSymbol;
-                        foreach (var p in symbol2.GetMembers())
-                        //foreach (var propSymbol in typeToGenerateFor..OfType<IPropertySymbol>()) Mach was du meinst
+                        var allMembers = symbol2.GetMembers();
+                        foreach (var p in allMembers)
                         {
-                            var fieldSymbol = p as IFieldSymbol;
+                            if (p is IFieldSymbol fieldSymbol && !thingy.Fields.Contains(fieldSymbol))
+                            {
+                                thingy.Fields.Add(fieldSymbol);
+                                var fieldAttributes = fieldSymbol.GetAttributes();
+                                if (fieldAttributes.Length == 0)
+                                    continue;
+                                var copyFromAttribute = fieldAttributes.FirstOrDefault(x => x.AttributeClass.Name == "CopyPropertyAttributesFromAttribute");
 
-                            if (fieldSymbol is null || thingy.Fields.Contains(fieldSymbol))
-                                continue;
+                                if (copyFromAttribute == default)
+                                    continue;
 
-                            thingy.Fields.Add(fieldSymbol);
-                            // Get the symbol being declared by the field, and keep it if its annotated
+                                var propName = copyFromAttribute.ConstructorArguments.First();
+                                var propertyMember = allMembers.FirstOrDefault(x => x.Name == propName.Value.ToString());
 
-                            //Properties.Add(propSymbol);
+                                if (propertyMember is not IPropertySymbol propertySymbol)
+                                {
+                                    //TODO: Issue Warning for wrong use of attribute
+                                    continue;
+                                }
+                                var attributeCopy = propertySymbol.GetAttributes();
+                                thingy.AdditionalAttributesForGeneratedProp[fieldSymbol] = attributeCopy;
+                            }
+
+
                         }
                     }
                 }

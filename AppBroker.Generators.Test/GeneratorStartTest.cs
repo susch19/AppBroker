@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.IO;
+using TestGenerator;
 
 namespace AppBroker.Generators.Test
 {
@@ -26,6 +27,9 @@ namespace AppBroker.Generators.Test
                         {
                             MetadataReference.CreateFromFile(typeof(Binder).GetTypeInfo().Assembly.Location),
                             MetadataReference.CreateFromFile(typeof(INotifyPropertyChanged).GetTypeInfo().Assembly.Location),
+                            MetadataReference.CreateFromFile(typeof(System.Text.Json.Serialization.JsonIgnoreAttribute).GetTypeInfo().Assembly.Location),
+                            MetadataReference.CreateFromFile(typeof(PropChanged).GetTypeInfo().Assembly.Location),
+                            MetadataReference.CreateFromFile(typeof(System.ComponentModel.DescriptionAttribute).GetTypeInfo().Assembly.Location),
                         },
                         new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
