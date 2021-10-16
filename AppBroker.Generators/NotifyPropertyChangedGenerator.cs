@@ -19,10 +19,25 @@ using System;
 namespace AppBroker
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    [System.Diagnostics.Conditional(""PropertyChangedAvaloniaGenerator_DEBUG"")]
-    sealed class IgnoreChangedAppbrokerAttribute : Attribute
+    [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
+    sealed class IgnoreFieldAttribute : Attribute
     {
-        public IgnoreChangedAppbrokerAttribute()
+        public IgnoreFieldAttribute()
+        {
+        }
+    }
+}
+";
+
+        private const string ignoreChangedFieldAttribute = @"
+using System;
+namespace AppBroker
+{
+    [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+    [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
+    sealed class IgnoreChangedFieldAttribute : Attribute
+    {
+        public IgnoreChangedFieldAttribute()
         {
         }
     }
@@ -34,7 +49,7 @@ using System;
 namespace AppBroker
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    [System.Diagnostics.Conditional(""PropertyChangedAvaloniaGenerator_DEBUG"")]
+    [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
     sealed class CopyPropertyAttributesFromAttribute : Attribute
     {
         public CopyPropertyAttributesFromAttribute(string propertyName)
@@ -52,7 +67,7 @@ using System;
 namespace AppBroker
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    [System.Diagnostics.Conditional(""PropertyChangedAvaloniaGenerator_DEBUG"")]
+    [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
     sealed class PropertyChangedAppbrokerAttribute : Attribute
     {
         public PropertyChangedAppbrokerAttribute()
@@ -70,7 +85,7 @@ namespace AppBroker
 {
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
-    [System.Diagnostics.Conditional(""ImplementPropertyChangedAvaloniaGenerator_DEBUG"")]
+    [System.Diagnostics.Conditional(""ImplementNotifyPropertyChangedGenerator_DEBUG"")]
     sealed class ClassPropertyChangedAppbrokerAttribute : Attribute
     {
         public ClassPropertyChangedAppbrokerAttribute(Type? typeName, bool callPropertyChanging = true, bool callPropertyChanged = false) : this(callPropertyChanging, callPropertyChanged)
@@ -98,10 +113,11 @@ namespace AppBroker
             // Register the attribute source
             context.RegisterForPostInitialization((i) =>
             {
-                i.AddSource("IgnoreChangedAppbrokerAttribute", ignoreFieldAttribute);
+                i.AddSource("IgnoreChangedFieldAttribute", ignoreChangedFieldAttribute);
                 i.AddSource("ClassPropertyChangedAppbrokerAttribute", classAttribute);
                 i.AddSource("PropertyChangedAppbrokerAttribute", propertyChangedFieldAttribute);
                 i.AddSource("CopyPropertyAttributesFromAttribute", copyPropertyAttributesFromAttribute);
+                i.AddSource("IgnoreFieldAttribute", ignoreFieldAttribute);
             });
 
             // Register a syntax receiver that will be created for each generation pass
@@ -116,17 +132,17 @@ namespace AppBroker
 
             // get the added attribute, and INotifyPropertyChanged
             INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
-            INamedTypeSymbol ignoreAttributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedAppbrokerAttribute");
-            INamedTypeSymbol abc = context.Compilation.GetTypeByMetadataName("System.Text.Json.Serialization.JsonPropertyNameAttribute");
+            INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
+            INamedTypeSymbol ignoreFieldSymbol= context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
 
             foreach (var group in receiver.Classes)
             {
-                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreAttributeSymbol);
+                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol);
                 context.AddSource($"{group.Key.Name}_autoNotifyAppbroker.cs", SourceText.From(classSource, Encoding.UTF8));
             }
         }
 
-        private string ProcessClass(INamedTypeSymbol classSymbol, SyntaxReceiver.ClassThingy thingy, INamedTypeSymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol)
+        private string ProcessClass(INamedTypeSymbol classSymbol, SyntaxReceiver.ClassThingy thingy, INamedTypeSymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol)
         {
             if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
             {
@@ -169,7 +185,7 @@ namespace {namespaceName}
             {
                 thingy.AdditionalAttributesForGeneratedProp.TryGetValue(fieldSymbol, out var additionalAttributes);
 
-                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, additionalAttributes);
+                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol, additionalAttributes);
             }
 
             source.Append(" }\n}");
@@ -177,7 +193,7 @@ namespace {namespaceName}
         }
 
 
-        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, ImmutableArray<AttributeData> additionalAttributes)
+        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, ImmutableArray<AttributeData> additionalAttributes)
         {
             // get the name and type of the field
             string fieldName = fieldSymbol.Name;
@@ -186,7 +202,10 @@ namespace {namespaceName}
             // get the AutoNotify attribute from the field, and any associated data
             var fieldAttrs = fieldSymbol.GetAttributes();
 
-            var ignore = fieldAttrs.Any(ad => ad.AttributeClass.Equals(ignoreAttributeSymbol, SymbolEqualityComparer.Default));
+            var ignore = fieldAttrs.Any(ad => ad.AttributeClass.Equals(ignoreFieldSymbol, SymbolEqualityComparer.Default));
+            if (ignore == true)
+                return;
+            ignore = fieldAttrs.Any(ad => ad.AttributeClass.Equals(ignoreAttributeSymbol, SymbolEqualityComparer.Default));
 
             AttributeData attributeData = fieldAttrs.FirstOrDefault(ad => ad.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
             TypedConstant? overridenNameOpt = attributeData?.NamedArguments.SingleOrDefault(kvp => kvp.Key == "PropertyName").Value;
