@@ -23,8 +23,10 @@ namespace TestGenerator
     {
         private int myProperty;
         
-        [AppBroker.IgnoreChangedAppbroker]
+        [AppBroker.IgnoreChangedField]
         private int myProperty2;
+        [AppBroker.IgnoreField]
+        private int myPropertyIgnored;
 
         [AppBroker.PropertyChangedAppbroker(PropertyName = "Different"), AppBroker.CopyPropertyAttributesFromAttribute(nameof(property))]
         private int myProperty3;

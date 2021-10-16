@@ -1,5 +1,8 @@
 ﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 using Newtonsoft.Json.Linq;
 
@@ -7,23 +10,26 @@ using PainlessMesh;
 
 namespace AppBrokerASP.Devices
 {
-    public abstract class Device
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public abstract partial class Device
     {
-        public long Id { get; set; }
         public List<Subscriber> Subscribers { get; set; } = new List<Subscriber>();
-        public string TypeName { get; set; }
-        public bool ShowInApp { get; set; }
-        public string FriendlyName { get; set; }
-        public bool IsConnected { get; set; }
+        private long id;
+        private string typeName;
+        private bool showInApp;
+        private string friendlyName;
+        private bool isConnected;
+
+        [AppBroker.IgnoreField]
         protected readonly NLog.Logger logger;
 
         public Device(long nodeId)
         {
-            Id = nodeId;
-            TypeName = GetType().Name;
-            IsConnected = true;
+            id = nodeId;
+            typeName = GetType().Name;
+            isConnected = true;
             logger = NLog.LogManager.GetCurrentClassLogger();
-            FriendlyName = "";
+            friendlyName = "";
         }
 
         public virtual Task UpdateFromApp(Command command, List<JToken> parameters) => Task.CompletedTask;
@@ -37,5 +43,10 @@ namespace AppBrokerASP.Devices
 
         public virtual void StopDevice() => IsConnected = false;
         public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
+
+        protected virtual void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "")
+        {
+            field = value;
+        }
     }
 }
