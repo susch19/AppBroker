@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" />
-    <ProjectReference Include="..\TestGenerator\TestGenerator.csproj" />
   </ItemGroup>
 
 </Project>

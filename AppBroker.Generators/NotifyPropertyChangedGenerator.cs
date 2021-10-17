@@ -8,6 +8,7 @@ using System.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Diagnostics;
 using System.Collections.Immutable;
+using System.Security.Cryptography;
 
 namespace AppBroker.Generators
 {
@@ -44,23 +45,6 @@ namespace AppBroker
 }
 ";
 
-        private const string copyPropertyAttributesFromAttribute = @"
-using System;
-namespace AppBroker
-{
-    [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
-    [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
-    sealed class CopyPropertyAttributesFromAttribute : Attribute
-    {
-        public CopyPropertyAttributesFromAttribute(string propertyName)
-        {
-            PropertyName = propertyName;
-        }
-
-        public string PropertyName { get; set; }
-    }
-}
-";
 
         private const string propertyChangedFieldAttribute = @"
 using System;
@@ -116,7 +100,6 @@ namespace AppBroker
                 i.AddSource("IgnoreChangedFieldAttribute", ignoreChangedFieldAttribute);
                 i.AddSource("ClassPropertyChangedAppbrokerAttribute", classAttribute);
                 i.AddSource("PropertyChangedAppbrokerAttribute", propertyChangedFieldAttribute);
-                i.AddSource("CopyPropertyAttributesFromAttribute", copyPropertyAttributesFromAttribute);
                 i.AddSource("IgnoreFieldAttribute", ignoreFieldAttribute);
             });
 
@@ -130,19 +113,30 @@ namespace AppBroker
             if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
                 return;
 
+            //Debugger.Launch();
+
             // get the added attribute, and INotifyPropertyChanged
             INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
             INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
-            INamedTypeSymbol ignoreFieldSymbol= context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
+            INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
 
             foreach (var group in receiver.Classes)
             {
-                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol);
+                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, context);
                 context.AddSource($"{group.Key.Name}_autoNotifyAppbroker.cs", SourceText.From(classSource, Encoding.UTF8));
             }
         }
 
-        private string ProcessClass(INamedTypeSymbol classSymbol, SyntaxReceiver.ClassThingy thingy, INamedTypeSymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol)
+        private bool BaseClassAlreadyHasAttribute(INamedTypeSymbol parent, string attributeName)
+        {
+            if (parent.BaseType == null)
+                return false;
+            var attr = parent.BaseType.GetAttributes();
+
+            return attr.Any(x => $"{x.AttributeClass.ContainingNamespace}.{x.AttributeClass.Name}" == attributeName) || BaseClassAlreadyHasAttribute(parent.BaseType, attributeName);
+        }
+
+        private string ProcessClass(INamedTypeSymbol classSymbol, SyntaxReceiver.ClassThingy thingy, INamedTypeSymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, GeneratorExecutionContext context)
         {
             if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
             {
@@ -150,6 +144,8 @@ namespace AppBroker
             }
 
             string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
+
+            var alreadyContainsMethod = BaseClassAlreadyHasAttribute(classSymbol, "AppBroker.ClassPropertyChangedAppbrokerAttribute");
 
             // begin building the generated source
             StringBuilder source = new StringBuilder($@"
@@ -162,6 +158,7 @@ namespace {namespaceName}
 
             source.Append($@"
     {{
+{(alreadyContainsMethod ? "" : $@"
         protected T RaiseAndSetIfChanged<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
         {{
             if (System.Collections.Generic.EqualityComparer<T>.Default.Equals(field, value))
@@ -171,29 +168,23 @@ namespace {namespaceName}
             {(thingy.CallPropertyChanged ? "OnPropertyChanged(propertyName);" : "")}
             return value;
         }}
+")}
             ");
-
-
-
-            //foreach (IPropertySymbol propSymbol in thingy.Properties)
-            //{
-            //    ProcessProp(source, propSymbol);
-            //}
 
             // create properties for each field 
             foreach (IFieldSymbol fieldSymbol in thingy.Fields)
             {
                 thingy.AdditionalAttributesForGeneratedProp.TryGetValue(fieldSymbol, out var additionalAttributes);
 
-                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol, additionalAttributes);
+                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol, additionalAttributes, context);
             }
 
-            source.Append(" }\n}");
+            source.Append("    }\n}");
             return source.ToString();
         }
 
 
-        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, ImmutableArray<AttributeData> additionalAttributes)
+        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, List<AttributeListSyntax> additionalAttributes, GeneratorExecutionContext context)
         {
             // get the name and type of the field
             string fieldName = fieldSymbol.Name;
@@ -217,14 +208,33 @@ namespace {namespaceName}
                 return;
             }
 
-            if (additionalAttributes != null && additionalAttributes.Length > 0)
+            if (additionalAttributes != null && additionalAttributes.Count > 0)
                 foreach (var additionalAttribute in additionalAttributes)
                 {
-                    if(additionalAttribute.ApplicationSyntaxReference.GetSyntax() is AttributeSyntax ass)
+                    var mod = context.Compilation.GetSemanticModel(additionalAttribute.SyntaxTree);
+                    foreach (var addAttr in additionalAttribute.Attributes)
                     {
-                        source.AppendLine($"        [{additionalAttribute.AttributeClass.ToDisplayString()}{ass.ArgumentList.ToFullString()}]");
+                        var symb = mod.GetSymbolInfo(addAttr);
+                        var candidate = symb.Symbol ?? symb.CandidateSymbols.FirstOrDefault();
+                        if (candidate == null)
+                        {
+                            context.ReportDiagnostic(
+                                Diagnostic.Create(
+                                    "AB0234", 
+                                    "Generator",
+                                    $"The type or namespace name '{addAttr.Name}' does not exist.' (did you use a the wrong namespace while declaring the fullname of the property attribute?)", 
+                                    DiagnosticSeverity.Error, 
+                                    DiagnosticSeverity.Error, 
+                                    true, 
+                                    0, 
+                                    location: Location.Create(addAttr.SyntaxTree, addAttr.Span)));
+                            source.AppendLine($"        [{addAttr.ToFullString()}]");
+                        }
+                        else
+                        {
+                            source.AppendLine($"        [{candidate.ContainingType.ToDisplayString()}{addAttr.ArgumentList.ToFullString()}]");
+                        }
                     }
-
                 }
 
             source.Append($@"
@@ -274,7 +284,7 @@ namespace {namespaceName}
 
                 public List<IFieldSymbol> Fields { get; } = new List<IFieldSymbol>();
 
-                public Dictionary<IFieldSymbol, System.Collections.Immutable.ImmutableArray<AttributeData>> AdditionalAttributesForGeneratedProp = new();
+                public Dictionary<IFieldSymbol, List<AttributeListSyntax>> AdditionalAttributesForGeneratedProp = new();
 
             }
             public Dictionary<ISymbol, ClassThingy> Classes { get; } = new();
@@ -352,24 +362,29 @@ namespace {namespaceName}
                             if (p is IFieldSymbol fieldSymbol && !thingy.Fields.Contains(fieldSymbol))
                             {
                                 thingy.Fields.Add(fieldSymbol);
-                                var fieldAttributes = fieldSymbol.GetAttributes();
-                                if (fieldAttributes.Length == 0)
-                                    continue;
-                                var copyFromAttribute = fieldAttributes.FirstOrDefault(x => x.AttributeClass.Name == "CopyPropertyAttributesFromAttribute");
 
-                                if (copyFromAttribute == default)
+                                var declaringSyntax 
+                                    = fieldSymbol
+                                    .DeclaringSyntaxReferences
+                                    .FirstOrDefault();
+
+                                if (declaringSyntax == default)
                                     continue;
 
-                                var propName = copyFromAttribute.ConstructorArguments.First();
-                                var propertyMember = allMembers.FirstOrDefault(x => x.Name == propName.Value.ToString());
+                                var attribuesForProp
+                                    = declaringSyntax
+                                    .GetSyntax()
+                                    .Parent
+                                    .Parent
+                                    .ChildNodes()
+                                    .OfType<AttributeListSyntax>()
+                                    .Where(x => x.Target?.Identifier.Text == "property")
+                                    .ToList();
 
-                                if (propertyMember is not IPropertySymbol propertySymbol)
-                                {
-                                    //TODO: Issue Warning for wrong use of attribute
+                                if (attribuesForProp.Count == 0)
                                     continue;
-                                }
-                                var attributeCopy = propertySymbol.GetAttributes();
-                                thingy.AdditionalAttributesForGeneratedProp[fieldSymbol] = attributeCopy;
+
+                                thingy.AdditionalAttributesForGeneratedProp[fieldSymbol] = attribuesForProp;
                             }
 
 

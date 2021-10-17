@@ -7,7 +7,7 @@
             var asd = new PropChanged();
             asd.MyProperty = 123;
             asd.MyProperty2 = 123;
-            asd.Different = 123;
+            //asd.Different = 123;
         }
     }
 }

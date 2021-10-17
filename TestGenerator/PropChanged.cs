@@ -18,21 +18,32 @@ namespace TestGenerator
         public string PropName { get;  }
     }
 
+
+    [AppBroker.ClassPropertyChangedAppbroker(true, false)]
+    public partial class PropChanged2 : PropChanged
+    {
+        private int myPropertySecond;
+
+    }
+
     [AppBroker.ClassPropertyChangedAppbroker(true, false)]
     public partial class PropChanged
     {
         private int myProperty;
-        
+
         [AppBroker.IgnoreChangedField]
         private int myProperty2;
         [AppBroker.IgnoreField]
         private int myPropertyIgnored;
 
-        [AppBroker.PropertyChangedAppbroker(PropertyName = "Different"), AppBroker.CopyPropertyAttributesFromAttribute(nameof(property))]
+
+        [property: JsonPropertyName("transition_Time")]
+        [AppBroker.PropertyChangedAppbroker(PropertyName = "Different2")]
         private int myProperty3;
 
-        [JsonIgnore(), Description("For"), JsonPropertyName("Test")]
-        private bool property { get; }
+        [property: System.Text.Json.Serialization.JsonPropertyName("transition_Time")]
+        private int myProperty4;
+
 
         protected virtual void OnPropertyChanging<T>(ref T field, T value, string propertyName)
         {
