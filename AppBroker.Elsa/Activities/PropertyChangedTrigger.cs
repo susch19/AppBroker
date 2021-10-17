@@ -25,13 +25,6 @@ namespace AppBroker.Elsa.Activities
         )]
         public string PropertyName { get; set; } = default!;
 
-        [ActivityInput(Label = "Device Name", SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid })]
-        public string DeviceName { get; set; } = default!;
-
-        [ActivityInput(Label = "Device Id", SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid })]
-        public long DeviceId { get; set; } = default!;
-
-
         [ActivityOutput]
         public PropertyChangedEvent? Output { get; set; }
         protected override IActivityExecutionResult OnExecute(ActivityExecutionContext context)
