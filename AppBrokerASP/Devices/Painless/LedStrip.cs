@@ -7,18 +7,19 @@ using PainlessMesh;
 namespace AppBrokerASP.Devices.Painless
 {
     [DeviceName("ledstri")]
-    public class LedStrip : PainlessDevice
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public partial class LedStrip : PainlessDevice
     {
         //{"id":763955710, "m":"Update", "c":"Mode", "p":["SingleColor",55,93,88,30,0,4278190080,1]}
 
-        public string ColorMode { get; set; } = "";
-        public int Delay { get; set; }
-        public int NumberOfLeds { get; set; }
-        public int Brightness { get; set; }
-        public uint Step { get; set; }
-        public bool Reverse { get; set; }
-        public uint ColorNumber { get; set; }
-        public ushort Version { get; set; }
+        private string colorMode = "";
+        private int delay;
+        private int numberOfLeds;
+        private int brightness;
+        private uint step;
+        private bool reverse;
+        private uint colorNumber;
+        private ushort version;
 
         public LedStrip(long id, ByteLengthList parameter) : base(id, parameter)
         {

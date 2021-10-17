@@ -2,6 +2,8 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
+using AppBroker.Elsa.Signaler;
+
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 using Newtonsoft.Json.Linq;
@@ -13,7 +15,7 @@ namespace AppBrokerASP.Devices
     [AppBroker.ClassPropertyChangedAppbroker]
     public abstract partial class Device
     {
-        public List<Subscriber> Subscribers { get; set; } = new List<Subscriber>();
+        public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
         private long id;
         private string typeName;
         private bool showInApp;
@@ -46,6 +48,7 @@ namespace AppBrokerASP.Devices
 
         protected virtual void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "")
         {
+            WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
             field = value;
         }
     }

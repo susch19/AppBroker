@@ -9,13 +9,17 @@ using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
-    public abstract class ZigbeeLamp : UpdateableZigbeeDevice
+
+
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public abstract partial class ZigbeeLamp : UpdateableZigbeeDevice
     {
-        public byte Brightness { get; set; }
-        public bool State { get; set; }
-        public int ColorTemp { get; set; }
-        [JsonProperty("transition_Time")]
-        public float TransitionTime { get; set; }
+        private byte brightness;
+        private bool state;
+        private int colorTemp;
+        [property: JsonProperty("transition_Time")]
+        private float transitionTime;
+
 
         public ZigbeeLamp(long nodeId, SocketIO socket) : base(nodeId, socket)
         {

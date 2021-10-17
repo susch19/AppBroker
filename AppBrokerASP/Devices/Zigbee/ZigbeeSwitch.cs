@@ -8,9 +8,11 @@ using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
-    public abstract class ZigbeeSwitch : UpdateableZigbeeDevice
+
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
     {
-        public bool State { get; set; }
+        private bool state;
 
         protected ZigbeeSwitch(long nodeId, SocketIO socket) : base(nodeId, socket)
         {

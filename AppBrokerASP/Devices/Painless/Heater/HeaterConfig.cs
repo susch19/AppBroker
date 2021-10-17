@@ -1,16 +1,20 @@
-﻿using Newtonsoft.Json;
+﻿using AppBroker.Elsa.Signaler;
+using Newtonsoft.Json;
+
+using System.Runtime.CompilerServices;
 
 namespace AppBrokerASP.Devices.Painless.Heater
 {
-    public class HeaterConfig
-    {
 
-        [JsonProperty("dayOfWeek"), JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        public DayOfWeek DayOfWeek { get; set; }
-        [JsonProperty("timeOfDay")]
-        public DateTime TimeOfDay { get; set; }
-        [JsonProperty("temperature")]
-        public double Temperature { get; set; }
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public partial class HeaterConfig
+    {
+        [property: JsonProperty("dayOfWeek"), JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        private DayOfWeek dayOfWeek;
+        [property: JsonProperty("timeOfDay")]
+        private DateTime timeOfDay;
+        [property: JsonProperty("temperature")]
+        private double temperature;
 
         public HeaterConfig()
         {
@@ -31,6 +35,12 @@ namespace AppBrokerASP.Devices.Painless.Heater
             dt = dt.AddHours(ttm.Time.Hours - dt.Hour);
             dt = dt.AddMinutes(ttm.Time.Minutes - dt.Minute);
             return new HeaterConfig(ttm.DayOfWeek, dt, ttm.Temp);
+        }
+
+        protected virtual void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "")
+        {
+            WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
+            field = value;
         }
     }
 }

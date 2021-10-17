@@ -11,19 +11,21 @@ using System.Diagnostics.CodeAnalysis;
 namespace AppBrokerASP.Devices.Painless.Heater
 {
     [DeviceName("heater")]
-    public class Heater : PainlessDevice, IDisposable
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public partial class Heater : PainlessDevice, IDisposable
     {
-        public HeaterConfig? Temperature { get; set; }
-        public long XiaomiTempSensor { get; set; } = 0;
-        public HeaterConfig? CurrentConfig { get; set; }
-        public HeaterConfig? CurrentCalibration { get; private set; }
+        private HeaterConfig? temperature;
+        private HeaterConfig? currentConfig;
+        private HeaterConfig? currentCalibration;
+        private long xiaomiTempSensor;
+        private bool disableHeating;
+        private bool disableLed;
 
-        private readonly List<HeaterConfig> timeTemps = new();
-
-        public bool DisableHeating { get; set; }
-        public bool DisableLed { get; set; }
-
+        [AppBroker.IgnoreField]
         private readonly Task? heaterSensorMapping;
+        [AppBroker.IgnoreField]
+        private readonly List<HeaterConfig> timeTemps = new();
+        [AppBroker.IgnoreField]
         private bool disposed;
 
         //2020-02-01 20:14:48.1075|DEBUG|AppBrokerASP.BaseClient|{"id":3257233774, "m":"Update", "c":"WhoIAm", "p":["10.12.206.9","heater","RmlybXdhcmUgVjIgRmViICAxIDIwMjA=","YAk3oJQqQBo3QKkqYQk3oZQqQRo3QakqYgk3opQqQho3QqkqYwk3o5QqQxo3Q6kqZAk3pJQqRBo3RKkqJQ03RakqJg03Rqkq"]}
@@ -31,7 +33,7 @@ namespace AppBrokerASP.Devices.Painless.Heater
         public Heater(long id, ByteLengthList parameters) : base(id)
         {
             using var cont = DbProvider.BrokerDbContext;
-            timeTemps.AddRange(cont.HeaterConfigs.Where(x => x.Device!.Id == id).ToList().Select(x => (HeaterConfig)x));
+            timeTemps.AddRange(((IEnumerable<HeaterConfigModel>)cont.HeaterConfigs).Where(x => x.Device!.Id == id).Select(x => (HeaterConfig)x));
 
             ShowInApp = true;
             //cont.HeaterCalibrations.FirstOrDefault(x => x.Id == Id);
@@ -252,20 +254,20 @@ namespace AppBrokerASP.Devices.Painless.Heater
                         var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
                         var s = ttm.SelectMany(x => x.ToBinary()).ToArray();
 
-                        msg = new ((uint)Id, MessageType.Options, command, s);
+                        msg = new((uint)Id, MessageType.Options, command, s);
                         InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
                         break;
                     }
                 case Command.Off:
-                    msg = new ((uint)Id, MessageType.Options, command, new ByteLengthList());
+                    msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
                     InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
                     break;
                 case Command.On:
-                    msg = new ((uint)Id, MessageType.Options, command, new ByteLengthList());
+                    msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
                     InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
                     break;
                 case Command.Mode:
-                    msg = new ((uint)Id, MessageType.Options, command);
+                    msg = new((uint)Id, MessageType.Options, command);
                     InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
                     break;
             }
@@ -283,7 +285,7 @@ namespace AppBrokerASP.Devices.Painless.Heater
                 foreach (var item in models)
                     item.Device = d;
 
-            var oldConfs = cont.HeaterConfigs.Where(x => x.Device!.Id == Id).ToList();
+            var oldConfs = ((IEnumerable<HeaterConfigModel>)cont.HeaterConfigs).Where(x => x.Device!.Id == Id).ToList();
             if (oldConfs.Count > 0)
             {
                 cont.RemoveRange(oldConfs);
@@ -302,7 +304,7 @@ namespace AppBrokerASP.Devices.Painless.Heater
             if (heater == default || tempSensor == default || sensor == default)
                 return;
 
-            var oldMappings = cont.DeviceToDeviceMappings.Where(x => x.Parent!.Id == Id);
+            var oldMappings = ((IEnumerable<DeviceMappingModel>)cont.DeviceToDeviceMappings).Where(x => x.Parent!.Id == Id);
             foreach (var oldMapping in oldMappings)
             {
                 var oldsensor = InstanceContainer.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;

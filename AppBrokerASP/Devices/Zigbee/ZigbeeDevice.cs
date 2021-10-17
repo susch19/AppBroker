@@ -12,15 +12,20 @@ using Newtonsoft.Json;
 
 namespace AppBrokerASP.Devices.Zigbee
 {
-    public abstract class ZigbeeDevice : Device
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public abstract partial class ZigbeeDevice : Device
     {
+        [AppBroker.IgnoreField]
         protected readonly SocketIO Socket;
-        public DateTime LastReceived { get; set; }
-        [JsonProperty("link_Quality")]
-        public byte LinkQuality { get; set; }
-        public bool Available { get; set; }
-        public string AdapterWithId { get; set; } = "";
 
+        private DateTime lastReceived;
+
+        [property: JsonProperty("link_Quality")]
+        private byte linkQuality;
+        private bool available;
+        private string adapterWithId = "";
+
+        [AppBroker.IgnoreField]
         private readonly ReadOnlyCollection<(string[] Names, PropertyInfo Info)> propertyInfos;
 
         public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId)

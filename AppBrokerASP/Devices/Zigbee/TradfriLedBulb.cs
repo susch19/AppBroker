@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json;
+﻿using AppBroker.Elsa.Signaler;
+
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
@@ -10,28 +14,23 @@ using System.Threading.Tasks;
 namespace AppBrokerASP.Devices.Zigbee
 {
     [DeviceName("TRADFRI bulb E27 CWS opal 600lm", "TRADFRI bulb E14 CWS opal 600lm", "LED1624G9")]
-    public class TradfriLedBulb : UpdateableZigbeeDevice
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public partial class TradfriLedBulb : UpdateableZigbeeDevice
     {
+        [AppBroker.IgnoreField]
         private byte brightness;
 
-        [JsonProperty("available")]
-        public new bool Available { get; set; }
-
-        [JsonProperty("brightness")]
         public byte Brightness
         {
             get => brightness;
             set
             {
-                brightness = Math.Clamp(value, (byte)0, (byte)100);
+                RaiseAndSetIfChanged(ref brightness, Math.Clamp(value, (byte)0, (byte)100));
             }
         }
 
-        [JsonProperty("color")]
-        public string Color { get; set; } = "#0000FF";
-
-        [JsonProperty("state")]
-        public bool State { get; set; }
+        private string color = "#0000FF";
+        private bool state;
 
         public TradfriLedBulb(long nodeId, SocketIO socket) :
             base(nodeId, socket)

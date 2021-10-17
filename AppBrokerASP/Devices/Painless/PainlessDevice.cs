@@ -10,30 +10,31 @@ namespace AppBrokerASP.Devices.Painless
 {
 
 
-    public abstract class PainlessDevice : Device
+    [AppBroker.ClassPropertyChangedAppbroker]
+    public abstract partial class PainlessDevice : Device
     {
-        public string IP { get; protected set; } = "";
-        protected uint FirmwareVersionNr { get; set; } = 0;
+        private string iP = "";
+
+        private uint firmwareVersionNr = 0;
         public string FirmwareVersion => "Firmware Version: " + FirmwareVersionNr;
         protected string LogName => Id + "/" + FriendlyName;
-        public string DeviceName { get; set; }
+        private string deviceName;
 
-
-        protected DateTime LastPartRequestReceived { get; set; }
+        private DateTime lastPartRequestReceived;
 
         protected PainlessDevice(long nodeId) : base(nodeId)
         {
-            DeviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
+            deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
             InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
-            
+
         }
 
 
         protected PainlessDevice(long nodeId, ByteLengthList parameter) : base(nodeId)
         {
-            DeviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
+            deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
             InterpretParameters(parameter);
             InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
             InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
@@ -75,7 +76,7 @@ namespace AppBrokerASP.Devices.Painless
                         str = memoryStream.ToArray();
                     }
 
-                    Task.Delay(str.Length / 8).ContinueWith(x=>InstanceContainer.MeshManager.SendSingle((uint)Id, str));
+                    Task.Delay(str.Length / 8).ContinueWith(x => InstanceContainer.MeshManager.SendSingle((uint)Id, str));
 
                     break;
                 case Command.OtaPart:
