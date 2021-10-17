@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Elsa" Version="2.3.0" />
+    <PackageReference Include="Elsa.Abstractions" Version="2.3.0" />
+    <PackageReference Include="Elsa.Activities.Conductor" Version="2.3.0" />
+    <PackageReference Include="Elsa.Activities.Http" Version="2.3.0" />
+    <PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.3.0" />
+    <PackageReference Include="Elsa.Designer.Components.Web" Version="2.3.0" />
+    <PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.3.0" />
+    <PackageReference Include="Elsa.Server.Api" Version="2.3.0" />
+  </ItemGroup>
+
+</Project>
