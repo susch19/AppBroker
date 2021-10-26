@@ -32,9 +32,6 @@ namespace AppBrokerASP.Devices
             isConnected = true;
             logger = NLog.LogManager.GetCurrentClassLogger();
             friendlyName = "";
-            var list = new List<Subscriber>();
-            var arr = new Subscriber[1];
-            System.Linq.
         }
 
         public virtual Task UpdateFromApp(Command command, List<JToken> parameters) => Task.CompletedTask;
