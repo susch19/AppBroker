@@ -1,5 +1,4 @@
-﻿using AppBroker.Elsa.Signaler;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
 using System.Runtime.CompilerServices;
 
@@ -39,7 +38,7 @@ namespace AppBrokerASP.Devices.Painless.Heater
 
         protected virtual void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "")
         {
-            WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
+            //WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
             field = value;
         }
     }

@@ -32,6 +32,9 @@ namespace AppBrokerASP.Devices
             isConnected = true;
             logger = NLog.LogManager.GetCurrentClassLogger();
             friendlyName = "";
+            var list = new List<Subscriber>();
+            var arr = new Subscriber[1];
+            System.Linq.
         }
 
         public virtual Task UpdateFromApp(Command command, List<JToken> parameters) => Task.CompletedTask;
@@ -49,6 +52,7 @@ namespace AppBrokerASP.Devices
         protected virtual void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "")
         {
             WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
+            WorkflowDeviceSignaler.DeviceChanged(value, field, this, FriendlyName, Id, TypeName, propertyName!);
             field = value;
         }
     }

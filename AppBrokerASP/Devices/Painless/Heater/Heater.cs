@@ -33,7 +33,11 @@ namespace AppBrokerASP.Devices.Painless.Heater
         public Heater(long id, ByteLengthList parameters) : base(id)
         {
             using var cont = DbProvider.BrokerDbContext;
-            timeTemps.AddRange(((IEnumerable<HeaterConfigModel>)cont.HeaterConfigs).Where(x => x.Device!.Id == id).Select(x => (HeaterConfig)x));
+            timeTemps.AddRange(
+                cont.HeaterConfigs
+                .Include(x=>x.Device)
+                .Where(x => x.Device!.Id == id).
+                Select(x => (HeaterConfig)x));
 
             ShowInApp = true;
             //cont.HeaterCalibrations.FirstOrDefault(x => x.Id == Id);

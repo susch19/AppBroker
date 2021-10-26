@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 
 namespace DbMigrator
 {
@@ -7,6 +8,7 @@ namespace DbMigrator
         static void Main(string[] args)
         {
             Console.WriteLine("Hello World!");
+            
         }
     }
 }

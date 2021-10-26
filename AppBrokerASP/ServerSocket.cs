@@ -12,28 +12,30 @@ namespace AppBrokerASP
         public event EventHandler<BaseClient>? OnClientConnected;
 
         private TcpListener? tcpListener;
-        private readonly ConcurrentBag<BaseClient> clients;
+        private readonly ConcurrentDictionary<BaseClient, byte> clients;
         private readonly Task sendTask;
         private readonly ConcurrentQueue<SendMessageForQueue> sendQueue;
+        private readonly List<BaseClient> clientsToRemove = new();
         private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
 
         public ServerSocket()
         {
-            clients = new ConcurrentBag<BaseClient>();
+            clients = new ConcurrentDictionary<BaseClient, byte>();
             sendQueue = new ConcurrentQueue<SendMessageForQueue>();
             sendTask = Task.Run(SendMessagesFromQueue);
         }
 
         public void Start(IPAddress address, int port)
         {
-            tcpListener = new TcpListener(new IPAddress(new byte[] { 0, 0, 0, 0 }), port);
+            tcpListener = new TcpListener(address, port);
             tcpListener.Start();
             _ = tcpListener.BeginAcceptTcpClient(OnClientAccepted, null);
         }
 
         public void Stop()
         {
-            foreach (var item in clients)
+            foreach (var item in clients.Keys)
                 item.Disconnect();
             clients.Clear();
 
@@ -45,7 +47,8 @@ namespace AppBrokerASP
         {
             var tmpListen = tcpListener!.EndAcceptTcpClient(ar);
             var tmpClient = new BaseClient(tmpListen);
-            clients.Add(tmpClient);
+
+            clients.TryAdd(tmpClient, 0);
             OnClientConnected?.Invoke(this, tmpClient);
 
             _ = tmpClient.Start();
@@ -63,15 +66,21 @@ namespace AppBrokerASP
         {
             while (true)
             {
+                DequeAndSend();
+            }
+
+            void DequeAndSend()
+            {
                 if (sendQueue.TryDequeue(out var msg))
                 {
-                    foreach (var client in clients)
+                    foreach (var keyClient in clients)
                     {
+                        var client = keyClient.Key;
                         try
                         {
                             if (client.Source.IsCancellationRequested)
                             {
-                                _ = clients.TryTake(out var a);
+                                clientsToRemove.Add(client);
                                 continue;
                             }
                             //if (msg.LogMessage)
@@ -82,8 +91,16 @@ namespace AppBrokerASP
                         {
                             Console.WriteLine(e);
                             logger.Error(e);
-                            _ = clients.TryTake(out var a);
+                            clientsToRemove.Add(client);
                         }
+                    }
+                    if (clientsToRemove.Count > 0)
+                    {
+                        foreach (var item in clientsToRemove)
+                        {
+                            clients.Remove(item, out _);
+                        }
+                        clientsToRemove.Clear();
                     }
                     Thread.Sleep(100);
                 }

@@ -22,10 +22,15 @@ namespace Microsoft.Extensions.DependencyInjection
             if (builder == null)
                 throw new ArgumentNullException(nameof(builder));
 
-            builder.AddActivity<PropertyChangedTrigger>();
+            _ = builder
+                .AddActivity<PropertyChangedTrigger>()
+                .AddActivity<DeviceChangedTrigger>();
 
-            builder.Services
+            _ = builder.Services
+                .AddSingleton<Scoped<IWorkflowLaunchpad>>()
                 .AddBookmarkProvider<PropertyChangedEventBookmarkProvider>()
+                .AddBookmarkProvider<DeviceChangedEventBookmarkProvider>()
+                .AddSingleton<WorkflowDeviceSignaler>()
                 .AddSingleton<WorkflowPropertySignaler>();
 
             return builder;

@@ -56,11 +56,12 @@ namespace AppBrokerASP
             stream = sslStream;
             try
             {
-                sslStream.AuthenticateAsServer(ServerCert!, true, SslProtocols.Tls12 | SslProtocols.Tls13, false);
+                sslStream.AuthenticateAsServer(ServerCert!, false, SslProtocols.Tls12 | SslProtocols.Tls13, false);
             }
             catch (AuthenticationException ae)
             {
                 StopConnection(client, stream);
+                
                 logger.Error(ae);
             }
             catch (IOException iOException)

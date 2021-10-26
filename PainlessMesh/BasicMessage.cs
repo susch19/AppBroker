@@ -17,7 +17,6 @@ namespace PainlessMesh
 
         [JsonProperty("c"), JsonConverter(typeof(StringEnumConverter))]
         public virtual Command Command { get; set; }
-
     }
 
 }
