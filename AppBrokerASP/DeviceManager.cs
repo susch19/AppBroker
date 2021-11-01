@@ -303,6 +303,7 @@ namespace AppBrokerASP
                     if (dev is ZigbeeDevice zd)
                         zd.SetPropFromIoBroker(ioObject, false);
                 }
+                dev.Initialized = true;
             }
         }
 

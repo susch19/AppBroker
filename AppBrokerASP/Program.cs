@@ -11,6 +11,9 @@ using Makaretu.Dns;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 
+using NLog.Extensions.Logging;
+using Microsoft.Extensions.Logging;
+
 
 namespace AppBrokerASP
 {
@@ -34,7 +37,7 @@ namespace AppBrokerASP
         public static void Main(string[] args)
         {
             var mainLogger = NLog.LogManager.GetCurrentClassLogger();
-
+            
 
             Console.OutputEncoding = Encoding.Unicode;
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -117,6 +120,12 @@ namespace AppBrokerASP
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
             WebHost
             .CreateDefaultBuilder(args)
-            .UseStartup<Startup>();
+            .ConfigureLogging(logging => {
+                logging.ClearProviders();
+                logging.AddNLog();
+            })
+            .UseStartup<Startup>()
+           
+            ;
     }
 }

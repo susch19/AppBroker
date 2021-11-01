@@ -54,6 +54,7 @@ namespace AppBrokerASP.Devices.Painless.Heater
             {
 
             }
+            Initialized = true;
         }
 
         protected override void InterpretParameters(ByteLengthList parameters)

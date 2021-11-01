@@ -18,12 +18,19 @@ namespace AppBroker.Elsa.Bookmarks
             DeviceId = deviceId;
         }
 
+        [global::Elsa.Attributes.ExcludeFromHash]
         public string? PropertyName { get; set; }
+
+        [global::Elsa.Attributes.ExcludeFromHash]
         public string DeviceName { get; set; }
+
+        [global::Elsa.Attributes.ExcludeFromHash]
         public string TypeName { get; set; }
+
+        [global::Elsa.Attributes.ExcludeFromHash]
         public long? DeviceId { get; set; }
 
-        public bool IsSame(IBookmark bookmark)
+        public bool? Compare(IBookmark bookmark)
         {
             return bookmark is DeviceChangedEventBookmark other
                 && (string.IsNullOrWhiteSpace(PropertyName) || string.Equals(PropertyName, other.PropertyName))

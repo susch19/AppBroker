@@ -1,4 +1,8 @@
 ﻿
+using Elsa;
+using Elsa.Persistence.EntityFramework.Core.Extensions;
+using Elsa.Persistence.EntityFramework.Sqlite;
+
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -39,25 +43,25 @@ namespace AppBrokerASP
             var elsaSection = Configuration.GetSection("Elsa");
 
 
-            //_ = services
-            //     .AddElsa(options => options
-            //         .UseEntityFrameworkPersistence(ef => ef.UseSqlite())
-            //         .AddConsoleActivities()
-            //         .AddHttpActivities(elsaSection.GetSection("Server").Bind)
-            //         .AddEmailActivities(elsaSection.GetSection("Smtp").Bind)
-            //         .AddQuartzTemporalActivities()
-            //         .AddJavaScriptActivities()
-            //         .AddFileActivities()
-            //         .AddPropetyActivities()
-            //         .AddActivitiesFrom<Startup>()
-            //         .AddFeatures(new[] { typeof(Startup) }, Configuration)
-            //         .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>())
-            //         .AddWorkflow<TestWorkflow>()
-            //     );
+            _ = services
+                 .AddElsa(options => options
+                     //.UseEntityFrameworkPersistence(ef => ef.UseSqlite())
+                     .AddConsoleActivities()
+                     //.AddHttpActivities(elsaSection.GetSection("Server").Bind)
+                     //.AddEmailActivities(elsaSection.GetSection("Smtp").Bind)
+                     //.AddQuartzTemporalActivities()
+                     .AddJavaScriptActivities()
+                     //.AddFileActivities()
+                     .AddPropetyActivities()
+                     .AddActivitiesFrom<Startup>()
+                     .AddFeatures(new[] { typeof(Startup) }, Configuration)
+                     .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>())
+                     .AddWorkflow<TestWorkflow>()
+                 );
 
-            //_ = services
-            //    .AddElsaSwagger()
-            //    .AddElsaApiEndpoints();
+            _ = services
+                .AddElsaSwagger()
+                .AddElsaApiEndpoints();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)

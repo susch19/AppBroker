@@ -29,6 +29,8 @@ namespace AppBrokerASP.Devices.Painless
             InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
             InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
 
+            Initialized = true;
+
         }
 
 

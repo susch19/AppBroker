@@ -9,7 +9,5 @@
             ConnectionId = connectionId;
             SmarthomeClient = smarthomeClient;
         }
-
-
     }
 }

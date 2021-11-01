@@ -35,7 +35,7 @@ namespace AppBroker.Elsa.Signaler
             var model = new DeviceChangedEvent<TDevice, TValue>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue, Device = device, DeviceName = deviceName, DeviceId = deviceId, TypeName = typeName };
             var bookmark = new DeviceChangedEventBookmark(propertyName, deviceName, deviceId, typeName);
             var launchContext = new WorkflowsQuery(nameof(DeviceChangedTrigger), bookmark);
-            _ = scopedWorkflowLaunchpad.UseService(async s => await s.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model)));
+            _ = scopedWorkflowLaunchpad.UseService(s => s.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model)));
         }
     }
 }

@@ -19,13 +19,15 @@ namespace AppBroker.Elsa.Bookmarks
             PropertyName = propertyName;
             //OldValue = oldValue;
             //NewValue = newValue;
+            
         }
 
+        
         public string? PropertyName { get; set; }
         //public object OldValue { get; }
         //public object NewValue { get; }
 
-        public bool IsSame(IBookmark bookmark)
+        public bool? Compare(IBookmark bookmark)
         {
             return bookmark is PropertyChangedEventBookmark other
                 && string.Equals(PropertyName, other.PropertyName)

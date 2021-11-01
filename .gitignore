@@ -268,3 +268,6 @@ jwt.key
 *.bin
 *.ota
 OTA/*
+/AppBrokerASP/OTA
+/AppBrokerASP/broker.db-wal
+/AppBrokerASP/broker.db-shm

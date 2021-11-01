@@ -22,11 +22,14 @@ namespace AppBrokerASP.Devices
         private string friendlyName;
         private bool isConnected;
 
+        internal bool Initialized { get; set; }
+
         [AppBroker.IgnoreField]
         protected readonly NLog.Logger logger;
 
         public Device(long nodeId)
         {
+            Initialized = false;
             id = nodeId;
             typeName = GetType().Name;
             isConnected = true;
@@ -48,8 +51,11 @@ namespace AppBrokerASP.Devices
 
         protected virtual void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "")
         {
-            WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
-            WorkflowDeviceSignaler.DeviceChanged(value, field, this, FriendlyName, Id, TypeName, propertyName!);
+            if (Initialized)
+            {
+                WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
+                WorkflowDeviceSignaler.DeviceChanged(value, field, this, FriendlyName, Id, TypeName, propertyName!);
+            }
             field = value;
         }
     }
