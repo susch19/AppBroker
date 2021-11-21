@@ -1,13 +1,12 @@
-﻿namespace AppBrokerASP
+﻿namespace AppBrokerASP;
+
+public class Subscriber
 {
-    public class Subscriber
+    public string ConnectionId { get; set; }
+    public ISmartHomeClient SmarthomeClient { get; internal set; }
+    public Subscriber(string connectionId, ISmartHomeClient smarthomeClient)
     {
-        public string ConnectionId { get; set; }
-        public ISmartHomeClient SmarthomeClient { get; internal set; }
-        public Subscriber(string connectionId, ISmartHomeClient smarthomeClient)
-        {
-            ConnectionId = connectionId;
-            SmarthomeClient = smarthomeClient;
-        }
+        ConnectionId = connectionId;
+        SmarthomeClient = smarthomeClient;
     }
 }

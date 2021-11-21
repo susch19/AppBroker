@@ -93,10 +93,7 @@ namespace TranslateTTMToHumanReadable
             return s;
         }
 
-        public byte[] ToBinary()
-        {
-            return new byte[] { data[0], data[1], data[2] };
-        }
+        public byte[] ToBinary() => new byte[] { data[0], data[1], data[2] };
 
         public void FromBinary(ReadOnlySpan<byte> bytes)
         {
@@ -143,8 +140,12 @@ namespace TranslateTTMToHumanReadable
                         {
 
                             var ttm = new TimeTempMessageLE((DayOfWeek)e, TimeSpan.FromMinutes(i), o / 10f);
-                            if (!(ttm.Time.TotalMinutes == i && ttm.DayOfWeek == (DayOfWeek)e && Math.Abs(ttm.Temp - o / 10f) < 0.001f))
+                            if (!(ttm.Time.TotalMinutes == i
+                                && ttm.DayOfWeek == (DayOfWeek)e
+                                && Math.Abs(ttm.Temp - (o / 10f)) < 0.001f))
+                            {
                                 Console.WriteLine($"Wrong input output I:{i} = M:{ttm.Time.TotalMinutes}  O:{o / 10f} = T:{ttm.Temp}  E:{e} = {(byte)ttm.DayOfWeek}");
+                            }
 
                         }
                         catch (Exception ex)
@@ -154,9 +155,6 @@ namespace TranslateTTMToHumanReadable
                     }
                 }
             }
-
-
         }
-
     }
 }

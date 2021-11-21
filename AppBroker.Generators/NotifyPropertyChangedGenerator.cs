@@ -1,14 +1,7 @@
 ﻿using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using System.Diagnostics;
-using System.Collections.Immutable;
-using System.Security.Cryptography;
 
 namespace AppBroker.Generators
 {
@@ -44,7 +37,6 @@ namespace AppBroker
     }
 }
 ";
-
 
         private const string propertyChangedFieldAttribute = @"
 using System;
@@ -110,7 +102,7 @@ namespace AppBroker
         public void Execute(GeneratorExecutionContext context)
         {
             // retrieve the populated receiver 
-            if (!(context.SyntaxContextReceiver is SyntaxReceiver receiver))
+            if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
                 return;
 
             //Debugger.Launch();
@@ -148,7 +140,7 @@ namespace AppBroker
             var alreadyContainsMethod = BaseClassAlreadyHasAttribute(classSymbol, "AppBroker.ClassPropertyChangedAppbrokerAttribute");
 
             // begin building the generated source
-            StringBuilder source = new StringBuilder($@"
+            StringBuilder source = new ($@"
 using System.Runtime.CompilerServices;
 namespace {namespaceName}
 {{
@@ -156,7 +148,7 @@ namespace {namespaceName}
 
             // if the class doesn't implement INotifyPropertyChanged already, add it
 
-            source.Append($@"
+            _ = source.Append($@"
     {{
 {(alreadyContainsMethod ? "" : $@"
         protected T RaiseAndSetIfChanged<T>(ref T field, T value, [CallerMemberName] string? propertyName = null)
@@ -174,15 +166,14 @@ namespace {namespaceName}
             // create properties for each field 
             foreach (IFieldSymbol fieldSymbol in thingy.Fields)
             {
-                thingy.AdditionalAttributesForGeneratedProp.TryGetValue(fieldSymbol, out var additionalAttributes);
+                _ = thingy.AdditionalAttributesForGeneratedProp.TryGetValue(fieldSymbol, out var additionalAttributes);
 
                 ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol, additionalAttributes, context);
             }
 
-            source.Append("    }\n}");
+            _ = source.Append("    }\n}");
             return source.ToString();
         }
-
 
         private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, List<AttributeListSyntax> additionalAttributes, GeneratorExecutionContext context)
         {
@@ -206,9 +197,17 @@ namespace {namespaceName}
             {
                 //TODO: issue a diagnostic that we can't process this field
                 return;
+
+    //            NoosonGenerator.MakeDiagnostic("0005",
+    //"",
+    //"IEnumerable is not supported for deserialization, implement own deserializer or this value will be lost.",
+    //property.Symbol,
+    //DiagnosticSeverity.Error
+    //);
             }
 
             if (additionalAttributes != null && additionalAttributes.Count > 0)
+            {
                 foreach (var additionalAttribute in additionalAttributes)
                 {
                     var mod = context.Compilation.GetSemanticModel(additionalAttribute.SyntaxTree);
@@ -228,16 +227,17 @@ namespace {namespaceName}
                                     true, 
                                     0, 
                                     location: Location.Create(addAttr.SyntaxTree, addAttr.Span)));
-                            source.AppendLine($"        [{addAttr.ToFullString()}]");
+                            _ = source.AppendLine($"        [{addAttr.ToFullString()}]");
                         }
                         else
                         {
-                            source.AppendLine($"        [{candidate.ContainingType.ToDisplayString()}{addAttr.ArgumentList.ToFullString()}]");
+                            _ = source.AppendLine($"        [{candidate.ContainingType.ToDisplayString()}{addAttr.ArgumentList.ToFullString()}]");
                         }
                     }
                 }
+            }
 
-            source.Append($@"
+            _ = source.Append($@"
         public {fieldType} {propertyName} 
         {{
             get => this.{fieldName};
@@ -256,14 +256,9 @@ namespace {namespaceName}
                 if (fieldName.Length == 0)
                     return string.Empty;
 
-                if (fieldName.Length == 1)
-                    return fieldName.ToUpper();
-
-                return fieldName.Substring(0, 1).ToUpper() + fieldName.Substring(1);
+                return fieldName.Length == 1 ? fieldName.ToUpper() : fieldName.Substring(0, 1).ToUpper() + fieldName.Substring(1);
             }
-
         }
-
 
         /// <summary>
         /// Created on demand before each generation pass
@@ -279,8 +274,6 @@ namespace {namespaceName}
                 public ISymbol ClassSymbol { get; }
                 public bool CallPropertyChanged { get; set; }
                 public bool CallPropertyChanging { get; set; }
-
-
 
                 public List<IFieldSymbol> Fields { get; } = new List<IFieldSymbol>();
 
@@ -300,13 +293,12 @@ namespace {namespaceName}
                     foreach (VariableDeclaratorSyntax variable in fieldDeclarationSyntax.Declaration.Variables)
                     {
                         // Get the symbol being declared by the field, and keep it if its annotated
-                        IFieldSymbol fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
+                        var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
                         if (fieldSymbol.GetAttributes().Any(ad => ad.AttributeClass.ToDisplayString() == "AppBroker.PropertyChangedAppbrokerAttribute"))
                         {
                             var symbol = fieldSymbol.ContainingType as ISymbol;
                             if (!Classes.TryGetValue(symbol, out var thingy))
                                 Classes[symbol] = thingy = new ClassThingy(symbol);
-
 
                             if (thingy.Fields.Contains(fieldSymbol))
                                 continue;
@@ -340,7 +332,6 @@ namespace {namespaceName}
                         {
                             IParameterSymbol item = symbolAttr.AttributeConstructor.Parameters[i];
                             var parameterValue = symbolAttr.ConstructorArguments[i].Value;
-
 
                             switch (item.Name)
                             {
@@ -386,12 +377,9 @@ namespace {namespaceName}
 
                                 thingy.AdditionalAttributesForGeneratedProp[fieldSymbol] = attribuesForProp;
                             }
-
-
                         }
                     }
                 }
-
             }
         }
     }

@@ -10,6 +10,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+		<Using Include="System" />
+		<Using Include="System.Collections.Generic" />
+		<Using Include="System.Collections.Concurrent" />
+		<Using Include="System.Linq" />
+		<Using Include="System.IO" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Remove="broker.db" />
 		<None Remove="broker.db-shm" />
 		<None Remove="broker.db-wal" />
@@ -18,10 +26,6 @@
 
 	<ItemGroup>
 		<Folder Include="wwwroot\" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="..\.editorconfig" Link=".editorconfig" />
 	</ItemGroup>
 	
 	
@@ -44,7 +48,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
 		<ProjectReference Include="..\PainlessMesh\PainlessMesh.csproj" />
 	</ItemGroup>
 

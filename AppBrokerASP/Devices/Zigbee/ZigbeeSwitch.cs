@@ -6,33 +6,31 @@ using SocketIOClient;
 
 using System.Threading.Tasks;
 
-namespace AppBrokerASP.Devices.Zigbee
+namespace AppBrokerASP.Devices.Zigbee;
+
+[AppBroker.ClassPropertyChangedAppbroker]
+public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
 {
+    private bool state;
 
-    [AppBroker.ClassPropertyChangedAppbroker]
-    public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
+    protected ZigbeeSwitch(long nodeId, SocketIO socket) : base(nodeId, socket)
     {
-        private bool state;
+        ShowInApp = true;
+    }
 
-        protected ZigbeeSwitch(long nodeId, SocketIO socket) : base(nodeId, socket)
+    public override async Task UpdateFromApp(Command command, List<JToken> parameters)
+    {
+        switch (command)
         {
-            ShowInApp = true;
-        }
+            case Command.On:
+                State = true;
+                await SetValue(nameof(State), State);
+                break;
 
-        public override async Task UpdateFromApp(Command command, List<JToken> parameters)
-        {
-            switch (command)
-            {
-                case Command.On:
-                    State = true;
-                    await SetValue(nameof(State), State);
-                    break;
-
-                case Command.Off:
-                    State = false;
-                    await SetValue(nameof(State), State);
-                    break;
-            }
+            case Command.Off:
+                State = false;
+                await SetValue(nameof(State), State);
+                break;
         }
     }
 }

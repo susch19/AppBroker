@@ -8,32 +8,28 @@ using AppBroker.Elsa.Bookmarks;
 using AppBroker.Elsa.Activities;
 
 // ReSharper disable once CheckNamespace
-namespace Microsoft.Extensions.DependencyInjection
+namespace Microsoft.Extensions.DependencyInjection;
+
+public static class ServiceCollectionExtensions
 {
-    public static class ServiceCollectionExtensions
+    public static IServiceCollection AddPropetyActivities(this IServiceCollection services) => services;
+
+    public static ElsaOptionsBuilder AddPropetyActivities(this ElsaOptionsBuilder builder)
     {
-        public static IServiceCollection AddPropetyActivities(this IServiceCollection services)
-        {
-            return services;
-        }
+        if (builder == null)
+            throw new ArgumentNullException(nameof(builder));
 
-        public static ElsaOptionsBuilder AddPropetyActivities(this ElsaOptionsBuilder builder) 
-        {
-            if (builder == null)
-                throw new ArgumentNullException(nameof(builder));
+        _ = builder
+            .AddActivity<PropertyChangedTrigger>()
+            .AddActivity<DeviceChangedTrigger>();
 
-            _ = builder
-                .AddActivity<PropertyChangedTrigger>()
-                .AddActivity<DeviceChangedTrigger>();
+        _ = builder.Services
+            .AddSingleton<Scoped<IWorkflowLaunchpad>>()
+            .AddBookmarkProvider<PropertyChangedEventBookmarkProvider>()
+            .AddBookmarkProvider<DeviceChangedEventBookmarkProvider>()
+            .AddSingleton<WorkflowDeviceSignaler>()
+            .AddSingleton<WorkflowPropertySignaler>();
 
-            _ = builder.Services
-                .AddSingleton<Scoped<IWorkflowLaunchpad>>()
-                .AddBookmarkProvider<PropertyChangedEventBookmarkProvider>()
-                .AddBookmarkProvider<DeviceChangedEventBookmarkProvider>()
-                .AddSingleton<WorkflowDeviceSignaler>()
-                .AddSingleton<WorkflowPropertySignaler>();
-
-            return builder;
-        }
+        return builder;
     }
 }

@@ -18,7 +18,6 @@ namespace TestGenerator
         public string PropName { get;  }
     }
 
-
     [AppBroker.ClassPropertyChangedAppbroker(true, false)]
     public partial class PropChanged2 : PropChanged
     {
@@ -36,14 +35,12 @@ namespace TestGenerator
         [AppBroker.IgnoreField]
         private int myPropertyIgnored;
 
-
         [property: JsonPropertyName("transition_Time")]
         [AppBroker.PropertyChangedAppbroker(PropertyName = "Different2")]
         private int myProperty3;
 
         [property: System.Text.Json.Serialization.JsonPropertyName("transition_Time")]
         private int myProperty4;
-
 
         protected virtual void OnPropertyChanging<T>(ref T field, T value, string propertyName)
         {

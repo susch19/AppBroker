@@ -10,52 +10,50 @@ using Elsa.Services.Models;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AppBroker.Elsa.Activities
+namespace AppBroker.Elsa.Activities;
+
+[Trigger(
+   Category = "Smarthome",
+   Description = "Waits for an event sent from your application."
+)]
+public class DeviceChangedTrigger : Activity
 {
+    [ActivityInput(
+        Label = "Property Name",
+        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
+    )]
+    public string PropertyName { get; set; } = default!;
 
-    [Trigger(
-       Category = "Smarthome",
-       Description = "Waits for an event sent from your application."
-   )]
-    public class DeviceChangedTrigger : Activity
+    [ActivityInput(
+        Label = "Device Name",
+        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
+    )]
+    public string DeviceName { get; set; } = default!;
+
+    [ActivityInput(
+        Label = "Type Name",
+        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
+    )]
+    public string TypeName { get; set; } = default!;
+
+    [ActivityInput(
+        Label = "Device Id",
+        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
+    )]
+    public long? DeviceId { get; set; } = default!;
+
+    [ActivityOutput]
+    public DeviceChangedEvent? Output { get; set; }
+    protected override IActivityExecutionResult OnExecute(ActivityExecutionContext context)
+        => context.IsFirstPass ? OnExecuteInternal(context) : Suspend();
+
+    protected override IActivityExecutionResult OnResume(ActivityExecutionContext context)
+        => OnExecuteInternal(context);
+
+    private IActivityExecutionResult OnExecuteInternal(ActivityExecutionContext context)
     {
-        [ActivityInput(
-            Label = "Property Name",
-            SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
-        )]
-        public string PropertyName { get; set; } = default!;
-
-        [ActivityInput(
-            Label = "Device Name",
-            SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
-        )]
-        public string DeviceName { get; set; } = default!;
-
-        [ActivityInput(
-            Label = "Type Name",
-            SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
-        )]
-        public string TypeName { get; set; } = default!;
-
-        [ActivityInput(
-            Label = "Device Id",
-            SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
-        )]
-        public long? DeviceId { get; set; } = default!;
-
-        [ActivityOutput]
-        public DeviceChangedEvent? Output { get; set; }
-        protected override IActivityExecutionResult OnExecute(ActivityExecutionContext context)
-            => context.IsFirstPass ? OnExecuteInternal(context) : Suspend();
-
-        protected override IActivityExecutionResult OnResume(ActivityExecutionContext context)
-            => OnExecuteInternal(context);
-
-        private IActivityExecutionResult OnExecuteInternal(ActivityExecutionContext context)
-        {
-            var input = context.GetInput<DeviceChangedEvent>();
-            Output = input;
-            return Done(Output);
-        }
+        var input = context.GetInput<DeviceChangedEvent>();
+        Output = input;
+        return Done(Output);
     }
 }

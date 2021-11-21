@@ -14,26 +14,25 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace AppBroker.Elsa.Signaler
+namespace AppBroker.Elsa.Signaler;
+
+public class WorkflowPropertySignaler
 {
-    public class WorkflowPropertySignaler
+    private static Scoped<IWorkflowLaunchpad> scopedWorkflowLaunchpad;
+
+    public WorkflowPropertySignaler(Scoped<IWorkflowLaunchpad> workflowLaunchpad)
     {
-        private static Scoped<IWorkflowLaunchpad> scopedWorkflowLaunchpad;
+        scopedWorkflowLaunchpad = workflowLaunchpad;
+    }
 
-        public WorkflowPropertySignaler(Scoped<IWorkflowLaunchpad> workflowLaunchpad)
-        {
-            scopedWorkflowLaunchpad = workflowLaunchpad;
-        }
+    public static void PropertyChanged<T>(T newValue, T oldValue, [CallerMemberName] string propertyName = "")
+    {
+        if (scopedWorkflowLaunchpad is null || Equals(newValue, oldValue))
+            return;
 
-        public static void PropertyChanged<T>(T newValue, T oldValue, [CallerMemberName] string propertyName = "")
-        {
-            if (scopedWorkflowLaunchpad is null || Equals(newValue, oldValue))
-                return;
-
-            var model = new PropertyChangedEvent<T>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue };
-            var bookmark = new PropertyChangedEventBookmark(propertyName);
-            var launchContext = new WorkflowsQuery(nameof(PropertyChangedTrigger), bookmark);
-            _ = scopedWorkflowLaunchpad.UseService(async s => await s.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model)));
-        }
+        var model = new PropertyChangedEvent<T>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue };
+        var bookmark = new PropertyChangedEventBookmark(propertyName);
+        var launchContext = new WorkflowsQuery(nameof(PropertyChangedTrigger), bookmark);
+        _ = scopedWorkflowLaunchpad.UseService(async s => await s.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model)));
     }
 }

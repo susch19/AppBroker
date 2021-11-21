@@ -5,20 +5,27 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
+	<ItemGroup>
+		<Using Include="System" />
+		<Using Include="System.Collections.Generic" />
+		<Using Include="System.Collections.Concurrent" />
+		<Using Include="System.Linq" />
+		<Using Include="System.IO" />
+	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Elsa" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Abstractions" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Activities.Conductor" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Activities.Console" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Activities.Email" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Activities.File" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Activities.Http" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Activities.Temporal.Common" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Designer.Components.Web" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.4.0-preview.343" />
-		<PackageReference Include="Elsa.Server.Api" Version="2.4.0-preview.343" />
+		<PackageReference Include="Elsa" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Abstractions" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Activities.Conductor" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Activities.Console" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Activities.Email" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Activities.File" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Activities.Http" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Activities.Temporal.Common" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Designer.Components.Web" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Server.Api" Version="2.4.0-preview.377" />
 	</ItemGroup>
 
 </Project>

@@ -17,7 +17,6 @@ namespace TranslateTTMToHumanReadable
                     for (int i = 0; i < (s.Length / 6 * 6); i += 6)
                     {
 
-
                         var ttm = TimeTempMessageLE.LoadFromBinary(StringToByteArray(s[i..(i + 6)]));
                         Console.WriteLine($"Time:{ttm.Time} Temp:{ttm.Temp} Dow:{ttm.DayOfWeek}");
                     }
