@@ -3,7 +3,9 @@ using System.Collections.Generic;
 
 namespace PainlessMesh.Ota;
 
-internal struct FirmwareAdvertisment
+
+
+internal partial struct FirmwareAdvertisment
 {
     public List<byte[]> Parts { get; init; }
     public DateTime AdvertiseUntil { get; init; }

@@ -9,6 +9,7 @@ using nj = Newtonsoft.Json;
 
 namespace PainlessMesh;
 
+//[NonSucking.Framework.Serialization.Nooson]
 public partial class JsonSmarthomeMessage : BaseSmarthomeMessage
 {
     [nj.JsonProperty("p")]

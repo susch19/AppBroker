@@ -115,7 +115,7 @@ namespace AppBroker
             foreach (var group in receiver.Classes)
             {
                 string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, context);
-                context.AddSource($"{group.Key.Name}_autoNotifyAppbroker.cs", SourceText.From(classSource, Encoding.UTF8));
+                context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
             }
         }
 

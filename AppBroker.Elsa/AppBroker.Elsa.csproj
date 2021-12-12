@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net5.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
+		<LangVersion>10</LangVersion>
 	</PropertyGroup>
 	<ItemGroup>
 		<Using Include="System" />
@@ -23,9 +24,9 @@
 		<PackageReference Include="Elsa.Activities.Http" Version="2.4.0-preview.377" />
 		<PackageReference Include="Elsa.Activities.Temporal.Common" Version="2.4.0-preview.377" />
 		<PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.4.0-preview.377" />
-		<PackageReference Include="Elsa.Designer.Components.Web" Version="2.4.0-preview.377" />
 		<PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.4.0-preview.377" />
-		<PackageReference Include="Elsa.Server.Api" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Scripting.JavaScript" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Scripting.Liquid" Version="2.4.0-preview.377" />
 	</ItemGroup>
 
 </Project>

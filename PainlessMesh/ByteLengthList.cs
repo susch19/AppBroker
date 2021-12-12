@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 
 namespace PainlessMesh;
 
-public class ByteLengthList : List<byte[]>
+public partial class ByteLengthList : List<byte[]>
 {
+
+
     public ByteLengthList() : base()
     {
 
@@ -19,6 +21,10 @@ public class ByteLengthList : List<byte[]>
     {
     }
     public ByteLengthList(byte capacity) : base(capacity)
+    {
+
+    }
+    public ByteLengthList(int capacity) : base(capacity)
     {
 
     }

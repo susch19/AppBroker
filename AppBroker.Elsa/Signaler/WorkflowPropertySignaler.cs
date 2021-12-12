@@ -25,12 +25,12 @@ public class WorkflowPropertySignaler
         scopedWorkflowLaunchpad = workflowLaunchpad;
     }
 
-    public static void PropertyChanged<T>(T newValue, T oldValue, [CallerMemberName] string propertyName = "")
+    public static void PropertyChanged<T>(T newValue, T oldValue, string friendlyName, long id, string typeName, [CallerMemberName] string propertyName = "")
     {
         if (scopedWorkflowLaunchpad is null || Equals(newValue, oldValue))
             return;
 
-        var model = new PropertyChangedEvent<T>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue };
+        var model = new PropertyChangedEvent<T>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue, DeviceName = friendlyName, DeviceId = id, TypeName = typeName };
         var bookmark = new PropertyChangedEventBookmark(propertyName);
         var launchContext = new WorkflowsQuery(nameof(PropertyChangedTrigger), bookmark);
         _ = scopedWorkflowLaunchpad.UseService(async s => await s.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model)));

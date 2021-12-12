@@ -1,7 +1,11 @@
 ﻿
-//using Elsa;
-//using Elsa.Persistence.EntityFramework.Core.Extensions;
-//using Elsa.Persistence.EntityFramework.Sqlite;
+using AppBrokerASP.Devices.Elsa;
+
+using AspNetCore.RouteAnalyzer;
+
+using Elsa;
+using Elsa.Persistence.EntityFramework.Core.Extensions;
+using Elsa.Persistence.EntityFramework.Sqlite;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -30,38 +34,37 @@ public class Startup
                   .AllowAnyHeader()
                   .AllowAnyOrigin()));
 
-        _ = services.AddSignalR(
-            opt => opt.EnableDetailedErrors = true
-            ).AddNewtonsoftJsonProtocol();
+        //_ = services.AddSignalR(
+        //    opt => opt.EnableDetailedErrors = true
+        //    ).AddNewtonsoftJsonProtocol();
+        _ = services.AddRazorPages();
 
-        //var elsaSection = Configuration.GetSection("Elsa");
+        var elsaSection = Configuration.GetSection("Elsa");
 
-        //_ = services
-        //     .AddElsa(options => options
-        //         //.UseEntityFrameworkPersistence(ef => ef.UseSqlite())
-        //         .AddConsoleActivities()
-        //         //.AddHttpActivities(elsaSection.GetSection("Server").Bind)
-        //         //.AddEmailActivities(elsaSection.GetSection("Smtp").Bind)
-        //         //.AddQuartzTemporalActivities()
-        //         .AddJavaScriptActivities()
-        //         //.AddFileActivities()
-        //         .AddPropetyActivities()
-        //         .AddActivitiesFrom<Startup>()
-        //         .AddFeatures(new[] { typeof(Startup) }, Configuration)
-        //         .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>())
-        //         .AddWorkflow<TestWorkflow>()
-        //     );
+        _ = services
+             .AddElsa(options => options
+                 .UseEntityFrameworkPersistence(ef => ef.UseSqlite())
+                 .AddConsoleActivities()
+                 .AddHttpActivities(elsaSection.GetSection("Server").Bind)
+                 .AddEmailActivities(elsaSection.GetSection("Smtp").Bind)
+                 .AddQuartzTemporalActivities()
+                 .AddJavaScriptActivities()
+                 .AddFileActivities()
+                 .AddPropertyActivities()
+                 .AddActivitiesFrom<Startup>()
+                 .AddFeatures(new[] { typeof(Startup) }, Configuration)
+                 .AddWorkflowsFrom<Startup>()
+                 .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>())
+             )
+            .AddJavaScriptTypeDefinitionProvider<DeviceJavascriptProvider>()
+            .AddJavaScriptTypeDefinitionProvider<DefaultAppbrokerJavascriptProvider>()
+            .AddNotificationHandlersFrom<DefaultAppbrokerLiquidHandler>()
+            .AddNotificationHandlersFrom<DeviceLiquidHandler>();
 
-        //_ = services
-        //    .AddElsaSwagger()
-        //    .AddElsaApiEndpoints();
+
+        _ = services
+            .AddElsaApiEndpoints();
+
     }
 
-    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-    {
-        _ = app.UseWebSockets();
-        _ = app.UseCors("CorsPolicy");
-        _ = app.UseRouting();
-        _ = app.UseEndpoints(e => _ = e.MapHub<SmartHome>("/SmartHome"));
-    }
 }

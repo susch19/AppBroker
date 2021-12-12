@@ -10,10 +10,21 @@
 
   <ItemGroup>
     <PackageReference Include="Azura" Version="0.7.2" />
-    <PackageReference Include="Azura.Generator" Version="0.7.2" />
+    <PackageReference Include="Azura.Generator" Version="0.7.2"  />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+    <!--<PackageReference Include="NonSucking.Framework.Serialization" Version="0.1.0.35-alpha" />-->
     <PackageReference Include="System.IO.Ports" Version="5.0.1" />
     <PackageReference Include="NLog" Version="4.7.11" />
   </ItemGroup>
+
+	<!--<ItemGroup>
+		<Folder Include="GeneratedFiles\NonSucking.Framework.Serialization\NonSucking.Framework.Serialization.NoosonGenerator\" />
+	</ItemGroup>
+
+	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<Compile Remove="GeneratedFiles\**" />
+		</ItemGroup>
+	</Target>-->
 
 </Project>

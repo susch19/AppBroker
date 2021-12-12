@@ -2,7 +2,7 @@
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
-//using AppBroker.Elsa.Signaler;
+using AppBroker.Elsa.Signaler;
 
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -52,8 +52,8 @@ public abstract partial class Device
     {
         if (Initialized)
         {
-            //WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
-            //WorkflowDeviceSignaler.DeviceChanged(value, field, this, FriendlyName, Id, TypeName, propertyName!);
+            WorkflowPropertySignaler.PropertyChanged(value, field, FriendlyName, Id, TypeName, propertyName!);
+            WorkflowDeviceSignaler.DeviceChanged(value, field, this, FriendlyName, Id, TypeName, propertyName!);
         }
         field = value;
     }

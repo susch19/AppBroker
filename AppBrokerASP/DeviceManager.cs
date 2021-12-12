@@ -193,12 +193,6 @@ public class DeviceManager : IDisposable
 
     public async Task GetZigbeeDevices(SocketIO socket)
     {
-        if (!Devices.IsEmpty)
-        {
-            logger.Debug($"Cancel {nameof(GetZigbeeDevices)}, because it wasn't the startup");
-            return;
-        }
-
         if (client is null)
         {
             logger.Error("SocketIO Client is null");

@@ -3,10 +3,15 @@
 	<PropertyGroup>
 		<TargetFramework>net6.0</TargetFramework>
 		<Nullable>enable</Nullable>
+		<LangVersion>10</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<EnablePreviewFeatures>True</EnablePreviewFeatures>
 		<WarningsAsErrors>nullable</WarningsAsErrors>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<NoWarn>CS0657</NoWarn>
+		<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
+		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+		<CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,21 +28,16 @@
 		<None Remove="broker.db-wal" />
 		<None Remove="fullchain1.pem" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<Folder Include="wwwroot\" />
-	</ItemGroup>
-	
 	
 	<ItemGroup>
+		<PackageReference Include="AspNetCore.RouteAnalyzer" Version="0.5.3" />
 		<PackageReference Include="NLog.Extensions.Logging" Version="1.7.4" />
 		<PackageReference Include="System.Runtime.Experimental" Version="6.0.0-preview.7.21377.19" />
 		<PackageReference Include="Makaretu.Dns.Multicast" Version="0.27.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Razor.Design" Version="2.2.0" PrivateAssets="All" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="6.0.0-rc.2.21480.10" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="6.0.0-rc.2.21480.10" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="6.0.0-rc.2.21480.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="6.0.0-rc.2.21480.5" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.12" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="5.0.12" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
 		<PackageReference Include="NLog" Version="4.7.11" />
 		<PackageReference Include="SocketIOClient" Version="2.3.1" />
@@ -45,15 +45,21 @@
 		<PackageReference Include="Azura" Version="0.7.2" />
 		<PackageReference Include="Azura.Generator" Version="0.7.2" />
 
+		<PackageReference Include="Elsa.Designer.Components.Web" Version="2.4.0-preview.377" />
+		<PackageReference Include="Elsa.Server.Api" Version="2.4.0-preview.377" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
 		<ProjectReference Include="..\PainlessMesh\PainlessMesh.csproj" />
+		<ProjectReference Condition="'$(DesignTimeBuild)'!='true'" Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-	</ItemGroup>
+	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<Compile Remove="GeneratedFiles\**" />
+		</ItemGroup>
+	</Target>
 
 	<ItemGroup>
 		<None Update="cert.pem">

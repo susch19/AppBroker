@@ -7,6 +7,9 @@ namespace AppBroker.Elsa.Models;
 public class PropertyChangedEvent
 {
     public string PropertyName { get; set; }
+    public string DeviceName { get; set; }
+    public long DeviceId { get; set; }
+    public string TypeName { get; set; }
 }
 public class PropertyChangedEvent<T> : PropertyChangedEvent
 {

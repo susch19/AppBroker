@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Hosting;
 
 using NLog.Extensions.Logging;
 using Microsoft.Extensions.Logging;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AppBrokerASP;
 
@@ -34,6 +36,9 @@ public class Program
 
     public static void Main(string[] args)
     {
+
+
+
         var mainLogger = NLog.LogManager.GetCurrentClassLogger();
 
         Console.OutputEncoding = Encoding.Unicode;
@@ -81,13 +86,41 @@ public class Program
 
         mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
 
-        CreateWebHostBuilder(args).UseUrls(listenUrls).Build().Run();
+        var webBuilder = WebApplication.CreateBuilder(args);
+        _ = webBuilder.WebHost.UseUrls(listenUrls);
+        _ = webBuilder.Host.ConfigureLogging(logging =>
+                   {
+                       _ = logging.ClearProviders();
+                       _ = logging.AddNLog();
+                   });
+        _= webBuilder.WebHost.UseStaticWebAssets();
+        var startup = new Startup(webBuilder.Configuration);
+        startup.ConfigureServices(webBuilder.Services);
+
+
+        var app = webBuilder.Build();
+
+        _ = app.UseWebSockets();
+        _ = app.UseCors("CorsPolicy");
+        _ = app.UseRouting();
+        _ = app.UseStaticFiles();
+
+        _ = app.UseEndpoints(e =>
+        {
+            _ = e.MapFallbackToPage("/_Host");
+            //_ = e.MapHub<SmartHome>("/SmartHome");
+            _ = e.MapControllers();
+
+        });
+
+        app.Run();
+
     }
 
     private static void AdvertiseServerPortsViaMDNS(ushort port)
     {
-        using MulticastService mdns = new();
-        using ServiceDiscovery sd = new(mdns);
+        MulticastService mdns = new();
+        ServiceDiscovery sd = new(mdns);
 
         var hostEntry
             = Dns.GetHostEntry(Environment.MachineName)
@@ -112,15 +145,16 @@ public class Program
         mdns.Start();
     }
 
-    public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-        WebHost
-        .CreateDefaultBuilder(args)
-        .ConfigureLogging(logging =>
-        {
-            _ = logging.ClearProviders();
-            _ = logging.AddNLog();
-        })
-        .UseStartup<Startup>()
+    //public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
+    //    WebApplication
+    //    .CreateBuilder(args)
+    //.ConfigureLogging(logging =>
+    //{
+    //    _ = logging.ClearProviders();
+    //    _ = logging.AddNLog();
+    //})
+    //.UseStartup<Startup>()
 
-        ;
+    //;
 }
+

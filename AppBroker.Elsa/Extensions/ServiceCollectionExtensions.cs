@@ -14,7 +14,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddPropetyActivities(this IServiceCollection services) => services;
 
-    public static ElsaOptionsBuilder AddPropetyActivities(this ElsaOptionsBuilder builder)
+    public static ElsaOptionsBuilder AddPropertyActivities(this ElsaOptionsBuilder builder)
     {
         if (builder == null)
             throw new ArgumentNullException(nameof(builder));

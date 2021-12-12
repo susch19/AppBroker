@@ -271,3 +271,4 @@ OTA/*
 /AppBrokerASP/OTA
 /AppBrokerASP/broker.db-wal
 /AppBrokerASP/broker.db-shm
+/AppBrokerASP/GeneratedFiles

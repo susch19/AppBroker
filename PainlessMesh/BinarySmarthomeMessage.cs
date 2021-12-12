@@ -4,6 +4,7 @@ using System.Threading;
 
 namespace PainlessMesh;
 
+
 public partial class BinarySmarthomeMessage : BaseSmarthomeMessage
 {
     public SmarthomeHeader Header { get; set; }

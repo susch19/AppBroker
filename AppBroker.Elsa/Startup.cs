@@ -10,5 +10,5 @@ namespace AppBroker.Elsa;
 [Feature("Property")]
 public class Startup : StartupBase
 {
-    public override void ConfigureElsa(ElsaOptionsBuilder elsa, IConfiguration configuration) => _ = elsa.AddPropetyActivities();
+    public override void ConfigureElsa(ElsaOptionsBuilder elsa, IConfiguration configuration) => _ = elsa.AddPropertyActivities();
 }
