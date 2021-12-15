@@ -5,7 +5,7 @@ using Elsa.Options;
 using Elsa.Services;
 using AppBroker.Elsa.Signaler;
 using AppBroker.Elsa.Bookmarks;
-using AppBroker.Elsa.Activities;
+using AppBroker.Activities;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection;
@@ -21,6 +21,8 @@ public static class ServiceCollectionExtensions
 
         _ = builder
             .AddActivity<PropertyChangedTrigger>()
+            .AddActivity<GetDeviceActivity>()
+            .AddActivity<GetDevicesActivity>()
             .AddActivity<DeviceChangedTrigger>();
 
         _ = builder.Services

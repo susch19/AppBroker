@@ -9,7 +9,7 @@ using System.Threading;
 
 namespace PainlessMesh.Ota;
 
-public class UpdateManager
+public class UpdateManager : IUpdateManager
 {
     public event EventHandler<FirmwareMetadata> Advertisment;
 

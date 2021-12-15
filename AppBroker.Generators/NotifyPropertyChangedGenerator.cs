@@ -23,6 +23,22 @@ namespace AppBroker
 }
 ";
 
+
+        private const string addOverrideAttribute = @"
+using System;
+namespace AppBroker
+{
+    [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
+    [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
+    sealed class AddOverrideAttribute : Attribute
+    {
+        public AddOverrideAttribute()
+        {
+        }
+    }
+}
+";
+
         private const string ignoreChangedFieldAttribute = @"
 using System;
 namespace AppBroker
@@ -93,6 +109,7 @@ namespace AppBroker
                 i.AddSource("ClassPropertyChangedAppbrokerAttribute", classAttribute);
                 i.AddSource("PropertyChangedAppbrokerAttribute", propertyChangedFieldAttribute);
                 i.AddSource("IgnoreFieldAttribute", ignoreFieldAttribute);
+                i.AddSource("AddOverrideAttribute", addOverrideAttribute);
             });
 
             // Register a syntax receiver that will be created for each generation pass
@@ -111,10 +128,11 @@ namespace AppBroker
             INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
             INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
             INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
+            INamedTypeSymbol overrideFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.AddOverrideAttribute");
 
             foreach (var group in receiver.Classes)
             {
-                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, context);
+                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, overrideFieldSymbol, context);
                 context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
             }
         }
@@ -128,7 +146,7 @@ namespace AppBroker
             return attr.Any(x => $"{x.AttributeClass.ContainingNamespace}.{x.AttributeClass.Name}" == attributeName) || BaseClassAlreadyHasAttribute(parent.BaseType, attributeName);
         }
 
-        private string ProcessClass(INamedTypeSymbol classSymbol, SyntaxReceiver.ClassThingy thingy, INamedTypeSymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, GeneratorExecutionContext context)
+        private string ProcessClass(INamedTypeSymbol classSymbol, SyntaxReceiver.ClassThingy thingy, INamedTypeSymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, INamedTypeSymbol overrideFieldSymbol, GeneratorExecutionContext context)
         {
             if (!classSymbol.ContainingSymbol.Equals(classSymbol.ContainingNamespace, SymbolEqualityComparer.Default))
             {
@@ -138,13 +156,16 @@ namespace AppBroker
             string namespaceName = classSymbol.ContainingNamespace.ToDisplayString();
 
             var alreadyContainsMethod = BaseClassAlreadyHasAttribute(classSymbol, "AppBroker.ClassPropertyChangedAppbrokerAttribute");
+            string additional = "";
+            if (classSymbol.IsGenericType)
+                additional = $"<{string.Join(",", classSymbol.TypeParameters.Select(x => x.Name))}>";
 
             // begin building the generated source
             StringBuilder source = new ($@"
 using System.Runtime.CompilerServices;
 namespace {namespaceName}
 {{
-    public partial class {classSymbol.Name}");
+    public partial class {classSymbol.Name}{additional}");
 
             // if the class doesn't implement INotifyPropertyChanged already, add it
 
@@ -168,14 +189,14 @@ namespace {namespaceName}
             {
                 _ = thingy.AdditionalAttributesForGeneratedProp.TryGetValue(fieldSymbol, out var additionalAttributes);
 
-                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol, additionalAttributes, context);
+                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol,overrideFieldSymbol, additionalAttributes, context);
             }
 
             _ = source.Append("    }\n}");
             return source.ToString();
         }
 
-        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, List<AttributeListSyntax> additionalAttributes, GeneratorExecutionContext context)
+        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol,INamedTypeSymbol ignoreFieldSymbol, INamedTypeSymbol overrideFieldSymbol, List<AttributeListSyntax> additionalAttributes, GeneratorExecutionContext context)
         {
             // get the name and type of the field
             string fieldName = fieldSymbol.Name;
@@ -237,8 +258,10 @@ namespace {namespaceName}
                 }
             }
 
+            var @override = fieldAttrs.Any(ad => ad.AttributeClass.Equals(overrideFieldSymbol, SymbolEqualityComparer.Default));
+
             _ = source.Append($@"
-        public {fieldType} {propertyName} 
+        public {(@override ? "override " : "")}{fieldType} {propertyName} 
         {{
             get => this.{fieldName};
             set => {(ignore ? $"this.{fieldName} = value;" : $"this.RaiseAndSetIfChanged(ref {fieldName}, value);")}

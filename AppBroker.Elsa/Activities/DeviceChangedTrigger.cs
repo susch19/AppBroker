@@ -9,35 +9,33 @@ using Elsa.Services.Models;
 
 using System.Collections.Generic;
 using System.Linq;
+using AppBroker.ValueProvider;
 
-namespace AppBroker.Elsa.Activities;
+namespace AppBroker.Activities;
 
 [Trigger(
    Category = "Smarthome",
-   Description = "Waits for an event sent from your application."
+   Description = "Waits for a property change on a specified device."
 )]
-public class DeviceChangedTrigger : Activity
+public partial class DeviceChangedTrigger : Activity
 {
-    [ActivityInput(
-        Label = "Property Name",
-        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
-    )]
+    [ActivityInput(Label = "Property Name", OptionsProvider = typeof(PropertyChangedTrigger), UIHint = ActivityInputUIHints.Dropdown,
+      SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.Json, SyntaxNames.JavaScript, SyntaxNames.Liquid })]
     public string PropertyName { get; set; } = default!;
 
     [ActivityInput(
-        Label = "Device Name",
+        Label = "Device Name", OptionsProvider = typeof(DeviceNameProvider), UIHint = ActivityInputUIHints.Dropdown,
         SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
     )]
     public string DeviceName { get; set; } = default!;
 
     [ActivityInput(
-        Label = "Type Name",
-        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
-    )]
+        Label = "Type Name", OptionsProvider = typeof(DeviceTypeNameProvider),
+        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }, UIHint = ActivityInputUIHints.Dropdown)]
     public string TypeName { get; set; } = default!;
 
     [ActivityInput(
-        Label = "Device Id",
+        Label = "Device Id", OptionsProvider = typeof(DeviceIdProvider), UIHint = ActivityInputUIHints.Dropdown,
         SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
     )]
     public long? DeviceId { get; set; } = default!;
@@ -56,4 +54,5 @@ public class DeviceChangedTrigger : Activity
         Output = input;
         return Done(Output);
     }
+
 }

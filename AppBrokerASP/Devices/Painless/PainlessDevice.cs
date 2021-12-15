@@ -1,4 +1,8 @@
 ﻿
+using AppBroker.Core;
+using AppBroker.Core.Devices;
+using AppBroker.Elsa.Signaler;
+
 using PainlessMesh;
 using PainlessMesh.Ota;
 
@@ -9,7 +13,7 @@ using System.Threading.Tasks;
 namespace AppBrokerASP.Devices.Painless;
 
 [AppBroker.ClassPropertyChangedAppbroker]
-public abstract partial class PainlessDevice : Device
+public abstract partial class PainlessDevice : WorkflowDevice<WorkflowPropertySignaler, WorkflowDeviceSignaler>
 {
     private string iP = "";
 
@@ -23,9 +27,9 @@ public abstract partial class PainlessDevice : Device
     protected PainlessDevice(long nodeId) : base(nodeId)
     {
         deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
-        InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
-        InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
 
         Initialized = true;
 
@@ -35,9 +39,9 @@ public abstract partial class PainlessDevice : Device
     {
         deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
         InterpretParameters(parameter);
-        InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
-        InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
 
     }
 
@@ -52,11 +56,11 @@ public abstract partial class PainlessDevice : Device
             case Command.Ota:
                 var request = new RequestFirmwarePart(e.Parameters[0], Id);
                 // Deserialize RequestFirmwarePart, send base64 as non json
-                var b64 = InstanceContainer.UpdateManager.GetPart(request);
+                var b64 = InstanceContainer.Instance.UpdateManager.GetPart(request);
                 if (b64.Length == 0)
                 {
                     request.TargetId = 0;
-                    b64 = InstanceContainer.UpdateManager.GetPart(request);
+                    b64 = InstanceContainer.Instance.UpdateManager.GetPart(request);
                 }
                 if (b64.Length == 0)
                 {
@@ -75,7 +79,7 @@ public abstract partial class PainlessDevice : Device
                     str = memoryStream.ToArray();
                 }
 
-                _ = Task.Delay(str.Length / 8).ContinueWith(x => InstanceContainer.MeshManager.SendSingle((uint)Id, str));
+                _ = Task.Delay(str.Length / 8).ContinueWith(x => InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, str));
 
                 break;
             case Command.OtaPart:
@@ -118,7 +122,7 @@ public abstract partial class PainlessDevice : Device
 
         //Do OTA
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, Command.Ota, metadata.ToBinary());
-        InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
     }
 
     protected virtual void InterpretParameters(ByteLengthList parameter)
@@ -150,9 +154,9 @@ public abstract partial class PainlessDevice : Device
     public override void StopDevice()
     {
         base.StopDevice();
-        InstanceContainer.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-        InstanceContainer.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        InstanceContainer.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
     }
 
     public override void Reconnect(ByteLengthList parameter)
@@ -161,12 +165,12 @@ public abstract partial class PainlessDevice : Device
 
         InterpretParameters(parameter);
 
-        InstanceContainer.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-        InstanceContainer.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        InstanceContainer.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
-        InstanceContainer.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
-        InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
 
     }
     protected virtual void GetMessageReceived(BinarySmarthomeMessage e) { }

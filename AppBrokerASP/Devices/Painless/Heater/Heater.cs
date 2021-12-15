@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Microsoft.EntityFrameworkCore;
 using AppBrokerASP.Devices.Zigbee;
 using System.Diagnostics.CodeAnalysis;
+using AppBroker.Core;
 
 namespace AppBrokerASP.Devices.Painless.Heater;
 
@@ -65,7 +66,7 @@ public partial class Heater : PainlessDevice, IDisposable
         //var s2 = "";
         //timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
         //var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
-        //InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+        //IInstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
 
         //}
         if (parameters.Count > 3)
@@ -79,7 +80,7 @@ public partial class Heater : PainlessDevice, IDisposable
                 {
                     Logger.Warn($"Heater {LogName} has wrong temps saved, trying correcting");
                     var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2);
-                    InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                    InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 }
             }
             catch (Exception e)
@@ -110,7 +111,7 @@ public partial class Heater : PainlessDevice, IDisposable
                     break;
                 }
 
-                var device = InstanceContainer.DeviceManager.Devices.FirstOrDefault(x => x.Key == mapping?.Child?.Id).Value;
+                var device = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == mapping?.Child?.Id).Value;
                 if (device != default)
                 {
                     if (device is XiaomiTempSensor sensor)
@@ -215,18 +216,18 @@ public partial class Heater : PainlessDevice, IDisposable
                 var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
                 //logger.Debug("Send new ttm: " + )
                 msg = new((uint)Id, MessageType.Update, command, ttm.ToBinary());
-                InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
             case Command.DeviceMapping:
                 UpdateDeviceMappingInDb((long)parameters[0], (long)parameters[1]);
                 break;
             case Command.Off:
                 msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
-                InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
             case Command.On:
                 msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
-                InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
             default:
                 break;
@@ -253,20 +254,20 @@ public partial class Heater : PainlessDevice, IDisposable
                 var s = ttm.SelectMany(x => x.ToBinary()).ToArray();
 
                 msg = new((uint)Id, MessageType.Options, command, s);
-                InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
             }
             case Command.Off:
                 msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
-                InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
             case Command.On:
                 msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
-                InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
             case Command.Mode:
                 msg = new((uint)Id, MessageType.Options, command);
-                InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
         }
     }
@@ -300,14 +301,14 @@ public partial class Heater : PainlessDevice, IDisposable
         using var cont = DbProvider.BrokerDbContext;
         var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
         var tempSensor = cont.Devices.FirstOrDefault(x => x.Id == tempId);
-        var sensor = InstanceContainer.DeviceManager.Devices.FirstOrDefault(x => x.Key == tempId).Value;
+        var sensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == tempId).Value;
         if (heater == default || tempSensor == default || sensor == default)
             return;
 
         var oldMappings = ((IEnumerable<DeviceMappingModel>)cont.DeviceToDeviceMappings).Where(x => x.Parent!.Id == Id);
         foreach (var oldMapping in oldMappings)
         {
-            var oldsensor = InstanceContainer.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;
+            var oldsensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;
             if (oldsensor is not null and XiaomiTempSensor xts)
                 xts.TemperatureChanged -= XiaomiTempSensorTemperaturChanged;
             _ = cont.Remove(oldMapping);
@@ -330,7 +331,7 @@ public partial class Heater : PainlessDevice, IDisposable
     {
         var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToBinary());
-        InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
     }
 
     public override void Reconnect(ByteLengthList parameter)
@@ -339,10 +340,10 @@ public partial class Heater : PainlessDevice, IDisposable
 
         InterpretParameters(parameter);
 
-        InstanceContainer.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-        InstanceContainer.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        InstanceContainer.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
 
         SendLastTempData();
     }
@@ -351,7 +352,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void SendLastTempData()
     {
-        if (InstanceContainer.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out var device)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out var device)
                 && device is XiaomiTempSensor sensor
                 && sensor.Temperature > 5f)
         {

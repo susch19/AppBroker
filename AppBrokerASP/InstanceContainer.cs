@@ -1,30 +1,35 @@
 ﻿using AppBrokerASP.Configuration;
+using AppBrokerASP.Devices.Elsa;
 
 using PainlessMesh.Ota;
 
 namespace AppBrokerASP;
 
-public static class InstanceContainer
+public class InstanceContainer : IInstanceContainer, IDisposable
 {
-    public static DeviceManager DeviceManager { get; private set; }
+    public static InstanceContainer Instance { get; private set; } = null!;
+    public IDeviceTypeMetaDataManager DevicePropertyManager { get; }
+    public SmarthomeMeshManager MeshManager { get; }
+    public IUpdateManager UpdateManager { get; }
+    public ConfigManager ConfigManager { get; }
+    public IDeviceManager DeviceManager { get; }
 
-    public static SmarthomeMeshManager MeshManager { get; private set; }
-
-    public static UpdateManager UpdateManager { get; private set; }
-
-    public static ConfigManager ConfigManager { get; private set; }
-
-    static InstanceContainer()
+    public InstanceContainer()
     {
+        IInstanceContainer.Instance = Instance = this;
         ConfigManager = new ConfigManager();
-        UpdateManager = new();
+        UpdateManager = new UpdateManager();
         MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.ListenPort);
-        DeviceManager = new DeviceManager();
+        var localDeviceManager = new DeviceManager();
+        DeviceManager = localDeviceManager;
+        DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);
     }
 
-    public static void Dispose()
+    public void Dispose()
     {
-        DeviceManager.Dispose();
-        MeshManager.Dispose();
+        if (DeviceManager is IDisposable disposable)
+            disposable.Dispose();
+        if (MeshManager is IDisposable disposable2)
+            disposable2.Dispose();
     }
 }

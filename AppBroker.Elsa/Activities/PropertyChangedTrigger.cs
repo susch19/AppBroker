@@ -9,23 +9,26 @@ using Elsa.Services.Models;
 
 using System.Collections.Generic;
 using System.Linq;
+using Elsa.Metadata;
+using System.Reflection;
+using AppBrokerASP;
 
-namespace AppBroker.Elsa.Activities;
+namespace AppBroker.Activities;
 
 [Trigger(
    Category = "Smarthome",
-   Description = "Waits for an event sent from your application."
+    DisplayName = "Property Changed",
+   Description = "Waits for the defined property to change on any device, that has this property."
 )]
-public class PropertyChangedTrigger : Activity
+public class PropertyChangedTrigger : Activity, IActivityPropertyOptionsProvider
 {
-    [ActivityInput(
-        Label = "Property Name",
-        SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.JavaScript, SyntaxNames.Liquid }
-    )]
+    [ActivityInput(Label = "Property Name", OptionsProvider = typeof(PropertyChangedTrigger), UIHint = ActivityInputUIHints.Dropdown,
+      SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.Json, SyntaxNames.JavaScript, SyntaxNames.Liquid })]
     public string PropertyName { get; set; } = default!;
 
     [ActivityOutput]
     public PropertyChangedEvent? Output { get; set; }
+
     protected override IActivityExecutionResult OnExecute(ActivityExecutionContext context)
         => context.IsFirstPass ? OnExecuteInternal(context) : Suspend();
 
@@ -38,4 +41,7 @@ public class PropertyChangedTrigger : Activity
         Output = input;
         return Done(Output);
     }
+
+    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DevicePropertyManager.PropertyNames;
 }
+

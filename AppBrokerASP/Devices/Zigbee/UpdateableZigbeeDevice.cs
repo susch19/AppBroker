@@ -11,5 +11,6 @@ public abstract class UpdateableZigbeeDevice : ZigbeeDevice
 
     }
 
-    protected Task SetValue(string property, object value) => Socket.EmitAsync("setState", $"{AdapterWithId}.{property.ToLower()}", value);
+    public Task SetValue(string property, object value) 
+        => Socket.EmitAsync("setState", $"{AdapterWithId}.{property.ToLower()}", value);
 }

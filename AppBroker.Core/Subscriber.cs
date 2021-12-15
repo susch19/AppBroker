@@ -1,4 +1,4 @@
-﻿namespace AppBrokerASP;
+﻿namespace AppBroker.Core;
 
 public class Subscriber
 {

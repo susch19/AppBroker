@@ -8,6 +8,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Security.Cryptography;
 using System.Security.Authentication;
 using PainlessMesh;
+using AppBroker.Core;
 
 namespace AppBrokerASP;
 

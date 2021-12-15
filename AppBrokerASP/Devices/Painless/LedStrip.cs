@@ -1,5 +1,7 @@
 ﻿using System.Threading.Tasks;
 
+using AppBroker.Core;
+
 using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
@@ -84,7 +86,7 @@ public partial class LedStrip : PainlessDevice
         }
 
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, meshParams);
-        InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
         return Task.CompletedTask;
     }
 
@@ -115,6 +117,6 @@ public partial class LedStrip : PainlessDevice
         }
 
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, meshParams);
-        InstanceContainer.MeshManager.SendSingle((uint)Id, msg);
+        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
     }
 }

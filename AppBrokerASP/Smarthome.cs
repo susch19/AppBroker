@@ -1,6 +1,9 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
 
+using AppBroker.Core;
+using AppBroker.Core.Devices;
+
 using AppBrokerASP.Database;
 using AppBrokerASP.Devices;
 using AppBrokerASP.Devices.Zigbee;
@@ -12,11 +15,6 @@ using PainlessMesh;
 
 namespace AppBrokerASP;
 
-public interface ISmartHomeClient
-{
-    Task Update(Device device);
-}
-
 public class SmartHome : Hub<ISmartHomeClient>
 {
     public SmartHome()
@@ -25,7 +23,7 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public override Task OnConnectedAsync()
     {
-        foreach (var item in InstanceContainer.DeviceManager.Devices.Values)
+        foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
             item.SendLastData(Clients.Caller);
 
         return base.OnConnectedAsync();
@@ -33,7 +31,7 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public async Task Update(JsonSmarthomeMessage message)
     {
-        if (InstanceContainer.DeviceManager.Devices.TryGetValue(message.LongNodeId, out var device))
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(message.LongNodeId, out var device))
         {
             switch (message.MessageType)
             {
@@ -54,7 +52,7 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public void UpdateDevice(long id, string newName)
     {
-        if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var stored))
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var stored))
         {
             stored.FriendlyName = newName;
             _ = DbProvider.UpdateDeviceInDb(stored);
@@ -62,15 +60,15 @@ public class SmartHome : Hub<ISmartHomeClient>
         }
     }
 
-    public dynamic? GetConfig(uint deviceId) => InstanceContainer.DeviceManager.Devices.TryGetValue(deviceId, out var device) ? device.GetConfig() : null;
+    public dynamic? GetConfig(uint deviceId) => IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out var device) ? device.GetConfig() : null;
 
     public async void SendUpdate(Device device) => await (Clients.All?.Update(device) ?? Task.CompletedTask);
 
-    public List<Device> GetAllDevices() => InstanceContainer.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
+    public List<Device> GetAllDevices() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
 
     public Task<List<IoBrokerHistory>> GetIoBrokerHistories(long id, string dt)
     {
-        if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
         {
             var date = DateTime.Parse(dt).Date;
             return d.GetHistory(date, date.AddDays(1).AddSeconds(-1));
@@ -80,7 +78,7 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public Task<IoBrokerHistory> GetIoBrokerHistory(long id, string dt, string propertyName)
     {
-        if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
         {
             var date = DateTime.Parse(dt).Date;
             return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), Enum.Parse<HistoryType>(propertyName, true));
@@ -90,7 +88,7 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public Task<List<IoBrokerHistory>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
     {
-        if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
         {
             return d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
         }
@@ -101,7 +99,7 @@ public class SmartHome : Hub<ISmartHomeClient>
     // TODO: remove list, just return one item
     public async Task<List<IoBrokerHistory>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
     {
-        if (InstanceContainer.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device) && device is ZigbeeDevice d)
         {
             return new List<IoBrokerHistory>()
                 {
@@ -131,7 +129,7 @@ public class SmartHome : Hub<ISmartHomeClient>
         foreach (var deviceId in DeviceIds)
         {
 
-            if (InstanceContainer.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+            if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out var device))
             {
                 if (!device.Subscribers.Any(x => x.ConnectionId == connectionId))
                     device.Subscribers.Add(new Subscriber(connectionId, Clients.Caller));
@@ -143,5 +141,5 @@ public class SmartHome : Hub<ISmartHomeClient>
         return devices;
     }
 
-    public void UpdateTime() => InstanceContainer.MeshManager.UpdateTime();
+    public void UpdateTime() => InstanceContainer.Instance.MeshManager.UpdateTime();
 }

@@ -1,5 +1,6 @@
 
-using AppBroker.Elsa.Activities;
+using AppBroker.Activities;
+using AppBroker.Core.Devices;
 using AppBroker.Elsa.Bookmarks;
 using AppBroker.Elsa.Models;
 
@@ -18,7 +19,9 @@ using System.Text;
 
 namespace AppBroker.Elsa.Signaler;
 
-public class WorkflowDeviceSignaler
+
+
+public class WorkflowDeviceSignaler : IWorkflowDeviceSignaler
 {
     private static Scoped<IWorkflowLaunchpad> scopedWorkflowLaunchpad;
 

@@ -1,5 +1,7 @@
-using AppBroker.Elsa.Activities;
 
+using AppBroker.Activities;
+
+using Elsa.Attributes;
 using Elsa.Services;
 
 using System.Collections.Generic;
@@ -17,15 +19,10 @@ public class PropertyChangedEventBookmark : IBookmark
     public PropertyChangedEventBookmark(string propertyName)//, object oldValue, object newValue)
     {
         PropertyName = propertyName;
-        //OldValue = oldValue;
-        //NewValue = newValue;
-
     }
 
-
+    [global::Elsa.Attributes.ExcludeFromHash]
     public string? PropertyName { get; set; }
-    //public object OldValue { get; }
-    //public object NewValue { get; }
 
     public bool? Compare(IBookmark bookmark)
     {

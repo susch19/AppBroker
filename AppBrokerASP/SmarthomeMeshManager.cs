@@ -2,6 +2,8 @@
 using System.Text;
 using System.Threading;
 
+using AppBroker.Core;
+
 using AppBrokerASP.Devices.Painless;
 
 using Newtonsoft.Json;
@@ -67,7 +69,7 @@ public class SmarthomeMeshManager : IDisposable
         timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(1.0), WaitBeforeWhoIAmSendAgain));
         timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1.0), TimeSpan.FromHours(1d)));
         timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10.0), TimeSpan.FromSeconds(10d)));
-        InstanceContainer.UpdateManager.Advertisment += OtaAdvertisment;
+        InstanceContainer.Instance.UpdateManager.Advertisment += OtaAdvertisment;
     }
 
     public void Stop()
@@ -100,7 +102,7 @@ public class SmarthomeMeshManager : IDisposable
 
     private void OtaAdvertisment(object? sender, PainlessMesh.Ota.FirmwareMetadata e)
     {
-        foreach (var item in InstanceContainer.DeviceManager.Devices.Values)
+        foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
         {
             if (item is PainlessDevice pd)
                 pd.OtaAdvertisment(e);
@@ -260,7 +262,7 @@ public class SmarthomeMeshManager : IDisposable
                     if (item.MissedConnections > 0)
                     {
                         item.MissedConnections = 0;
-                        if (InstanceContainer.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
+                        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
                             SendSingle((uint)dev.Id, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                         else
                             lostSubs.Add(item.Id);

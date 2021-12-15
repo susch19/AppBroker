@@ -8,6 +8,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.IO;
+using AppBroker.Core.Devices;
 
 namespace AppBroker.Generators.Test;
 

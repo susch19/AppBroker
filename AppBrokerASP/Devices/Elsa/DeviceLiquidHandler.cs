@@ -10,7 +10,7 @@ public class DeviceLiquidHandler : INotificationHandler<EvaluatingLiquidExpressi
 {
     public Task Handle(EvaluatingLiquidExpression notification, CancellationToken cancellationToken)
     {
-        foreach (var item in InstanceContainer.DeviceManager.Devices.Values)
+        foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
         {
             notification.TemplateContext.Options.MemberAccessStrategy.Register(item.GetType());
         } 

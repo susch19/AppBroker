@@ -1,13 +1,11 @@
-﻿using Azura;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace PainlessMesh;
+namespace AppBroker.Core;
 
 public partial class ByteLengthList : List<byte[]>
 {

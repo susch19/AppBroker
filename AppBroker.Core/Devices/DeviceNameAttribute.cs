@@ -1,7 +1,7 @@
 ﻿namespace AppBrokerASP.Devices;
 
 [AttributeUsage(AttributeTargets.Class)]
-internal class DeviceNameAttribute : Attribute
+public class DeviceNameAttribute : Attribute
 {
     public DeviceNameAttribute(string alternateName, params string[] alternativeNames)
     {

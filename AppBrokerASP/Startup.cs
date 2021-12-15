@@ -34,9 +34,9 @@ public class Startup
                   .AllowAnyHeader()
                   .AllowAnyOrigin()));
 
-        //_ = services.AddSignalR(
-        //    opt => opt.EnableDetailedErrors = true
-        //    ).AddNewtonsoftJsonProtocol();
+        _ = services.AddSignalR(
+            opt => opt.EnableDetailedErrors = true
+            ).AddNewtonsoftJsonProtocol();
         _ = services.AddRazorPages();
 
         var elsaSection = Configuration.GetSection("Elsa");

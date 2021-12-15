@@ -15,13 +15,19 @@ using System.Net.Http;
 using SocketIOClient;
 using AppBrokerASP.Extension;
 using Newtonsoft.Json.Linq;
+using AppBroker.Core;
+using AppBroker.Core.Devices;
 
 namespace AppBrokerASP;
 
-public class DeviceManager : IDisposable
+public class DeviceManager : IDisposable, IDeviceManager
 {
     public ZigbeeConfig Config { get; }
     public ConcurrentDictionary<long, Device> Devices { get; } = new();
+    public IReadOnlyCollection<Type> DeviceTypes => types;
+
+    public event EventHandler<(long id, Device device)>? NewDeviceAdded;
+
     private SocketIO? client;
     private bool disposed;
     private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -32,7 +38,7 @@ public class DeviceManager : IDisposable
 
     public DeviceManager()
     {
-        Config = InstanceContainer.ConfigManager.ZigbeeConfig;
+        Config = InstanceContainer.Instance.ConfigManager.ZigbeeConfig;
 
         types = Assembly
             .GetExecutingAssembly()
@@ -49,11 +55,16 @@ public class DeviceManager : IDisposable
             }
         }
 
-        InstanceContainer.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
-        InstanceContainer.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
-        InstanceContainer.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
+        InstanceContainer.Instance.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
+        InstanceContainer.Instance.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
+        InstanceContainer.Instance.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
 
         temp = ConnectToIOBroker();
+    }
+    private void AddNewDeviceToDic(long id, Device device)
+    {
+        if (Devices.TryAdd(id, device))
+            NewDeviceAdded?.Invoke(this, (id, device));
     }
 
     private static List<string> GetAllNamesFor(Type y)
@@ -100,7 +111,8 @@ public class DeviceManager : IDisposable
                 return;
 
             logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
-            _ = Devices.TryAdd(e.c.NodeId, newDevice);
+            AddNewDeviceToDic(e.c.NodeId, newDevice);
+            //_ = Devices.TryAdd(e.c.NodeId, newDevice);
 
             if (!DbProvider.AddDeviceToDb(newDevice))
                 _ = DbProvider.MergeDeviceWithDbData(newDevice);
@@ -266,7 +278,7 @@ public class DeviceManager : IDisposable
                 if (dev is ZigbeeDevice zd)
                     zd.AdapterWithId = deviceRes._id;
 
-                _ = Devices.TryAdd(id, dev);
+                //_ = Devices.TryAdd(id, dev);
 
                 if (!DbProvider.AddDeviceToDb(dev))
                     _ = DbProvider.MergeDeviceWithDbData(dev);
@@ -274,6 +286,8 @@ public class DeviceManager : IDisposable
                 // If name is only numbers, try to get better name
                 if (string.IsNullOrWhiteSpace(dev.FriendlyName) || long.TryParse(dev.FriendlyName, out _))
                     dev.FriendlyName = deviceRes.common.name;
+
+                AddNewDeviceToDic(id, dev);
             }
 
             foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))

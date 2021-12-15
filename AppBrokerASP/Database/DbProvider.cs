@@ -1,4 +1,6 @@
-﻿using AppBrokerASP.Devices;
+﻿using AppBroker.Core.Devices;
+
+using AppBrokerASP.Devices;
 
 namespace AppBrokerASP.Database;
 

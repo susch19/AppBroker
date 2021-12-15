@@ -36,30 +36,29 @@ public class Program
 
     public static void Main(string[] args)
     {
-
-
-
         var mainLogger = NLog.LogManager.GetCurrentClassLogger();
 
         Console.OutputEncoding = Encoding.Unicode;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-        if (InstanceContainer.ConfigManager.PainlessMeshConfig.Enabled)
-            InstanceContainer.MeshManager.Start();
+        _ = new InstanceContainer();
+
+        if (InstanceContainer.Instance.ConfigManager.PainlessMeshConfig.Enabled)
+            InstanceContainer.Instance.MeshManager.Start();
 
         ushort tempPort = port;
-        if (InstanceContainer.ConfigManager.ServerConfig.ListenPort == 0)
+        if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
             mainLogger.Info($"ListenPort is not configured in the appsettings serverconfig section and therefore default port {port} will be used, when no port was passed into listen url.");
         else
-            tempPort = InstanceContainer.ConfigManager.ServerConfig.ListenPort;
+            tempPort = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort;
 
         string[] listenUrls;
-        if (InstanceContainer.ConfigManager.ServerConfig.ListenUrls.Any())
+        if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Any())
         {
-            listenUrls = new string[InstanceContainer.ConfigManager.ServerConfig.ListenUrls.Count];
-            for (int i = 0; i < InstanceContainer.ConfigManager.ServerConfig.ListenUrls.Count; i++)
+            listenUrls = new string[InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count];
+            for (int i = 0; i < InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count; i++)
             {
-                string? item = InstanceContainer.ConfigManager.ServerConfig.ListenUrls[i];
+                string? item = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls[i];
                 try
                 {
                     var builder = new UriBuilder(item)
@@ -108,7 +107,7 @@ public class Program
         _ = app.UseEndpoints(e =>
         {
             _ = e.MapFallbackToPage("/_Host");
-            //_ = e.MapHub<SmartHome>("/SmartHome");
+            _ = e.MapHub<SmartHome>("/SmartHome");
             _ = e.MapControllers();
 
         });
@@ -133,28 +132,16 @@ public class Program
                     && !x.IsIPv6Teredo))
             .ToArray();
 
-        var serv = new ServiceProfile(InstanceContainer.ConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
+        var serv = new ServiceProfile(InstanceContainer.Instance.ConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
 
         //serv.AddProperty("Min App Version", "0.0.2"); //Currently not needed, but supported by flutter app
         if (IsDebug)
             serv.AddProperty("Debug", IsDebug.ToString());
-        if (string.IsNullOrWhiteSpace(InstanceContainer.ConfigManager.ServerConfig.ClusterId))
-            serv.AddProperty("ClusterId", InstanceContainer.ConfigManager.ServerConfig.ClusterId);
+        if (string.IsNullOrWhiteSpace(InstanceContainer.Instance.ConfigManager.ServerConfig.ClusterId))
+            serv.AddProperty("ClusterId", InstanceContainer.Instance.ConfigManager.ServerConfig.ClusterId);
         sd.Advertise(serv);
 
         mdns.Start();
     }
-
-    //public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>
-    //    WebApplication
-    //    .CreateBuilder(args)
-    //.ConfigureLogging(logging =>
-    //{
-    //    _ = logging.ClearProviders();
-    //    _ = logging.AddNLog();
-    //})
-    //.UseStartup<Startup>()
-
-    //;
 }
 

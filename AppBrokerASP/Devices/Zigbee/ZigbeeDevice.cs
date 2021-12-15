@@ -9,11 +9,13 @@ using System.Threading.Tasks;
 
 using static AppBrokerASP.IOBroker.IoBrokerHistory;
 using Newtonsoft.Json;
+using AppBroker.Core.Devices;
+using AppBroker.Elsa.Signaler;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
 [AppBroker.ClassPropertyChangedAppbroker]
-public abstract partial class ZigbeeDevice : Device
+public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySignaler, WorkflowDeviceSignaler>
 {
     protected SocketIO Socket { get; }
 
@@ -110,6 +112,7 @@ public abstract partial class ZigbeeDevice : Device
         }
     }
 
+
     private void SetValueOnProperty<T>(PropertyInfo prop, long v1) where T : INumber<T>, IMinMaxValue<T> => prop.SetValue(this, T.CreateSaturating(v1));
 
     public async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
@@ -141,7 +144,7 @@ public abstract partial class ZigbeeDevice : Device
 
     public virtual IoBrokerHistory? ReadHistoryJSON(DateTime date, IoBrokerHistory history)
     {
-        var filePath = Path.Combine(InstanceContainer.ConfigManager.ZigbeeConfig.HistoryPath, $"{date:yyyyMMdd}", $"history.{AdapterWithId}.{history.PropertyName}.json");
+        var filePath = Path.Combine(InstanceContainer.Instance.ConfigManager.ZigbeeConfig.HistoryPath, $"{date:yyyyMMdd}", $"history.{AdapterWithId}.{history.PropertyName}.json");
         if (File.Exists(filePath))
         {
             var records = Newtonsoft.Json.JsonConvert.DeserializeObject<HistoryRecord[]>(File.ReadAllText(filePath));

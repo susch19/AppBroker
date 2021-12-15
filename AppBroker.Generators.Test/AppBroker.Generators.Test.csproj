@@ -16,6 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
     <ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" />
   </ItemGroup>
 
