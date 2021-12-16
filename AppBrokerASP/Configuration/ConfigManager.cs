@@ -1,33 +1,31 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace AppBrokerASP.Configuration
+namespace AppBrokerASP.Configuration;
+
+public class ConfigManager
 {
-    public class ConfigManager
+    public ZigbeeConfig ZigbeeConfig { get; }
+    public PainlessMeshSettings PainlessMeshConfig { get; }
+    public ServerConfig ServerConfig { get; }
+
+    public ConfigManager()
     {
-        public ZigbeeConfig ZigbeeConfig { get; }
-        public PainlessMeshSettings PainlessMeshConfig { get; }
-        public ServerConfig ServerConfig {  get; }
-
-
-        public ConfigManager()
-        {
-            var configBuilder = new ConfigurationBuilder();
-            var fileName = "appsettings.json";
+        var configBuilder = new ConfigurationBuilder();
+        var fileName = "appsettings.json";
 #if DEBUG
-            fileName = "appsettings.debug.json";
+        fileName = "appsettings.debug.json";
 #endif
 
-            configBuilder.AddJsonFile(fileName);
-            var configuration = configBuilder.Build();
+        configBuilder.AddJsonFile(fileName);
+        var configuration = configBuilder.Build();
 
-            PainlessMeshConfig = new PainlessMeshSettings();
-            configuration.GetSection(PainlessMeshSettings.ConfigName).Bind(PainlessMeshConfig);
+        PainlessMeshConfig = new PainlessMeshSettings();
+        configuration.GetSection(PainlessMeshSettings.ConfigName).Bind(PainlessMeshConfig);
 
-            ZigbeeConfig = new ZigbeeConfig();
-            configuration.GetSection(ZigbeeConfig.ConfigName).Bind(ZigbeeConfig);
-            ServerConfig = new ServerConfig();
-            configuration.GetSection(ServerConfig.ConfigName).Bind(ServerConfig);
+        ZigbeeConfig = new ZigbeeConfig();
+        configuration.GetSection(ZigbeeConfig.ConfigName).Bind(ZigbeeConfig);
+        ServerConfig = new ServerConfig();
+        configuration.GetSection(ServerConfig.ConfigName).Bind(ServerConfig);
 
-        }
     }
 }

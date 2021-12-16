@@ -1,15 +1,14 @@
 ﻿using AppBrokerASP.Database;
 
-namespace DbMigrator.V1ToV2.Database
+namespace DbMigrator.V1ToV2.Database;
+
+public static class DbProvider
 {
-    public static class DbProvider
+    public static BrokerDbContext BrokerDbContext => new();
+    public static BrokerDbContextOld BrokerDbContextOld => new();
+    static DbProvider()
     {
-        public static BrokerDbContext BrokerDbContext => new();
-        public static BrokerDbContextOld BrokerDbContextOld => new();
-        static DbProvider()
-        {
-            _ = BrokerDbContext.Database.EnsureCreated();
-            _ = BrokerDbContextOld.Database.EnsureCreated();
-        }
+        _ = BrokerDbContext.Database.EnsureCreated();
+        _ = BrokerDbContextOld.Database.EnsureCreated();
     }
 }

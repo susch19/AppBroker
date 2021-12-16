@@ -1,35 +1,31 @@
 using SocketIOClient;
 
-namespace AppBrokerASP.Devices.Zigbee
+using System.Runtime.CompilerServices;
+
+namespace AppBrokerASP.Devices.Zigbee;
+
+[DeviceName("lumi.weather", "WSDCGQ11LM")]
+[AppBroker.ClassPropertyChangedAppbroker]
+public partial class XiaomiTempSensor : ZigbeeDevice
 {
-    [DeviceName("lumi.weather", "WSDCGQ11LM")]
-    public class XiaomiTempSensor : ZigbeeDevice
+    public event EventHandler<float>? TemperatureChanged;
+    public new bool IsConnected => Available;
+    private float humidity;
+    private float pressure;
+    private byte battery;
+    private float voltage;
+    private float temperature;
+
+    public XiaomiTempSensor(long id, SocketIO socket) : base(id, socket)
     {
-        public event EventHandler<float>? TemperatureChanged;
-        public new bool IsConnected => Available;
-        public new bool Available { get; set; }
-        public float Temperature
-        {
-            get => temperature; set
-            {
-                temperature = value;
-                TemperatureChanged?.Invoke(this, value);
-                //PrintableInformation[0] = $"Temp: {value.ToString()}";
-            }
-        }
-        public float Humidity { get; set; }
-        public float Pressure { get; set; }
+        ShowInApp = true;
+        Available = true;
+    }
 
-        public byte Battery { get; set; }
-        public float Voltage { get; set; }
-
-        private float temperature;
-
-
-        public XiaomiTempSensor(long id, SocketIO socket) : base(id, socket)
-        {
-            ShowInApp = true;
-            Available = true;
-        }
+    protected override void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "")
+    {
+        if (propertyName == nameof(Temperature))
+            TemperatureChanged?.Invoke(this, (float)(object)value!);
+        base.OnPropertyChanging(ref field, value, propertyName);
     }
 }

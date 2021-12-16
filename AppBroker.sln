@@ -15,7 +15,19 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.Generators", "App
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestGenerator", "TestGenerator\TestGenerator.csproj", "{50833AB1-C7AA-4524-A48D-BD6423020D89}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppBroker.Generators.Test", "AppBroker.Generators.Test\AppBroker.Generators.Test.csproj", "{A553ED81-487F-49A0-8ACB-DD49BEBBCA48}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.Generators.Test", "AppBroker.Generators.Test\AppBroker.Generators.Test.csproj", "{A553ED81-487F-49A0-8ACB-DD49BEBBCA48}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.Elsa", "AppBroker.Elsa\AppBroker.Elsa.csproj", "{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Elsa", "Elsa", "{985CE004-B3C1-4E1A-A269-E2F15D496E0D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E76B3A29-D64E-4881-BAAE-19D87C124334}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Nuget.Config = Nuget.Config
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.Core", "AppBroker.Core\AppBroker.Core.csproj", "{6579337A-A00D-4912-839D-F28C3604FD31}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +93,22 @@ Global
 		{A553ED81-487F-49A0-8ACB-DD49BEBBCA48}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
 		{A553ED81-487F-49A0-8ACB-DD49BEBBCA48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A553ED81-487F-49A0-8ACB-DD49BEBBCA48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{49CD08E7-D07D-4952-B4F7-6FDEBEF37240}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Debug_Ubuntu|Any CPU.ActiveCfg = Debug|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Debug_Ubuntu|Any CPU.Build.0 = Debug|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Release_Ubuntu|Any CPU.ActiveCfg = Release|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Release_Ubuntu|Any CPU.Build.0 = Release|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6579337A-A00D-4912-839D-F28C3604FD31}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -268,3 +268,10 @@ jwt.key
 *.bin
 *.ota
 OTA/*
+/AppBrokerASP/OTA
+/AppBrokerASP/broker.db-wal
+/AppBrokerASP/broker.db-shm
+/AppBrokerASP/GeneratedFiles
+/AppBroker.Core/GeneratedFiles/AppBroker.Generators/AppBroker.Generators.NotifyPropertyChangedGenerator
+/AppBrokerASP/elsa.sqlite.db-shm
+/AppBrokerASP/elsa.sqlite.db-wal

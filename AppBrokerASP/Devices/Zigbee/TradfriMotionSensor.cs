@@ -1,26 +1,18 @@
 ﻿using Newtonsoft.Json;
 using SocketIOClient;
 
-namespace AppBrokerASP.Devices.Zigbee
+namespace AppBrokerASP.Devices.Zigbee;
+
+[DeviceName("E1525/E1745")]
+[AppBroker.ClassPropertyChangedAppbroker]
+public partial class TradfriMotionSensor : ZigbeeDevice
 {
-    [DeviceName("E1525/E1745")]
-    public class TradfriMotionSensor : ZigbeeDevice
+    private byte battery;
+    private long noMotion;
+    private bool occupancy;
+
+    public TradfriMotionSensor(long nodeId, SocketIO socket) : base(nodeId, socket)
     {
-        [JsonProperty("available")]
-        public new bool Available { get; set; }
-
-        [JsonProperty("battery")]
-        public byte Battery { get; set; }
-
-        [JsonProperty("no_motion")]
-        public long NoMotion { get; set; }
-
-        [JsonProperty("occupancy")]
-        public bool Occupancy { get; set; }
-
-        public TradfriMotionSensor(long nodeId, SocketIO socket) : base(nodeId, socket)
-        {
-            ShowInApp = true;
-        }
+        ShowInApp = true;
     }
 }

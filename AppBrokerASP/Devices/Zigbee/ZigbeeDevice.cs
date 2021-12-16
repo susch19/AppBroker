@@ -9,159 +9,175 @@ using System.Threading.Tasks;
 
 using static AppBrokerASP.IOBroker.IoBrokerHistory;
 using Newtonsoft.Json;
+using AppBroker.Core.Devices;
+using AppBroker.Elsa.Signaler;
 
-namespace AppBrokerASP.Devices.Zigbee
+namespace AppBrokerASP.Devices.Zigbee;
+
+[AppBroker.ClassPropertyChangedAppbroker]
+public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySignaler, WorkflowDeviceSignaler>
 {
-    public abstract class ZigbeeDevice : Device
+    protected SocketIO Socket { get; }
+
+    private DateTime lastReceived;
+
+    [property: JsonProperty("link_Quality")]
+    private byte linkQuality;
+    private bool available;
+    private string adapterWithId = "";
+
+    [AppBroker.IgnoreField]
+    private readonly ReadOnlyCollection<(string[] Names, PropertyInfo Info)> propertyInfos;
+
+    public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId)
     {
-        protected readonly SocketIO Socket;
-        public DateTime LastReceived { get; set; }
-        [JsonProperty("link_Quality")]
-        public byte LinkQuality { get; set; }
-        public bool Available { get; set; }
-        public string AdapterWithId { get; set; } = "";
+        Socket = socket;
 
-        private readonly ReadOnlyCollection<(string[] Names, PropertyInfo Info)> propertyInfos;
+        propertyInfos =
+            Array.AsReadOnly(
+                GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Concat(typeof(ZigbeeDevice).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                .Select(x =>
+                {
+                    var attr = x.GetCustomAttribute<JsonPropertyAttribute>();
+                    return
+                    (string.IsNullOrEmpty(attr?.PropertyName)
+                    ? (new string[] { x.Name })
+                    : (new string[] { x.Name, attr.PropertyName }),
+                    x);
+                })
+            .ToArray());
+    }
 
-        public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId)
+    public void SetPropFromIoBroker(IoBrokerObject ioBrokerObject, bool setLastReceived)
+    {
+        try
         {
-            Socket = socket;
 
-            propertyInfos =
-                Array.AsReadOnly(
-                    GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .Concat(typeof(ZigbeeDevice).GetProperties(BindingFlags.Public | BindingFlags.Instance))
-                    .Select(x =>
-                    {
-                        var attr = x.GetCustomAttribute<JsonPropertyAttribute>();
-                        return
-                        (string.IsNullOrEmpty(attr?.PropertyName)
-                        ? (new string[] { x.Name })
-                        : (new string[] { x.Name, attr.PropertyName }),
-                        x);
-                    })
-                .ToArray());
+            if (ioBrokerObject.ValueParameter.Value is null)
+                return;
+
+            var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => ioBrokerObject.ValueName.Contains(y, StringComparison.OrdinalIgnoreCase))).Info;
+            if (prop == default)
+                return;
+
+            SetProperty(ioBrokerObject, prop);
+            if (setLastReceived)
+                LastReceived = DateTime.Now;
+            SendDataToAllSubscribers();
+
         }
-
-        public void SetPropFromIoBroker(IoBrokerObject ioBrokerObject, bool setLastReceived)
+        catch (Exception ex)
         {
-            try
-            {
-
-                if (ioBrokerObject.ValueParameter.Value is null)
-                    return;
-
-                var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => ioBrokerObject.ValueName.Contains(y, StringComparison.OrdinalIgnoreCase))).Info;
-                if (prop == default)
-                    return;
-
-                SetProperty(ioBrokerObject, prop);
-                if (setLastReceived)
-                    LastReceived = DateTime.Now;
-                SendDataToAllSubscribers();
-
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex);
-                logger.Info(JsonConvert.SerializeObject(ioBrokerObject, Formatting.Indented));
-            }
+            Logger.Error(ex);
+            Logger.Info(JsonConvert.SerializeObject(ioBrokerObject, Formatting.Indented));
         }
+    }
 
-        private void SetProperty(IoBrokerObject ioBrokerObject, PropertyInfo prop)
+    private void SetProperty(IoBrokerObject ioBrokerObject, PropertyInfo prop)
+    {
+        if ((prop.PropertyType == typeof(float) || prop.PropertyType == typeof(double)) && ioBrokerObject.ValueParameter.Value.ToObject<string>()!.Contains(','))
         {
-            if ((prop.PropertyType == typeof(float) || prop.PropertyType == typeof(double)) && ioBrokerObject.ValueParameter.Value.ToObject<string>()!.Contains(","))
-            {
-                var strValue = ioBrokerObject.ValueParameter.Value.ToObject<string>();
-                if (double.TryParse(strValue, out var val))
-                    prop.SetValue(this, Convert.ChangeType(val, prop.PropertyType));
-            }
-            else if (prop.PropertyType == typeof(sbyte))
-                SetValueOnProperty<sbyte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
-            else if (prop.PropertyType == typeof(byte))
-                SetValueOnProperty<byte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
-            else if (prop.PropertyType == typeof(short))
-                SetValueOnProperty<short>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
-            else if (prop.PropertyType == typeof(ushort))
-                SetValueOnProperty<ushort>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
-            else if (prop.PropertyType == typeof(int))
-                SetValueOnProperty<int>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
-            else if (prop.PropertyType == typeof(uint))
-                SetValueOnProperty<uint>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
-            else
-                prop.SetValue(this, Convert.ChangeType(ioBrokerObject.ValueParameter.Value.ToObject(prop.PropertyType), prop.PropertyType));
+            var strValue = ioBrokerObject.ValueParameter.Value.ToObject<string>();
+            if (double.TryParse(strValue, out var val))
+                prop.SetValue(this, Convert.ChangeType(val, prop.PropertyType));
         }
-
-
-        private void SetValueOnProperty<T>(PropertyInfo prop, long v1) where T : INumber<T>, IMinMaxValue<T>
+        else if (prop.PropertyType == typeof(sbyte))
         {
-            prop.SetValue(this, T.CreateSaturating(v1));
+            SetValueOnProperty<sbyte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
         }
-
-        public async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
+        else if (prop.PropertyType == typeof(byte))
         {
-            var temp = GetHistory(start, end, HistoryType.Temperature);
-            var humidity = GetHistory(start, end, HistoryType.Humidity);
-            var pressure = GetHistory(start, end, HistoryType.Pressure);
+            SetValueOnProperty<byte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+        }
+        else if (prop.PropertyType == typeof(short))
+        {
+            SetValueOnProperty<short>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+        }
+        else if (prop.PropertyType == typeof(ushort))
+        {
+            SetValueOnProperty<ushort>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+        }
+        else if (prop.PropertyType == typeof(int))
+        {
+            SetValueOnProperty<int>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+        }
+        else if (prop.PropertyType == typeof(uint))
+        {
+            SetValueOnProperty<uint>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
+        }
+        else
+        {
+            prop.SetValue(this, Convert.ChangeType(ioBrokerObject.ValueParameter.Value.ToObject(prop.PropertyType), prop.PropertyType));
+        }
+    }
 
-            var result = new List<IoBrokerHistory>
+
+    private void SetValueOnProperty<T>(PropertyInfo prop, long v1) where T : INumber<T>, IMinMaxValue<T> => prop.SetValue(this, T.CreateSaturating(v1));
+
+    public async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
+    {
+        var temp = GetHistory(start, end, HistoryType.Temperature);
+        var humidity = GetHistory(start, end, HistoryType.Humidity);
+        var pressure = GetHistory(start, end, HistoryType.Pressure);
+
+        var result = new List<IoBrokerHistory>
             {
                 await temp,
                 await humidity,
                 await pressure
             };
-            return result;
-        }
+        return result;
+    }
 
-        public async Task<IoBrokerHistory> GetHistory(DateTimeOffset start, DateTimeOffset end, HistoryType type)
+    public async Task<IoBrokerHistory> GetHistory(DateTimeOffset start, DateTimeOffset end, HistoryType type)
+    {
+        var history = new IoBrokerHistory(type.ToString().ToLower());
+
+        var readFromFile = ReadHistoryJSON(start.Date, history);
+        if (readFromFile is not null)
+            return readFromFile;
+
+        history.HistoryRecords = await GetHistoryRecords(start, end, type);
+        return history;
+    }
+
+    public virtual IoBrokerHistory? ReadHistoryJSON(DateTime date, IoBrokerHistory history)
+    {
+        var filePath = Path.Combine(InstanceContainer.Instance.ConfigManager.ZigbeeConfig.HistoryPath, $"{date:yyyyMMdd}", $"history.{AdapterWithId}.{history.PropertyName}.json");
+        if (File.Exists(filePath))
         {
-            var history = new IoBrokerHistory(type.ToString().ToLower());
-
-            var readFromFile = ReadHistoryJSON(start.Date, history);
-            if (readFromFile is not null)
-                return readFromFile;
-
-            history.HistoryRecords = await GetHistoryRecords(start, end, type);
+            var records = Newtonsoft.Json.JsonConvert.DeserializeObject<HistoryRecord[]>(File.ReadAllText(filePath));
+            history.HistoryRecords = records!;
             return history;
         }
+        return null;
+    }
 
-        public virtual IoBrokerHistory? ReadHistoryJSON(DateTime date, IoBrokerHistory history)
-        {
-            var filePath = Path.Combine(InstanceContainer.ConfigManager.ZigbeeConfig.HistoryPath, $"{date:yyyyMMdd}", $"history.{AdapterWithId}.{history.PropertyName}.json");
-            if (File.Exists(filePath))
+    private async Task<HistoryRecord[]> GetHistoryRecords(DateTimeOffset start, DateTimeOffset end, HistoryType type)
+    {
+        var i = AdapterWithId + "." + type.ToString().ToLower();
+
+        var endMs = end.ToUnixTimeMilliseconds();
+        var history = await Socket.Emit("getHistory",
+            i,
+            new
             {
-                var records = Newtonsoft.Json.JsonConvert.DeserializeObject<HistoryRecord[]>(File.ReadAllText(filePath));
-                history.HistoryRecords = records!;
-                return history;
-            }
-            return null;
-        }
-
-        private async Task<HistoryRecord[]> GetHistoryRecords(DateTimeOffset start, DateTimeOffset end, HistoryType type)
-        {
-            var i = AdapterWithId + "." + type.ToString().ToLower();
-
-            var endMs = end.ToUnixTimeMilliseconds();
-            var history = await Socket.Emit("getHistory",
-                i,
-                new
-                {
-                    id = i, // probably not necessary to put it here again
+                id = i, // probably not necessary to put it here again
                     start = start.ToUnixTimeMilliseconds(),
                     //end = end.ToUnixTimeMilliseconds(),
                     ignoreNull = true,
-                    aggregate = "none",
-                    count = 200
-                });
+                aggregate = "none",
+                count = 200
+            });
 
-            return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.ts < endMs).ToArray();
-        }
+        return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.ts < endMs).ToArray();
     }
+}
 
-    public enum HistoryType
-    {
-        Temperature,
-        Humidity,
-        Pressure
-    }
+public enum HistoryType
+{
+    Temperature,
+    Humidity,
+    Pressure
 }
