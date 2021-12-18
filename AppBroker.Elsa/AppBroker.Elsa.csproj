@@ -7,27 +7,27 @@
 		<LangVersion>10</LangVersion>
 		<EnablePreviewFeatures>True</EnablePreviewFeatures>
 	</PropertyGroup>
-	<ItemGroup>
+	<!--<ItemGroup>
 		<Using Include="System" />
 		<Using Include="System.Collections.Generic" />
 		<Using Include="System.Collections.Concurrent" />
 		<Using Include="System.Linq" />
 		<Using Include="System.IO" />
-	</ItemGroup>
+	</ItemGroup>-->
 
 	<ItemGroup>
-		<PackageReference Include="Elsa" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Abstractions" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Activities.Conductor" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Activities.Console" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Activities.Email" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Activities.File" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Activities.Http" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Activities.Temporal.Common" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Scripting.JavaScript" Version="2.4.0-preview.441" />
-		<PackageReference Include="Elsa.Scripting.Liquid" Version="2.4.0-preview.441" />
+		<PackageReference Include="Elsa.Abstractions" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Activities.Conductor" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Activities.Console" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Activities.Email" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Activities.File" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Activities.Http" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Activities.Temporal.Common" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Scripting.JavaScript" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Scripting.Liquid" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa" Version="2.4.0-preview.*" />
 	</ItemGroup>
 
 	<ItemGroup>

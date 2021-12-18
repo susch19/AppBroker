@@ -85,14 +85,14 @@ public class Program
 
         mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
 
-        var webBuilder = WebApplication.CreateBuilder(args);
-        _ = webBuilder.WebHost.UseUrls(listenUrls);
+        var webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath="wwwroot"} );
+        _ = webBuilder.WebHost.UseUrls(listenUrls).UseStaticWebAssets();
+        
         _ = webBuilder.Host.ConfigureLogging(logging =>
                    {
                        _ = logging.ClearProviders();
                        _ = logging.AddNLog();
                    });
-        _= webBuilder.WebHost.UseStaticWebAssets();
         var startup = new Startup(webBuilder.Configuration);
         startup.ConfigureServices(webBuilder.Services);
 
