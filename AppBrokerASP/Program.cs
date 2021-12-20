@@ -1,20 +1,12 @@
-﻿using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Makaretu.Dns;
 
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-
 using NLog.Extensions.Logging;
-using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
+using NLog.Web;
+using NLog;
 
 namespace AppBrokerASP;
 
@@ -28,92 +20,100 @@ public class Program
         private const int port = 5055;
 #endif
 
-    private enum PemStringType
-    {
-        Certificate,
-        RsaPrivateKey
-    }
-
     public static void Main(string[] args)
     {
-        var mainLogger = NLog.LogManager.GetCurrentClassLogger();
-
         Console.OutputEncoding = Encoding.Unicode;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         _ = new InstanceContainer();
 
-        if (InstanceContainer.Instance.ConfigManager.PainlessMeshConfig.Enabled)
-            InstanceContainer.Instance.MeshManager.Start();
+        var mainLogger = LogManager
+            .Setup()
+            .LoadConfigurationFromSection(InstanceContainer.Instance.ConfigManager.Configuration)
+            .GetCurrentClassLogger();
 
-        ushort tempPort = port;
-        if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
-            mainLogger.Info($"ListenPort is not configured in the appsettings serverconfig section and therefore default port {port} will be used, when no port was passed into listen url.");
-        else
-            tempPort = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort;
-
-        string[] listenUrls;
-        if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Any())
+        try
         {
-            listenUrls = new string[InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count];
-            for (int i = 0; i < InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count; i++)
+            if (InstanceContainer.Instance.ConfigManager.PainlessMeshConfig.Enabled)
+                InstanceContainer.Instance.MeshManager.Start();
+
+            ushort tempPort = port;
+            if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
+                mainLogger.Info($"ListenPort is not configured in the appsettings serverconfig section and therefore default port {port} will be used, when no port was passed into listen url.");
+            else
+                tempPort = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort;
+
+            string[] listenUrls;
+            if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Any())
             {
-                string? item = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls[i];
-                try
+                listenUrls = new string[InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count];
+                for (int i = 0; i < InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count; i++)
                 {
-                    var builder = new UriBuilder(item)
+                    string? item = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls[i];
+                    try
                     {
-                        //TODO only override default ports? How do we advertise multiple ports or will there be a main port, multiple advertisments or what is the plan?
-                        //if ((builder.Scheme == "http" && builder.Port == 80) || (builder.Scheme == "https" && builder.Port == 443))
-                        //{
-                        Port = tempPort
-                    };
-                    //}
-                    listenUrls[i] = builder.ToString();
-                }
-                catch (UriFormatException ex)
-                {
-                    mainLogger.Error($"Error during process of {item}", ex);
+                        var builder = new UriBuilder(item)
+                        {
+                            //TODO only override default ports? How do we advertise multiple ports or will there be a main port, multiple advertisments or what is the plan?
+                            //if ((builder.Scheme == "http" && builder.Port == 80) || (builder.Scheme == "https" && builder.Port == 443))
+                            //{
+                            Port = tempPort
+                        };
+                        //}
+                        listenUrls[i] = builder.ToString();
+                    }
+                    catch (UriFormatException ex)
+                    {
+                        mainLogger.Error($"Error during process of {item}", ex);
+                    }
                 }
             }
+            else
+            {
+                listenUrls = new[] { $"http://[::1]:{tempPort}", $"http://0.0.0.0:{tempPort}" };
+            }
+            AdvertiseServerPortsViaMDNS(tempPort);
+
+            mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
+
+            var webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath = "wwwroot" });
+            _ = webBuilder.WebHost.UseUrls(listenUrls).UseStaticWebAssets();
+
+            _ = webBuilder.Host.ConfigureLogging(logging =>
+                       {
+                           _ = logging.ClearProviders();
+                           _ = logging.AddNLog();
+                       });
+            var startup = new Startup(webBuilder.Configuration);
+            startup.ConfigureServices(webBuilder.Services);
+
+
+            var app = webBuilder.Build();
+
+            _ = app.UseWebSockets();
+            _ = app.UseCors("CorsPolicy");
+            _ = app.UseRouting();
+            _ = app.UseStaticFiles();
+
+            _ = app.UseEndpoints(e =>
+            {
+                _ = e.MapFallbackToPage("/_Host");
+                _ = e.MapHub<SmartHome>("/SmartHome");
+                _ = e.MapControllers();
+
+            });
+
+            app.Run();
         }
-        else
+        catch (Exception ex)
         {
-            listenUrls = new[] { $"http://[::1]:{tempPort}", $"http://0.0.0.0:{tempPort}" };
+            mainLogger.Error(ex, "Stopped program because of exception");
+            throw;
         }
-        AdvertiseServerPortsViaMDNS(tempPort);
-
-        mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
-
-        var webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath="wwwroot"} );
-        _ = webBuilder.WebHost.UseUrls(listenUrls).UseStaticWebAssets();
-        
-        _ = webBuilder.Host.ConfigureLogging(logging =>
-                   {
-                       _ = logging.ClearProviders();
-                       _ = logging.AddNLog();
-                   });
-        var startup = new Startup(webBuilder.Configuration);
-        startup.ConfigureServices(webBuilder.Services);
-
-
-        var app = webBuilder.Build();
-
-        _ = app.UseWebSockets();
-        _ = app.UseCors("CorsPolicy");
-        _ = app.UseRouting();
-        _ = app.UseStaticFiles();
-
-        _ = app.UseEndpoints(e =>
+        finally
         {
-            _ = e.MapFallbackToPage("/_Host");
-            _ = e.MapHub<SmartHome>("/SmartHome");
-            _ = e.MapControllers();
-
-        });
-
-        app.Run();
-
+            NLog.LogManager.Shutdown();
+        }
     }
 
     private static void AdvertiseServerPortsViaMDNS(ushort port)
