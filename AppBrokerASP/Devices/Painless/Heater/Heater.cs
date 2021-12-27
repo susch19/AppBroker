@@ -206,7 +206,6 @@ public partial class Heater : PainlessDevice, IDisposable
 
     public override Task UpdateFromApp(Command command, List<JToken> parameters)
     {
-
         Logger.Debug("UpdateFromApp " + command + " <> " + parameters.ToJson());
         BinarySmarthomeMessage msg;
         switch (command)
@@ -239,7 +238,7 @@ public partial class Heater : PainlessDevice, IDisposable
     public override void OptionsFromApp(Command command, List<JToken> parameters)
     {
 
-        Logger.Debug("OptionsFromApp " + command + " <> " + parameters.ToJson());
+        Logger.Debug($"{Id}|OptionsFromApp {command} <> {parameters.ToJson()}");
         BinarySmarthomeMessage msg;
 
         switch (command)
@@ -286,7 +285,13 @@ public partial class Heater : PainlessDevice, IDisposable
                 item.Device = d;
         }
 
-        var oldConfs = ((IEnumerable<HeaterConfigModel>)cont.HeaterConfigs).Where(x => x.Device!.Id == Id).ToList();
+        var oldConfs 
+            = cont
+            .HeaterConfigs
+            .Include(x => x.Device)
+            .Where(x => x.Device == null || x.Device.Id == Id)
+            .ToList();
+
         if (oldConfs.Count > 0)
         {
             cont.RemoveRange(oldConfs);

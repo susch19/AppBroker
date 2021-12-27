@@ -35,6 +35,7 @@ public abstract partial class WorkflowDevice<TPropertySignaler, TDeviceSignaler>
         typeName = GetType().Name;
         isConnected = true;
         Logger = NLog.LogManager.GetCurrentClassLogger();
+        Logger = Logger.WithProperty(nameof(Id), Id);
         friendlyName = "";
     }
 

@@ -116,6 +116,7 @@ public class DeviceManager : IDisposable, IDeviceManager
 
             if (!DbProvider.AddDeviceToDb(newDevice))
                 _ = DbProvider.MergeDeviceWithDbData(newDevice);
+
         }
     }
 

@@ -12,6 +12,7 @@ using System.Linq;
 using Elsa.Metadata;
 using System.Reflection;
 using AppBrokerASP;
+using Elsa.Providers.WorkflowStorage;
 
 namespace AppBroker.Activities;
 
@@ -23,10 +24,10 @@ namespace AppBroker.Activities;
 public class PropertyChangedTrigger : Activity, IActivityPropertyOptionsProvider
 {
     [ActivityInput(Label = "Property Name", OptionsProvider = typeof(PropertyChangedTrigger), UIHint = ActivityInputUIHints.Dropdown,
-      SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.Json, SyntaxNames.JavaScript, SyntaxNames.Liquid })]
+      SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.Json, SyntaxNames.JavaScript, SyntaxNames.Liquid}, DisableWorkflowProviderSelection = true, DefaultWorkflowStorageProvider = TransientWorkflowStorageProvider.ProviderName)]
     public string PropertyName { get; set; } = default!;
 
-    [ActivityOutput]
+    [ActivityOutput(DisableWorkflowProviderSelection = true, DefaultWorkflowStorageProvider = TransientWorkflowStorageProvider.ProviderName)]
     public PropertyChangedEvent? Output { get; set; }
 
     protected override IActivityExecutionResult OnExecute(ActivityExecutionContext context)
