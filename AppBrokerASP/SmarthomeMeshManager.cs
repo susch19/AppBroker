@@ -7,6 +7,7 @@ using AppBroker.Core;
 using AppBrokerASP.Devices.Painless;
 
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
 
@@ -55,7 +56,12 @@ public class SmarthomeMeshManager : IDisposable
         WhoIAmSendTime = new();
         knownNodeIds = new() { new NodeSync(nodeID, 0), new NodeSync(0, 0) };
         this.listenPort = listenPort;
-
+#if DEBUG
+        Task.Delay(500).ContinueWith(_ =>
+        {
+            this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.4"), Encoding.UTF8.GetBytes("heater")));
+        });
+#endif
     }
 
     public void Start()

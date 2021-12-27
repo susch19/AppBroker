@@ -21,6 +21,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         UpdateManager = new UpdateManager();
         MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.ListenPort);
         var localDeviceManager = new DeviceManager();
+
         DeviceManager = localDeviceManager;
         DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);
     }

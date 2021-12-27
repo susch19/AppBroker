@@ -4,6 +4,8 @@ namespace AppBroker.Core.Devices;
 
 public abstract class Device
 {
+    public IReadOnlyCollection<string> TypeNames { get; }
+
     public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
 
     public abstract long Id { get; set; }
@@ -26,9 +28,21 @@ public abstract class Device
         Initialized = false;
         Id = nodeId;
         TypeName = GetType().Name;
+        TypeNames = GetBaseTypeNames(GetType()).ToArray();
         IsConnected = true;
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
+    }
+
+    private IEnumerable<string> GetBaseTypeNames(Type type)
+    {
+        yield return type.Name;
+        if(type.BaseType is null || type.BaseType == typeof(object) )
+            yield break;
+        foreach (var item in GetBaseTypeNames(type.BaseType))
+        {
+            yield return item;
+        }
     }
 
     public virtual Task UpdateFromApp(Command command, List<JToken> parameters) => Task.CompletedTask;

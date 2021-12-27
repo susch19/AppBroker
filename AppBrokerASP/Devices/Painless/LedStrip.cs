@@ -1,5 +1,4 @@
-﻿using System.Threading.Tasks;
-
+﻿
 using AppBroker.Core;
 
 using Newtonsoft.Json.Linq;
@@ -12,8 +11,6 @@ namespace AppBrokerASP.Devices.Painless;
 [AppBroker.ClassPropertyChangedAppbroker]
 public partial class LedStrip : PainlessDevice
 {
-    //{"id":763955710, "m":"Update", "c":"Mode", "p":["SingleColor",55,93,88,30,0,4278190080,1]}
-
     private string colorMode = "";
     private int delay;
     private int numberOfLeds;
