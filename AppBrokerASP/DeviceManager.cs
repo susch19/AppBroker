@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -231,9 +231,17 @@ public class DeviceManager : IDisposable, IDeviceManager
 
             return;
         }
+
+        const int maxUrlLength = 1900;
+
+        var baseStateRequest = @$"{Config.HttpUrl}/get/";
         var idRequest = @$"{Config.HttpUrl}/get/";
+
         var idsAlreadyInRequest = new List<ulong>();
-        var stateRequest = @$"{Config.HttpUrl}/get/";
+        var requests = new List<string>();
+
+        var currentStateRequest = baseStateRequest;
+
         foreach (var item in ioBrokerObject)
         {
             if (item is null)
@@ -249,16 +257,33 @@ public class DeviceManager : IDisposable, IDeviceManager
                         idRequest += string.Join('.', matches.Take(3)) + ",";
                         idsAlreadyInRequest.Add(id);
                     }
-                    stateRequest += item._id + ",";
+                    var addItem = item._id + ",";
+
+                    if (currentStateRequest.Length + addItem.Length > maxUrlLength)
+                    {
+                        requests.Add(currentStateRequest);
+                        currentStateRequest = baseStateRequest;
+                    }
+
+                    currentStateRequest += addItem;
                 }
             }
         }
 
+        if (currentStateRequest != baseStateRequest)
+            requests.Add(currentStateRequest);
+
         var content = await http.GetStringAsync(idRequest);
 
         var getDeviceResponses = JsonConvert.DeserializeObject<IoBrokerGetDeviceResponse[]>(content)!;
-        content = await http.GetStringAsync(stateRequest);
-        var deviceStates = JsonConvert.DeserializeObject<IoBrokerStateResponse[]>(content)!;
+
+        var deviceStates = new List<IoBrokerStateResponse>();
+
+        foreach (var stateRequest in requests)
+        {
+            content = await http.GetStringAsync(stateRequest);
+            deviceStates.AddRange(JsonConvert.DeserializeObject<IoBrokerStateResponse[]>(content)!);
+        }
 
         foreach (var deviceRes in getDeviceResponses)
         {
