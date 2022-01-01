@@ -45,8 +45,8 @@
 		<PackageReference Include="Azura" Version="0.7.2" />
 		<PackageReference Include="Azura.Generator" Version="0.7.2" />
 
-		<PackageReference Include="Elsa.Designer.Components.Web" Version="2.4.0-preview.*" />
-		<PackageReference Include="Elsa.Server.Api" Version="2.4.0-preview.*" />
+		<PackageReference Include="Elsa.Designer.Components.Web" Version="2.4.0.1" />
+		<PackageReference Include="Elsa.Server.Api" Version="2.4.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
