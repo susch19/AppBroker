@@ -7,6 +7,7 @@ using Makaretu.Dns;
 using NLog.Extensions.Logging;
 using NLog.Web;
 using NLog;
+using AppBroker.Core.DynamicUI;
 
 namespace AppBrokerASP;
 
@@ -26,6 +27,8 @@ public class Program
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         _ = new InstanceContainer();
+
+        _=DeviceLayoutService.InstanceDeviceLayouts;
 
         var mainLogger = LogManager
             .Setup()

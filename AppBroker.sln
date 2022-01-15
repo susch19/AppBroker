@@ -29,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.Core", "AppBroker.Core\AppBroker.Core.csproj", "{6579337A-A00D-4912-839D-F28C3604FD31}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppBroker.PainlessMesh.Elsa", "AppBroker.PainlessMesh.Elsa\AppBroker.PainlessMesh.Elsa.csproj", "{09DAEE5A-8C1C-4A31-B26F-6DD5AF782A0C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.PainlessMesh.Elsa", "AppBroker.PainlessMesh.Elsa\AppBroker.PainlessMesh.Elsa.csproj", "{09DAEE5A-8C1C-4A31-B26F-6DD5AF782A0C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

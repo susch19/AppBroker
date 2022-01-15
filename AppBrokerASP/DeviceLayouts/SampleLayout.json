@@ -1,0 +1,104 @@
+{
+  "TypeName": "Demo",
+  "Ids": [
+    -1,
+    -2
+  ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "PropName",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 22.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "italic"
+        },
+        "RowNr": null,
+        "UnitOfMeasurement": "",
+        "SpecialType": "none"
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "PropNameUpdateable",
+        "Order": 0,
+        "EditInfo": {
+          "EditType": "Update",
+          "EditCommand": 14
+        },
+        "TextStyle": {
+          "FontSize": 12.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "PropNameNotUpdable",
+        "Order": 1,
+        "EditInfo": null,
+        "TextStyle": null,
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "PropNameTempCurrent",
+        "Order": 2,
+        "EditInfo": null,
+        "TextStyle": {
+          "FontSize": 12.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 1,
+        "SpecialType": "current"
+      },
+      {
+        "Name": "PropNameTempTarget",
+        "Order": 3,
+        "EditInfo": {
+          "EditType": "Update",
+          "EditCommand": 6
+        },
+        "TextStyle": {
+          "FontSize": 12.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 1,
+        "SpecialType": "target"
+      }
+    ],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "DefaultIcon",
+        "Order": 1,
+        "LinkedDevice": null
+      },
+      {
+        "Id": 1,
+        "IconName": "IconName",
+        "Order": 2,
+        "LinkedDevice": null
+      },
+      {
+        "Id": 2,
+        "IconName": "IconName",
+        "Order": 3,
+        "LinkedDevice": {
+          "DeviceIdPropertyName": "LinkedDeviceIdPropertyName",
+          "DeviceType": "DeviceTypeName"
+        }
+      }
+    ]
+  }
+}

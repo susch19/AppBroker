@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 
 using AppBroker.Core;
 using AppBroker.Core.Devices;
+using AppBroker.Core.DynamicUI;
 
 using AppBrokerASP.Database;
 using AppBrokerASP.Devices;
@@ -23,8 +24,8 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public override Task OnConnectedAsync()
     {
-        foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
-            item.SendLastData(Clients.Caller);
+        //foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
+        //    item.SendLastData(Clients.Caller);
 
         return base.OnConnectedAsync();
     }
@@ -142,4 +143,17 @@ public class SmartHome : Hub<ISmartHomeClient>
     }
 
     public void UpdateTime() => InstanceContainer.Instance.MeshManager.UpdateTime();
+
+    public byte[] GetIconByTypeName(string typename) => InstanceContainer.Instance.IconService.GetBestFitIcon(typename);
+    public byte[] GetIconByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName);
+
+    public byte[] GetIconByDeviceId(long deviceId) => InstanceContainer.Instance.IconService.GetBestFitIcon(InstanceContainer.Instance.DeviceManager.Devices[deviceId].TypeName);
+
+    public void ReloadDeviceLayouts() => DeviceLayoutService.ReloadLayouts();
+    public DeviceLayout? GetDeviceLayoutByName(string typename) => DeviceLayoutService.GetDeviceLayout(typename);
+    public DeviceLayout? GetDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDeviceLayout(id);
+    public DashboardDeviceLayout? GetDashboardDeviceLayoutByName(string typename) => DeviceLayoutService.GetDashboardDeviceLayout(typename);
+    public DashboardDeviceLayout? GetDashboardDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDashboardDeviceLayout(id);
+    public DetailDeviceLayout? GetDetailDeviceLayoutByName(string typename) => DeviceLayoutService.GetDetailDeviceLayout(typename);
+    public DetailDeviceLayout? GetDetailDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDetailDeviceLayout(id);
 }

@@ -1,4 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using AppBroker.Core.DynamicUI;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace AppBroker.Core.Devices;
 
@@ -6,21 +10,24 @@ public abstract class Device
 {
     public IReadOnlyCollection<string> TypeNames { get; }
 
+    [JsonIgnore]
     public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
 
     public abstract long Id { get; set; }
 
     public abstract string TypeName { get; set; }
 
+    [JsonIgnore]
     public abstract bool ShowInApp { get; set; }
 
     public abstract string FriendlyName { get; set; }
 
     public abstract bool IsConnected { get; set; }
 
-
+    [JsonIgnore]
     public bool Initialized { get; set; }
 
+    [JsonIgnore]
     protected NLog.Logger Logger { get; set; }
 
     public Device(long nodeId)
@@ -32,17 +39,18 @@ public abstract class Device
         IsConnected = true;
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
+       
     }
 
     private IEnumerable<string> GetBaseTypeNames(Type type)
     {
         yield return type.Name;
-        if(type.BaseType is null || type.BaseType == typeof(object) )
+
+        if (type.BaseType is null || type.BaseType == typeof(object))
             yield break;
+
         foreach (var item in GetBaseTypeNames(type.BaseType))
-        {
             yield return item;
-        }
     }
 
     public virtual Task UpdateFromApp(Command command, List<JToken> parameters) => Task.CompletedTask;
@@ -56,5 +64,4 @@ public abstract class Device
 
     public virtual void StopDevice() => IsConnected = false;
     public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
-
 }
