@@ -2,6 +2,7 @@
 
 public enum Command
 {
+    None,
     Off,
     On,
     WhoIAm,

@@ -15,13 +15,3 @@ public enum PackageType
     BRIDGE = 255,
 
 };
-
-
-
-public enum MessageType
-{
-    Get,
-    Update,
-    Options,
-    Relay
-};

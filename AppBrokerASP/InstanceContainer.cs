@@ -1,4 +1,6 @@
-﻿using AppBrokerASP.Configuration;
+﻿using AppBroker.Core;
+
+using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices.Elsa;
 
 using PainlessMesh.Ota;
@@ -13,10 +15,12 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     public IUpdateManager UpdateManager { get; }
     public ConfigManager ConfigManager { get; }
     public IDeviceManager DeviceManager { get; }
+    public IconService IconService { get; }
 
     public InstanceContainer()
     {
         IInstanceContainer.Instance = Instance = this;
+        IconService = new IconService();
         ConfigManager = new ConfigManager();
         UpdateManager = new UpdateManager();
         MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.ListenPort);

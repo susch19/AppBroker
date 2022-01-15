@@ -17,7 +17,7 @@ public abstract partial class PainlessDevice : WorkflowDevice<WorkflowPropertySi
 {
     private string iP = "";
 
-    private uint firmwareVersionNr = 0;
+    private uint firmwareVersionNr;
     public string FirmwareVersion => "Firmware Version: " + FirmwareVersionNr;
     protected string LogName => Id + "/" + FriendlyName;
     private string deviceName;

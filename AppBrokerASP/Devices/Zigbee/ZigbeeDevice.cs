@@ -1,16 +1,18 @@
-using AppBrokerASP.IOBroker;
-using AppBrokerASP.Extension;
-
-using SocketIOClient;
-using System.Collections.ObjectModel;
-using System.Reflection;
-
-using System.Threading.Tasks;
-
-using static AppBrokerASP.IOBroker.IoBrokerHistory;
-using Newtonsoft.Json;
 using AppBroker.Core.Devices;
 using AppBroker.Elsa.Signaler;
+
+using AppBrokerASP.Extension;
+using AppBrokerASP.IOBroker;
+
+using Newtonsoft.Json;
+
+using SocketIOClient;
+
+using System.Collections.ObjectModel;
+using System.Globalization;
+using System.Reflection;
+
+using static AppBrokerASP.IOBroker.IoBrokerHistory;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
@@ -19,7 +21,10 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
 {
     protected SocketIO Socket { get; }
 
+    //[property: JsonIgnore()]
     private DateTime lastReceived;
+
+    public string LastReceivedFormatted => lastReceived.ToString("dd.MM.yyyy HH:mm:ss");
 
     [property: JsonProperty("link_Quality")]
     private byte linkQuality;
@@ -112,8 +117,21 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
         }
     }
 
-
-    private void SetValueOnProperty<T>(PropertyInfo prop, long v1) where T : INumber<T>, IMinMaxValue<T> => prop.SetValue(this, T.CreateSaturating(v1));
+    [AppBroker.IgnoreField]
+    private Dictionary<Type, MethodInfo> createSaturatingMethods = new();
+    private void SetValueOnProperty<T>(PropertyInfo prop, long v1) // where T : INumber<T>, IMinMaxValue<T> 
+    // => prop.SetValue(this, resT.CreateSaturating(v1));
+    {
+        if (!createSaturatingMethods.TryGetValue(typeof(T), out var method))
+        {
+            var methods = typeof(T).GetRuntimeMethods();
+            var satMethod = methods.FirstOrDefault(x => x.Name.EndsWith("CreateSaturating"));
+            method = satMethod!.MakeGenericMethod(typeof(T));
+            createSaturatingMethods[typeof(T)] = method;
+        }
+        var res = method!.Invoke(null, new object[] { Convert.ChangeType(v1, typeof(T)) });
+        prop.SetValue(this, res);
+    }
 
     public async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
     {
@@ -164,9 +182,9 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
             new
             {
                 id = i, // probably not necessary to put it here again
-                    start = start.ToUnixTimeMilliseconds(),
-                    //end = end.ToUnixTimeMilliseconds(),
-                    ignoreNull = true,
+                start = start.ToUnixTimeMilliseconds(),
+                //end = end.ToUnixTimeMilliseconds(),
+                ignoreNull = true,
                 aggregate = "none",
                 count = 200
             });
