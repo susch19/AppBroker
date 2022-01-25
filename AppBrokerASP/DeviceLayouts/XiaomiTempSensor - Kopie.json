@@ -1,14 +1,16 @@
 {
-  "UniqueName": "TempSensorLayout",
-  "TypeName": "XiaomiTempSensor",
-  "Ids": [],
+  "UniqueName": "SaschaTempSensorLayout",
+  "TypeName": "",
+  "Ids": [
+    6066005697233659
+  ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 25.0,
+          "FontSize": 20.0,
           "FontWeight": "bold"
         },
         "RowNr": 0,
@@ -19,7 +21,7 @@
         "Order": 1,
         "RowNr": 1,
         "TextStyle": {
-          "FontSize": 14.0,
+          "FontSize": 10.0,
           "FontWeight": "normal"
         },
         "UnitOfMeasurement": " %"
@@ -29,7 +31,7 @@
         "Order": 2,
         "RowNr": 1,
         "TextStyle": {
-          "FontSize": 14.0,
+          "FontSize": 10.0,
           "FontWeight": "normal"
         },
         "UnitOfMeasurement": " kpa"

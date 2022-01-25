@@ -1,13 +1,18 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
-using PainlessMesh;
+﻿using AppBroker.Core;
+
 using AppBrokerASP.Database;
 using AppBrokerASP.Database.Model;
-using Newtonsoft.Json.Linq;
-using Microsoft.EntityFrameworkCore;
 using AppBrokerASP.Devices.Zigbee;
+
+using Microsoft.EntityFrameworkCore;
+
+using Newtonsoft.Json.Linq;
+
+using PainlessMesh;
+
 using System.Diagnostics.CodeAnalysis;
-using AppBroker.Core;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless.Heater;
 
@@ -31,7 +36,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
     public Heater(long id, ByteLengthList parameters) : base(id)
     {
-        using var cont = DbProvider.BrokerDbContext;
+        using BrokerDbContext? cont = DbProvider.BrokerDbContext;
         timeTemps.AddRange(
             cont.HeaterConfigs
             .Include(x => x.Device)
@@ -43,7 +48,7 @@ public partial class Heater : PainlessDevice, IDisposable
         try
         {
 
-            var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
+            DeviceModel? heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
             var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent!.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
             Logger.Debug($"Heater {LogName} has {mappings?.Count} mappings");
             if (mappings?.Count > 0)
@@ -73,7 +78,7 @@ public partial class Heater : PainlessDevice, IDisposable
         {
             try
             {
-                var s = parameters[3];
+                byte[]? s = parameters[3];
                 byte[] s2 = GetSendableTimeTemps(timeTemps);
 
                 if (!s.SequenceEqual(s2))
@@ -102,7 +107,7 @@ public partial class Heater : PainlessDevice, IDisposable
         while (mappings.Count > 0)
         {
             var toRemove = new List<DeviceMappingModel>();
-            foreach (var mapping in mappings)
+            foreach (DeviceMappingModel? mapping in mappings)
             {
 
                 if (mapping is not null && mapping.Child is null)
@@ -111,7 +116,7 @@ public partial class Heater : PainlessDevice, IDisposable
                     break;
                 }
 
-                var device = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == mapping?.Child?.Id).Value;
+                AppBroker.Core.Devices.Device? device = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == mapping?.Child?.Id).Value;
                 if (device != default)
                 {
                     if (device is XiaomiTempSensor sensor)
@@ -128,7 +133,7 @@ public partial class Heater : PainlessDevice, IDisposable
                 }
             }
 
-            foreach (var mapping in toRemove)
+            foreach (DeviceMappingModel? mapping in toRemove)
             {
                 _ = mappings.Remove(mapping);
             }
@@ -186,7 +191,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void HandleTimeTempMessageUpdate(byte[] messages)
     {
-        var message = messages.AsSpan();
+        Span<byte> message = messages.AsSpan();
         var ttm = TimeTempMessageLE.LoadFromBinary(message[0..3]);
         Temperature = ttm;
         ttm = TimeTempMessageLE.LoadFromBinary(message[3..6]);
@@ -211,14 +216,15 @@ public partial class Heater : PainlessDevice, IDisposable
         switch (command)
         {
             case Command.Temp:
-                var temp = (float)parameters[0];
+                float temp = (float)parameters[0];
                 var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
                 //logger.Debug("Send new ttm: " + )
                 msg = new((uint)Id, MessageType.Update, command, ttm.ToBinary());
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
             case Command.DeviceMapping:
-                UpdateDeviceMappingInDb((long)parameters[0], (long)parameters[1]);
+                if (UpdateDeviceMappingInDb((long)parameters[0], (long)parameters[1]))
+                    SendDataToAllSubscribers();
                 break;
             case Command.Off:
                 msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
@@ -245,12 +251,12 @@ public partial class Heater : PainlessDevice, IDisposable
         {
             case Command.Temp:
             {
-                var hc = parameters.Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
+                IOrderedEnumerable<HeaterConfig>? hc = parameters.Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
 
                 UpdateDB(hc);
 
-                var ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
-                var s = ttm.SelectMany(x => x.ToBinary()).ToArray();
+                IEnumerable<TimeTempMessageLE>? ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
+                byte[]? s = ttm.SelectMany(x => x.ToBinary()).ToArray();
 
                 msg = new((uint)Id, MessageType.Options, command, s);
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
@@ -277,15 +283,15 @@ public partial class Heater : PainlessDevice, IDisposable
         timeTemps.AddRange(hc);
 
         var models = hc.Select(x => (HeaterConfigModel)x).ToList();
-        using var cont = DbProvider.BrokerDbContext;
-        var d = cont.Devices.FirstOrDefault(x => x.Id == Id);
+        using BrokerDbContext? cont = DbProvider.BrokerDbContext;
+        DeviceModel? d = cont.Devices.FirstOrDefault(x => x.Id == Id);
         if (d is not null)
         {
-            foreach (var item in models)
+            foreach (HeaterConfigModel? item in models)
                 item.Device = d;
         }
 
-        var oldConfs 
+        var oldConfs
             = cont
             .HeaterConfigs
             .Include(x => x.Device)
@@ -301,19 +307,19 @@ public partial class Heater : PainlessDevice, IDisposable
         _ = cont.SaveChanges();
     }
 
-    private void UpdateDeviceMappingInDb(long tempId, long oldId)
+    private bool UpdateDeviceMappingInDb(long tempId, long oldId)
     {
-        using var cont = DbProvider.BrokerDbContext;
-        var heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
-        var tempSensor = cont.Devices.FirstOrDefault(x => x.Id == tempId);
-        var sensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == tempId).Value;
+        using BrokerDbContext? cont = DbProvider.BrokerDbContext;
+        DeviceModel? heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
+        DeviceModel? tempSensor = cont.Devices.FirstOrDefault(x => x.Id == tempId);
+        AppBroker.Core.Devices.Device? sensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == tempId).Value;
         if (heater == default || tempSensor == default || sensor == default)
-            return;
+            return false;
 
-        var oldMappings = ((IEnumerable<DeviceMappingModel>)cont.DeviceToDeviceMappings).Where(x => x.Parent!.Id == Id);
-        foreach (var oldMapping in oldMappings)
+        IEnumerable<DeviceMappingModel>? oldMappings = ((IEnumerable<DeviceMappingModel>)cont.DeviceToDeviceMappings).Where(x => x.Parent!.Id == Id);
+        foreach (DeviceMappingModel? oldMapping in oldMappings)
         {
-            var oldsensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;
+            AppBroker.Core.Devices.Device? oldsensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;
             if (oldsensor is not null and XiaomiTempSensor xts)
                 xts.TemperatureChanged -= XiaomiTempSensorTemperaturChanged;
             _ = cont.Remove(oldMapping);
@@ -330,6 +336,7 @@ public partial class Heater : PainlessDevice, IDisposable
             xiaomiTempSensor.TemperatureChanged += XiaomiTempSensorTemperaturChanged;
         XiaomiTempSensor = sensor.Id;
         _ = cont.SaveChanges();
+        return true;
     }
 
     private void XiaomiTempSensorTemperaturChanged(object? sender, float temp)
@@ -357,7 +364,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void SendLastTempData()
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out var device)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out AppBroker.Core.Devices.Device? device)
                 && device is XiaomiTempSensor sensor
                 && sensor.Temperature > 5f)
         {

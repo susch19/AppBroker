@@ -15,20 +15,22 @@ public static class DeviceLayoutService
     public static Dictionary<string, DeviceLayout> TypeDeviceLayouts = new();
     public static Dictionary<long, DeviceLayout> InstanceDeviceLayouts = new();
 
-    private static string DemoFilePath = Path.Combine("DeviceLayouts", "SampleLayout.json");
+    private static readonly string DemoFilePath = Path.Combine("DeviceLayouts", "SampleLayout.json");
     private static readonly FileSystemWatcher fileSystemWatcher;
 
     static DeviceLayoutService()
     {
-        fileSystemWatcher = new FileSystemWatcher(new DirectoryInfo("DeviceLayouts").FullName, "*.json");
-        fileSystemWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite;
+        fileSystemWatcher = new FileSystemWatcher(new DirectoryInfo("DeviceLayouts").FullName, "*.json")
+        {
+            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+        };
         fileSystemWatcher.Changed += FileChanged;
         fileSystemWatcher.Created += FileChanged;
         fileSystemWatcher.EnableRaisingEvents = true;
 
         if (!File.Exists(DemoFilePath))
         {
-            var deviceLayout = new DeviceLayout("Demo",
+            var deviceLayout = new DeviceLayout("DemoLayout", "Demo",
                 new() { -1, -2 },
                 new(new()
                 {
@@ -48,7 +50,7 @@ public static class DeviceLayoutService
                     new(2, "IconName", 3, new("LinkedDeviceIdPropertyName", "DeviceTypeName")),
                 },
                 new() { }));
-            var serializedDemo = JsonConvert.SerializeObject(deviceLayout, Formatting.Indented);
+            string? serializedDemo = JsonConvert.SerializeObject(deviceLayout, Formatting.Indented);
             File.WriteAllText(DemoFilePath, serializedDemo);
         }
         ReloadLayouts();
@@ -56,8 +58,9 @@ public static class DeviceLayoutService
 
     private static void FileChanged(object sender, FileSystemEventArgs e)
     {
-        _ = Task.Delay(100).ContinueWith((t) => { 
-            var layout = JsonConvert.DeserializeObject<DeviceLayout>(File.ReadAllText(e.FullPath));
+        _ = Task.Delay(100).ContinueWith((t) =>
+        {
+            DeviceLayout? layout = JsonConvert.DeserializeObject<DeviceLayout>(File.ReadAllText(e.FullPath));
 
             if (layout is null)
                 return;
@@ -66,17 +69,17 @@ public static class DeviceLayoutService
 
             if (layout.Ids is not null)
             {
-                foreach (var id in layout.Ids)
+                foreach (long id in layout.Ids)
                 {
                     InstanceDeviceLayouts[id] = layout;
                 }
             }
 
-            foreach (var device in IInstanceContainer.Instance.DeviceManager.Devices)
+            foreach (KeyValuePair<long, Devices.Device> device in IInstanceContainer.Instance.DeviceManager.Devices)
             {
                 if (layout.Ids?.Contains(device.Key) ?? false)
                 {
-                    foreach (var sub in device.Value.Subscribers)
+                    foreach (Subscriber? sub in device.Value.Subscribers)
                     {
                         _ = sub.SmarthomeClient.UpdateUi(layout);
                     }
@@ -84,7 +87,7 @@ public static class DeviceLayoutService
                 }
                 if (layout.TypeName is not null && device.Value.TypeNames.Contains(layout.TypeName))
                 {
-                    foreach (var sub in device.Value.Subscribers)
+                    foreach (Subscriber? sub in device.Value.Subscribers)
                     {
                         _ = sub.SmarthomeClient.UpdateUi(layout);
                     }
@@ -96,16 +99,16 @@ public static class DeviceLayoutService
 
     public static void ReloadLayouts()
     {
-        var files = Directory.GetFiles("DeviceLayouts", "*.json");
+        string[]? files = Directory.GetFiles("DeviceLayouts", "*.json");
 
         TypeDeviceLayouts.Clear();
         InstanceDeviceLayouts.Clear();
-        foreach (var file in files)
+        foreach (string? file in files)
         {
             // TODO: try catch
             try
             {
-                var layout = Newtonsoft.Json.JsonConvert.DeserializeObject<DeviceLayout>(File.ReadAllText(file));
+                DeviceLayout? layout = Newtonsoft.Json.JsonConvert.DeserializeObject<DeviceLayout>(File.ReadAllText(file));
 
                 if (layout is null)
                     continue;
@@ -117,7 +120,7 @@ public static class DeviceLayoutService
 
                 if (layout.Ids is not null)
                 {
-                    foreach (var id in layout.Ids)
+                    foreach (long id in layout.Ids)
                     {
                         if (InstanceDeviceLayouts.ContainsKey(id))
                             continue;
@@ -134,19 +137,21 @@ public static class DeviceLayoutService
     }
 
     public static DetailDeviceLayout? GetDetailDeviceLayout(string typeName)
-        => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret.DetailDeviceLayout : null;
+        => TypeDeviceLayouts.TryGetValue(typeName, out DeviceLayout? ret) ? ret.DetailDeviceLayout : null;
 
     public static DetailDeviceLayout? GetDetailDeviceLayout(long deviceId)
     {
-        if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
+        if (InstanceDeviceLayouts.TryGetValue(deviceId, out DeviceLayout? ret))
         {
             return ret.DetailDeviceLayout;
         }
-        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
         {
-            if (InstanceDeviceLayouts.TryGetValue(device.Id, out ret))
+            foreach (string typeName in device.TypeNames)
             {
-                return ret.DetailDeviceLayout;
+                DetailDeviceLayout? res = GetDetailDeviceLayout(typeName);
+                if (res is not null)
+                    return res;
             }
         }
         return null;
@@ -154,19 +159,21 @@ public static class DeviceLayoutService
     }
 
     public static DashboardDeviceLayout? GetDashboardDeviceLayout(string typeName)
-        => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret.DashboardDeviceLayout : null;
+        => TypeDeviceLayouts.TryGetValue(typeName, out DeviceLayout? ret) ? ret.DashboardDeviceLayout : null;
 
     public static DashboardDeviceLayout? GetDashboardDeviceLayout(long deviceId)
     {
-        if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
+        if (InstanceDeviceLayouts.TryGetValue(deviceId, out DeviceLayout? ret))
         {
             return ret.DashboardDeviceLayout;
         }
-        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
         {
-            if (InstanceDeviceLayouts.TryGetValue(device.Id, out ret))
+            foreach (string typeName in device.TypeNames)
             {
-                return ret.DashboardDeviceLayout;
+                DashboardDeviceLayout? res = GetDashboardDeviceLayout(typeName);
+                if (res is not null)
+                    return res;
             }
         }
         return null;
@@ -175,19 +182,22 @@ public static class DeviceLayoutService
 
 
     public static DeviceLayout? GetDeviceLayout(string typeName)
-        => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret : null;
+        => TypeDeviceLayouts.TryGetValue(typeName, out DeviceLayout? ret) ? ret : null;
 
     public static DeviceLayout? GetDeviceLayout(long deviceId)
     {
-        if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
+        if (InstanceDeviceLayouts.TryGetValue(deviceId, out DeviceLayout? ret))
         {
             return ret;
         }
-        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
         {
-            if (InstanceDeviceLayouts.TryGetValue(device.Id, out ret))
+            foreach (string typeName in device.TypeNames)
             {
-                return ret;
+                if (TypeDeviceLayouts.TryGetValue(typeName, out ret))
+                {
+                    return ret;
+                }
             }
         }
         return null;

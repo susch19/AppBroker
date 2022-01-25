@@ -1,8 +1,4 @@
-﻿using System.Net;
-using System.Text;
-using System.Threading;
-
-using AppBroker.Core;
+﻿using AppBroker.Core;
 
 using AppBrokerASP.Devices.Painless;
 
@@ -10,6 +6,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
+
+using System.Net;
+using System.Text;
+using System.Threading;
 
 namespace AppBrokerASP;
 
@@ -60,6 +60,7 @@ public class SmarthomeMeshManager : IDisposable
         Task.Delay(500).ContinueWith(_ =>
         {
             this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.4"), Encoding.UTF8.GetBytes("heater")));
+            this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257171132, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.5"), Encoding.UTF8.GetBytes("ledstri")));
         });
 #endif
     }
@@ -86,7 +87,7 @@ public class SmarthomeMeshManager : IDisposable
         serverSocket.Stop();
         serverSocket.OnClientConnected -= ServerSocket_OnClientConnected;
 
-        foreach (var timer in timers)
+        foreach (Timer? timer in timers)
         {
             timer.Dispose();
         }
@@ -108,7 +109,7 @@ public class SmarthomeMeshManager : IDisposable
 
     private void OtaAdvertisment(object? sender, PainlessMesh.Ota.FirmwareMetadata e)
     {
-        foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
+        foreach (AppBroker.Core.Devices.Device? item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
         {
             if (item is PainlessDevice pd)
                 pd.OtaAdvertisment(e);
@@ -133,16 +134,16 @@ public class SmarthomeMeshManager : IDisposable
             if (!knownNodeIds.Any(x => x.Id == e.NodeId))
                 knownNodeIds.Add(new NodeSync(e.NodeId, 0));
 
-            _ = WhoIAmSendTime.TryRemove(e.NodeId, out var asda);
+            _ = WhoIAmSendTime.TryRemove(e.NodeId, out (DateTime time, int count) asda);
             if (e.Parameters != null)
                 NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters));
             return;
         }
 
-        var known = knownNodeIds.FirstOrDefault(x => x.Id == e.NodeId);
+        NodeSync? known = knownNodeIds.FirstOrDefault(x => x.Id == e.NodeId);
         if (known == default)
         {
-            if (!WhoIAmSendTime.TryGetValue(e.NodeId, out var dt) || dt.time.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
+            if (!WhoIAmSendTime.TryGetValue(e.NodeId, out (DateTime time, int count) dt) || dt.time.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
             {
                 //SendSingle(e.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                 if (dt == default)
@@ -150,7 +151,7 @@ public class SmarthomeMeshManager : IDisposable
                 else
                     WhoIAmSendTime[e.NodeId] = (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0);
             }
-            if (!queuedMessages.TryGetValue(e.NodeId, out var queue))
+            if (!queuedMessages.TryGetValue(e.NodeId, out Queue<BinarySmarthomeMessage>? queue))
             {
                 queue = new Queue<BinarySmarthomeMessage>();
                 queuedMessages.Add(e.NodeId, queue);
@@ -165,9 +166,9 @@ public class SmarthomeMeshManager : IDisposable
             ConnectionReastablished?.Invoke(this, (known.Id, e.Parameters));
         }
 
-        if (queuedMessages.TryGetValue(e.NodeId, out var messages))
+        if (queuedMessages.TryGetValue(e.NodeId, out Queue<BinarySmarthomeMessage>? messages))
         {
-            while (messages.TryDequeue(out var message))
+            while (messages.TryDequeue(out BinarySmarthomeMessage? message))
                 MessageTypeSwitch(message);
             _ = queuedMessages.Remove(e.NodeId);
         }
@@ -201,7 +202,7 @@ public class SmarthomeMeshManager : IDisposable
             subs.Add(sub);
             if (!knownNodeIds.Any(x => x.Id == sub.NodeId))
             {
-                if (!WhoIAmSendTime.TryGetValue(sub.NodeId, out var dt) /*|| dt.time.Add(WaitBeforeWhoIAmSendAgain*2) > DateTime.Now*/)
+                if (!WhoIAmSendTime.TryGetValue(sub.NodeId, out (DateTime time, int count) dt) /*|| dt.time.Add(WaitBeforeWhoIAmSendAgain*2) > DateTime.Now*/)
                 {
                     //SendSingle(sub.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                     if (dt == default)
@@ -213,9 +214,9 @@ public class SmarthomeMeshManager : IDisposable
 
             if (sub.Subs is not null and not null)
             {
-                foreach (var item in sub.Subs)
+                foreach (KeyValuePair<uint, Sub> item in sub.Subs)
                 {
-                    if (TryParseSubsRecursive(item.Value, out var rsubs))
+                    if (TryParseSubsRecursive(item.Value, out List<Sub>? rsubs))
                         subs.AddRange(rsubs);
                 }
             }
@@ -249,15 +250,15 @@ public class SmarthomeMeshManager : IDisposable
     {
         try
         {
-            var str = Encoding.UTF8.GetString(e.Parameters[0]);
+            string? str = Encoding.UTF8.GetString(e.Parameters[0]);
             logger.Debug(str);
-            var sub = JsonConvert.DeserializeObject<Sub>(str);
-            if (sub is null || !TryParseSubsRecursive(sub, out var rsubs))
+            Sub? sub = JsonConvert.DeserializeObject<Sub>(str);
+            if (sub is null || !TryParseSubsRecursive(sub, out List<Sub>? rsubs))
                 return;
             var subs = rsubs.Distinct().ToDictionary(x => x.NodeId, x => x);
             var lostSubs = new List<uint>();
 
-            foreach (var item in knownNodeIds) // Check our subs with incoming list
+            foreach (NodeSync? item in knownNodeIds) // Check our subs with incoming list
             {
                 if (!subs.ContainsKey(item.Id))
                 {
@@ -268,14 +269,14 @@ public class SmarthomeMeshManager : IDisposable
                     if (item.MissedConnections > 0)
                     {
                         item.MissedConnections = 0;
-                        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(item.Id, out var dev))
+                        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(item.Id, out AppBroker.Core.Devices.Device? dev))
                             SendSingle((uint)dev.Id, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                         else
                             lostSubs.Add(item.Id);
                     }
                 }
             }
-            foreach (var item in WhoIAmSendTime)
+            foreach (KeyValuePair<uint, (DateTime time, int count)> item in WhoIAmSendTime)
             {
                 if (lostSubs.Contains(item.Key))
                 {
@@ -283,9 +284,9 @@ public class SmarthomeMeshManager : IDisposable
                         _ = lostSubs.Remove(item.Key);
                 }
             }
-            foreach (var id in lostSubs)
+            foreach (uint id in lostSubs)
             {
-                var knownId = knownNodeIds.FirstOrDefault(x => x.Id == id);
+                NodeSync? knownId = knownNodeIds.FirstOrDefault(x => x.Id == id);
                 ConnectionLost?.Invoke(this, id);
                 if (knownId != default)
                 {
@@ -428,7 +429,7 @@ public class SmarthomeMeshManager : IDisposable
         var toDelete = new Dictionary<uint, (DateTime time, int count)>();
         try
         {
-            foreach (var item in WhoIAmSendTime)
+            foreach (KeyValuePair<uint, (DateTime time, int count)> item in WhoIAmSendTime)
             {
                 if (item.Value.time.Add(WaitBeforeWhoIAmSendAgain) < DateTime.Now)
                 {
@@ -439,9 +440,9 @@ public class SmarthomeMeshManager : IDisposable
                     toDelete.Add(item.Key, item.Value);
             }
 
-            foreach (var item in toDelete)
+            foreach (KeyValuePair<uint, (DateTime time, int count)> item in toDelete)
             {
-                _ = WhoIAmSendTime.TryRemove(item.Key, out var val);
+                _ = WhoIAmSendTime.TryRemove(item.Key, out (DateTime time, int count) val);
             }
             toDelete.Clear();
         }
@@ -454,7 +455,7 @@ public class SmarthomeMeshManager : IDisposable
 
     public void Dispose()
     {
-        foreach (var item in timers)
+        foreach (Timer? item in timers)
         {
             item.Dispose();
         }
