@@ -3,7 +3,7 @@
 @inject IConfiguration _configuration;
 @{
     ViewData["Title"] = "Home page";
-    var serverUrl = _configuration["Elsa:Server:BaseUrl"].Replace("0.0.0.0", "localhost");
+    var serverUrl = _configuration["Elsa:Server:BaseUrl"]?.Replace("0.0.0.0", "localhost");
 }
 <!DOCTYPE html>
 <html lang="en">

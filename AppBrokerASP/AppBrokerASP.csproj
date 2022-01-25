@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content  Include="..\Configs\$(USERNAME)\appsettings.debug.json" Link="appsettings.debug.json">
+	  <Content Include="..\Configs\$(USERNAME)\appsettings.debug.json" Link="appsettings.debug.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
 	  <Content Include="..\Configs\$(USERNAME)\appsettings.json" Link="appsettings.json">
@@ -80,6 +80,11 @@
 		<None Update="key.pem">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="GeneratedFiles\AppBroker.Generators\" />
+	  <Folder Include="Properties\" />
 	</ItemGroup>
 
 </Project>

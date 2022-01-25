@@ -34,7 +34,7 @@ public partial class LedStrip : PainlessDevice
 
         for (int i = 0; i < e.Parameters.Count; i++)
         {
-            var item = e.Parameters[i];
+            byte[]? item = e.Parameters[i];
             if (item is null)
                 continue;
             if (i == 0)
@@ -74,8 +74,12 @@ public partial class LedStrip : PainlessDevice
             case Command.SingleColor:
                 if (parameters.Count > 0)
                 {
-                    var color = Convert.ToUInt32(parameters[0].ToString(), 16);
+                    uint color = Convert.ToUInt32(parameters[0].ToString(), 16);
                     meshParams.Add(BitConverter.GetBytes(color));
+#if DEBUG
+                    this.ColorNumber = color;
+                    SendDataToAllSubscribers();
+#endif
                 }
                 break;
             default:
@@ -96,8 +100,13 @@ public partial class LedStrip : PainlessDevice
             case Command.Color:
                 if (parameters.Count > 0)
                 {
-                    var color = Convert.ToUInt32(parameters[0].ToString(), 16);
+
+                    uint color = Convert.ToUInt32(parameters[0].ToString(), 16);
                     meshParams.Add(BitConverter.GetBytes(color));
+#if DEBUG
+                    this.ColorNumber = color;
+                    SendDataToAllSubscribers();
+#endif
                 }
                 break;
             case Command.Brightness:
@@ -105,8 +114,13 @@ public partial class LedStrip : PainlessDevice
             case Command.Delay:
                 if (parameters.Count > 0)
                 {
-                    var color = Convert.ToInt32(parameters[0].ToString(), 16);
+                    int color = Convert.ToInt32(parameters[0].ToString(), 16);
                     meshParams.Add(BitConverter.GetBytes(color));
+
+#if DEBUG
+                    this.ColorNumber = (uint)color;
+                    SendDataToAllSubscribers();
+#endif
                 }
                 break;
             default:

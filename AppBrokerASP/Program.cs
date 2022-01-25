@@ -1,13 +1,14 @@
-﻿using System.Net;
-using System.Net.Sockets;
-using System.Text;
+﻿using AppBroker.Core.DynamicUI;
 
 using Makaretu.Dns;
 
+using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
-using NLog;
-using AppBroker.Core.DynamicUI;
+
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
 
 namespace AppBrokerASP;
 
@@ -28,9 +29,9 @@ public class Program
 
         _ = new InstanceContainer();
 
-        _=DeviceLayoutService.InstanceDeviceLayouts;
+        _ = DeviceLayoutService.InstanceDeviceLayouts;
 
-        var mainLogger = LogManager
+        Logger? mainLogger = LogManager
             .Setup()
             .LoadConfigurationFromSection(InstanceContainer.Instance.ConfigManager.Configuration)
             .GetCurrentClassLogger();
@@ -73,14 +74,17 @@ public class Program
             }
             else
             {
-                listenUrls = new[] { $"http://[::1]:{tempPort}", $"http://0.0.0.0:{tempPort}" };
+                listenUrls = new[] { $"http://*:{tempPort}" };
             }
             AdvertiseServerPortsViaMDNS(tempPort);
 
             mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
 
-            var webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath = "wwwroot" });
-            _ = webBuilder.WebHost.UseUrls(listenUrls).UseStaticWebAssets();
+            WebApplicationBuilder? webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath = "wwwroot" });
+            _ = webBuilder.WebHost.UseKestrel((ks) =>
+            {
+                ks.ListenAnyIP(tempPort);
+            }).UseStaticWebAssets();
 
             _ = webBuilder.Host.ConfigureLogging(logging =>
                        {
@@ -91,7 +95,7 @@ public class Program
             startup.ConfigureServices(webBuilder.Services);
 
 
-            var app = webBuilder.Build();
+            WebApplication? app = webBuilder.Build();
 
             _ = app.UseWebSockets();
             _ = app.UseCors("CorsPolicy");
@@ -124,7 +128,7 @@ public class Program
         MulticastService mdns = new();
         ServiceDiscovery sd = new(mdns);
 
-        var hostEntry
+        IPAddress[]? hostEntry
             = Dns.GetHostEntry(Environment.MachineName)
             .AddressList
             .Where(x => x.AddressFamily == AddressFamily.InterNetwork
