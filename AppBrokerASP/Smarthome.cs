@@ -176,16 +176,31 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public void UpdateTime() => InstanceContainer.Instance.MeshManager.UpdateTime();
 
-    public byte[] GetIconByTypeName(string typename) => InstanceContainer.Instance.IconService.GetBestFitIcon(typename);
-    public byte[] GetIconByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName);
+    public string GetHashCodeByTypeName(string typeName) => InstanceContainer.Instance.IconService.GetBestFitIcon(typeName).Hash;
+    public string GetHashCodeByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName).Hash;
 
-    public byte[] GetIconByDeviceId(long deviceId) => InstanceContainer.Instance.IconService.GetBestFitIcon(InstanceContainer.Instance.DeviceManager.Devices[deviceId].TypeName);
+    public SvgIcon GetIconByTypeName(string typename) => InstanceContainer.Instance.IconService.GetBestFitIcon(typename);
+    public SvgIcon GetIconByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName);
+    public SvgIcon GetIconByDeviceId(long deviceId) => InstanceContainer.Instance.IconService.GetBestFitIcon(InstanceContainer.Instance.DeviceManager.Devices[deviceId].TypeName);
 
     public void ReloadDeviceLayouts() => DeviceLayoutService.ReloadLayouts();
-    public DeviceLayout? GetDeviceLayoutByName(string typename) => DeviceLayoutService.GetDeviceLayout(typename);
-    public DeviceLayout? GetDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDeviceLayout(id);
-    public DashboardDeviceLayout? GetDashboardDeviceLayoutByName(string typename) => DeviceLayoutService.GetDashboardDeviceLayout(typename);
-    public DashboardDeviceLayout? GetDashboardDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDashboardDeviceLayout(id);
-    public DetailDeviceLayout? GetDetailDeviceLayoutByName(string typename) => DeviceLayoutService.GetDetailDeviceLayout(typename);
-    public DetailDeviceLayout? GetDetailDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDetailDeviceLayout(id);
+    public DeviceLayout? GetDeviceLayoutByName(string typename) => DeviceLayoutService.GetDeviceLayout(typename)?.layout;
+    public DeviceLayout? GetDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDeviceLayout(id)?.layout;
+
+
+    public record LayoutNameWithHash(string Name, string Hash);
+    public LayoutNameWithHash? GetDeviceLayoutHashByDeviceId(long id)
+    {
+
+        var layoutHash = DeviceLayoutService.GetDeviceLayout(id);
+        if (layoutHash is null || layoutHash.Value.layout is null)
+            return null;
+
+        return new(layoutHash.Value.layout.UniqueName, layoutHash.Value.hash);
+    }
+
+    //public DashboardDeviceLayout? GetDashboardDeviceLayoutByName(string typename) => DeviceLayoutService.GetDashboardDeviceLayout(typename);
+    //public DashboardDeviceLayout? GetDashboardDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDashboardDeviceLayout(id);
+    //public DetailDeviceLayout? GetDetailDeviceLayoutByName(string typename) => DeviceLayoutService.GetDetailDeviceLayout(typename);
+    //public DetailDeviceLayout? GetDetailDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDetailDeviceLayout(id);
 }

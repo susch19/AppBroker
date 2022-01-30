@@ -39,7 +39,7 @@ public abstract class Device
         IsConnected = true;
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
-       
+
     }
 
     private IEnumerable<string> GetBaseTypeNames(Type type)
@@ -60,7 +60,19 @@ public abstract class Device
 
     public virtual async void SendLastData(ISmartHomeClient client) => await client.Update(this);
     public virtual void SendLastData(List<ISmartHomeClient> clients) => clients.ForEach(async x => await x.Update(this));
-    public virtual void SendDataToAllSubscribers() => Subscribers.ForEach(x => SendLastData(x.SmarthomeClient));
+
+
+    private Task? dataSendTask;
+    public void SendDataToAllSubscribers()
+    {
+        if (dataSendTask != null && !dataSendTask.IsCompleted)
+            return;
+        dataSendTask = Task.Run(async () =>
+            {
+                await Task.Delay(250); //Wait for multiple property changes from endpoint, like zigbee
+                Subscribers.ForEach(x => SendLastData(x.SmarthomeClient));
+            });
+    }
 
     public virtual void StopDevice() => IsConnected = false;
     public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
