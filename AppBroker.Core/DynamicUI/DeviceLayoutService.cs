@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,10 +13,10 @@ namespace AppBroker.Core.DynamicUI;
 
 public static class DeviceLayoutService
 {
-    public static Dictionary<string, DeviceLayout> TypeDeviceLayouts = new();
-    public static Dictionary<long, DeviceLayout> InstanceDeviceLayouts = new();
+    public static Dictionary<string, (DeviceLayout layout, string hash)> TypeDeviceLayouts = new();
+    public static Dictionary<long, (DeviceLayout layout, string hash)> InstanceDeviceLayouts = new();
 
-    private static readonly string DemoFilePath = Path.Combine("DeviceLayouts", "SampleLayout.json");
+    private static readonly string demoFilePath = Path.Combine("DeviceLayouts", "SampleLayout.json");
     private static readonly FileSystemWatcher fileSystemWatcher;
 
     static DeviceLayoutService()
@@ -28,7 +29,7 @@ public static class DeviceLayoutService
         fileSystemWatcher.Created += FileChanged;
         fileSystemWatcher.EnableRaisingEvents = true;
 
-        if (!File.Exists(DemoFilePath))
+        if (!File.Exists(demoFilePath))
         {
             var deviceLayout = new DeviceLayout("DemoLayout", "Demo",
                 new() { -1, -2 },
@@ -51,29 +52,59 @@ public static class DeviceLayoutService
                 },
                 new() { }));
             string? serializedDemo = JsonConvert.SerializeObject(deviceLayout, Formatting.Indented);
-            File.WriteAllText(DemoFilePath, serializedDemo);
+            File.WriteAllText(demoFilePath, serializedDemo);
         }
         ReloadLayouts();
     }
 
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
+    private static string GetMD5StringFor(byte[] bytes)
+    {
+        Span<byte> toWriteBytes = stackalloc byte[16];
+        _ = MD5.HashData(bytes, toWriteBytes);
+        return Convert.ToHexString(toWriteBytes);
+    }
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
+
+    private static (DeviceLayout? layout, string hash) GetHashAndFile(string path)
+    {
+        var text = File.ReadAllText(path);
+        var hash = GetMD5StringFor(File.ReadAllBytes(path));
+        return (JsonConvert.DeserializeObject<DeviceLayout>(text), hash);
+    }
     private static void FileChanged(object sender, FileSystemEventArgs e)
     {
         _ = Task.Delay(100).ContinueWith((t) =>
         {
-            DeviceLayout? layout = JsonConvert.DeserializeObject<DeviceLayout>(File.ReadAllText(e.FullPath));
+            var (layout, hash) = GetHashAndFile(e.FullPath);
+            bool updated = false;
 
             if (layout is null)
                 return;
             if (layout.TypeName is not null)
-                TypeDeviceLayouts[layout.TypeName] = layout;
+            {
+                if (!TypeDeviceLayouts.TryGetValue(layout.TypeName, out var layoutType) || layoutType.hash != hash)
+                {
+                    TypeDeviceLayouts[layout.TypeName] = (layout, hash);
+                    updated = true;
+                }
+            }
 
             if (layout.Ids is not null)
             {
                 foreach (long id in layout.Ids)
                 {
-                    InstanceDeviceLayouts[id] = layout;
+                    if (InstanceDeviceLayouts.TryGetValue(id, out var layoutType) && layoutType.hash == hash)
+                        continue;
+                    {
+                        InstanceDeviceLayouts[id] = (layout, hash);
+
+                    }
                 }
             }
+
+            if (!updated)
+                return;
 
             foreach (KeyValuePair<long, Devices.Device> device in IInstanceContainer.Instance.DeviceManager.Devices)
             {
@@ -81,7 +112,7 @@ public static class DeviceLayoutService
                 {
                     foreach (Subscriber? sub in device.Value.Subscribers)
                     {
-                        _ = sub.SmarthomeClient.UpdateUi(layout);
+                        _ = sub.SmarthomeClient.UpdateUi(layout, hash);
                     }
                     continue;
                 }
@@ -89,7 +120,7 @@ public static class DeviceLayoutService
                 {
                     foreach (Subscriber? sub in device.Value.Subscribers)
                     {
-                        _ = sub.SmarthomeClient.UpdateUi(layout);
+                        _ = sub.SmarthomeClient.UpdateUi(layout, hash);
                     }
                     continue;
                 }
@@ -108,13 +139,13 @@ public static class DeviceLayoutService
             // TODO: try catch
             try
             {
-                DeviceLayout? layout = Newtonsoft.Json.JsonConvert.DeserializeObject<DeviceLayout>(File.ReadAllText(file));
+                var (layout, hash) = GetHashAndFile(file);
 
                 if (layout is null)
                     continue;
 
                 if (layout.TypeName is not null && !TypeDeviceLayouts.ContainsKey(layout.TypeName))
-                    TypeDeviceLayouts.Add(layout.TypeName, layout);
+                    TypeDeviceLayouts.Add(layout.TypeName, (layout, hash));
                 else
                 {/* TODO: warning*/}
 
@@ -124,7 +155,7 @@ public static class DeviceLayoutService
                     {
                         if (InstanceDeviceLayouts.ContainsKey(id))
                             continue;
-                        InstanceDeviceLayouts.Add(id, layout);
+                        InstanceDeviceLayouts.Add(id, (layout, hash));
                     }
                 }
             }
@@ -136,57 +167,57 @@ public static class DeviceLayoutService
         }
     }
 
-    public static DetailDeviceLayout? GetDetailDeviceLayout(string typeName)
-        => TypeDeviceLayouts.TryGetValue(typeName, out DeviceLayout? ret) ? ret.DetailDeviceLayout : null;
+    //public static DetailDeviceLayout? GetDetailDeviceLayout(string typeName)
+    //    => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret.layout.DetailDeviceLayout : null;
 
-    public static DetailDeviceLayout? GetDetailDeviceLayout(long deviceId)
+    //public static DetailDeviceLayout? GetDetailDeviceLayout(long deviceId)
+    //{
+    //    if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
+    //    {
+    //        return ret.layout.DetailDeviceLayout;
+    //    }
+    //    else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
+    //    {
+    //        foreach (string typeName in device.TypeNames)
+    //        {
+    //            DetailDeviceLayout? res = GetDetailDeviceLayout(typeName);
+    //            if (res is not null)
+    //                return res;
+    //        }
+    //    }
+    //    return null;
+
+    //}
+
+    //public static DashboardDeviceLayout? GetDashboardDeviceLayout(string typeName)
+    //    => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret.layout.DashboardDeviceLayout : null;
+
+    //public static DashboardDeviceLayout? GetDashboardDeviceLayout(long deviceId)
+    //{
+    //    if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
+    //    {
+    //        return ret.layout.DashboardDeviceLayout;
+    //    }
+    //    else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
+    //    {
+    //        foreach (string typeName in device.TypeNames)
+    //        {
+    //            DashboardDeviceLayout? res = GetDashboardDeviceLayout(typeName);
+    //            if (res is not null)
+    //                return res;
+    //        }
+    //    }
+    //    return null;
+
+    //}
+
+
+    public static (DeviceLayout? layout, string hash)? GetDeviceLayout(string typeName)
+        => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret : null;
+
+    public static (DeviceLayout? layout, string hash)? GetDeviceLayout(long deviceId)
     {
-        if (InstanceDeviceLayouts.TryGetValue(deviceId, out DeviceLayout? ret))
-        {
-            return ret.DetailDeviceLayout;
-        }
-        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
-        {
-            foreach (string typeName in device.TypeNames)
-            {
-                DetailDeviceLayout? res = GetDetailDeviceLayout(typeName);
-                if (res is not null)
-                    return res;
-            }
-        }
-        return null;
-
-    }
-
-    public static DashboardDeviceLayout? GetDashboardDeviceLayout(string typeName)
-        => TypeDeviceLayouts.TryGetValue(typeName, out DeviceLayout? ret) ? ret.DashboardDeviceLayout : null;
-
-    public static DashboardDeviceLayout? GetDashboardDeviceLayout(long deviceId)
-    {
-        if (InstanceDeviceLayouts.TryGetValue(deviceId, out DeviceLayout? ret))
-        {
-            return ret.DashboardDeviceLayout;
-        }
-        else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
-        {
-            foreach (string typeName in device.TypeNames)
-            {
-                DashboardDeviceLayout? res = GetDashboardDeviceLayout(typeName);
-                if (res is not null)
-                    return res;
-            }
-        }
-        return null;
-
-    }
-
-
-    public static DeviceLayout? GetDeviceLayout(string typeName)
-        => TypeDeviceLayouts.TryGetValue(typeName, out DeviceLayout? ret) ? ret : null;
-
-    public static DeviceLayout? GetDeviceLayout(long deviceId)
-    {
-        if (InstanceDeviceLayouts.TryGetValue(deviceId, out DeviceLayout? ret))
+        if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
         {
             return ret;
         }

@@ -1,18 +1,36 @@
 ﻿using AppBrokerASP;
 
+using Newtonsoft.Json;
+
+using System.Security.Cryptography;
+
 namespace AppBroker.Core;
 
+public record SvgIcon(string Name, string Hash, [property: JsonIgnore] string Path, byte[]? Data);
+
+
+#pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
 public class IconService
 {
-    Dictionary<string, byte[]> iconCache = new();
-    readonly byte[] fallBackIcon = File.ReadAllBytes(Path.Combine("Icons", "paw.svg"));
+    private readonly Dictionary<string, SvgIcon> iconCache = new();
+    private readonly SvgIcon fallBackIcon;
 
-    public byte[] GetIcon(string typeName)
+    public IconService()
     {
-        return GetIconByName(typeName);
+        var fallbackPath = Path.Combine("Icons", "paw.svg");
+        var fallbackData = File.ReadAllBytes(fallbackPath);
+
+        fallBackIcon = new("Paw", GetMD5StringFor(fallbackData), fallbackPath, fallbackData);
     }
 
-    public byte[] GetIconByName(string iconName)
+    private string GetMD5StringFor(byte[] bytes)
+    {
+        Span<byte> toWriteBytes = stackalloc byte[16];
+        _ = MD5.HashData(bytes, toWriteBytes);
+        return Convert.ToHexString(toWriteBytes);
+    }
+
+    public SvgIcon GetIconByName(string iconName)
     {
         if (iconCache.TryGetValue(iconName, out var result))
             return result;
@@ -22,13 +40,11 @@ public class IconService
         if (!File.Exists(path))
             return fallBackIcon;
 
-        result = File.ReadAllBytes(path);
-        iconCache[iconName] = result;
-
-        return result;
+        var iconBytes = File.ReadAllBytes(path);
+        return iconCache[iconName] = new(iconName, GetMD5StringFor(iconBytes), path, iconBytes);
     }
 
-    public byte[] GetBestFitIcon(string typeName)
+    public SvgIcon GetBestFitIcon(string typeName)
     {
         if (iconCache.TryGetValue(typeName, out var result))
             return result;
@@ -52,7 +68,10 @@ public class IconService
             if (!File.Exists(path))
                 continue;
 
-            result = File.ReadAllBytes(path);
+            var iconBytes = File.ReadAllBytes(path);
+            var existing = iconCache.FirstOrDefault(x => x.Value.Path == path).Value;
+
+            result = existing == default ? new(tmpTypeName, GetMD5StringFor(iconBytes), path, iconBytes) : existing;
             break;
         }
 
@@ -63,3 +82,4 @@ public class IconService
     }
 
 }
+#pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms

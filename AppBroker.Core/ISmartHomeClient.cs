@@ -6,5 +6,5 @@ namespace AppBroker.Core;
 public interface ISmartHomeClient
 {
     Task Update(Device device);
-    Task UpdateUi(DeviceLayout deviceLayout);
+    Task UpdateUi(DeviceLayout deviceLayout, string hash);
 }
