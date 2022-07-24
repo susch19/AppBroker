@@ -7,6 +7,7 @@ using Elsa;
 using Elsa.Persistence.EntityFramework.Core.Extensions;
 using Elsa.Persistence.EntityFramework.Sqlite;
 
+using MQTTnet.AspNetCore;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -83,6 +84,9 @@ public class Startup
         //_ = services
         //    .AddElsaApiEndpoints();
 
+        _ = services
+            .AddHostedMqttServer(mqttServer => mqttServer.WithoutDefaultEndpoint())
+            .AddMqttConnectionHandler()
+            .AddConnections();
     }
-
 }

@@ -6,6 +6,8 @@ using MQTTnet.Client;
 using MQTTnet.Extensions.ManagedClient;
 using MQTTnet;
 
+using MQTTnet.AspNetCore;
+
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
@@ -101,8 +103,9 @@ public class Program
             WebApplicationBuilder? webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { /*Args = args,*/ WebRootPath = "wwwroot", });
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
-                ks.ListenAnyIP(UsedPortForSignalR);
-            });
+                ks.ListenAnyIP(tempPort);
+                ks.ListenAnyIP(InstanceContainer.Instance.ConfigManager.MqttConfig.Port, x => x.UseMqtt());
+            }).UseStaticWebAssets();
 
             _ = webBuilder.Host.ConfigureLogging(logging =>
                        {
@@ -127,13 +130,23 @@ public class Program
                 _ = e.MapHub<SmartHome>(pattern: "/SmartHome");
                 _ = e.MapControllers();
 
+                _ = e.MapConnectionHandler<MqttConnectionHandler>(
+                    "/mqtt",
+                    httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
+                    protocolList => protocolList.FirstOrDefault() ?? string.Empty);
+
             });
 
+            _ = app.UseMqttServer(server =>
+            {
+                // Todo: Do something with the server
+            });
 
             app.Run();
         }
         catch (Exception ex)
         {
+            // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
             mainLogger.Error(ex, "Stopped program because of exception");
             throw;
         }
