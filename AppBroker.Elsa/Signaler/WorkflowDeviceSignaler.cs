@@ -7,20 +7,16 @@ using AppBroker.Elsa.Models;
 using Elsa.Models;
 using Elsa.Services;
 using Elsa.Services.Models;
-using Elsa.Services.Workflows;
 
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
 
 namespace AppBroker.Elsa.Signaler;
 
-
+public class WorkflowDeviceSignaler : IWorkflowDeviceSignaler
+{
+    private static IWorkflowLaunchpad scopedWorkflowLaunchpad;
 
 [RequiresPreviewFeatures]
 public class WorkflowDeviceSignaler : IWorkflowDeviceSignaler
