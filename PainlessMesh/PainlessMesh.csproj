@@ -10,11 +10,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azura" Version="0.8.0" />
-    <PackageReference Include="Azura.Generator" Version="0.8.0" />
+    <PackageReference Include="Azura" Version="0.9.0" />
+    <PackageReference Include="Azura.Generator" Version="0.9.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <!--<PackageReference Include="NonSucking.Framework.Serialization" Version="0.1.0.35-alpha" />-->
-    <PackageReference Include="NLog" Version="5.0.0-rc1" />
+    <PackageReference Include="NLog" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>

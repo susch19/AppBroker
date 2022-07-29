@@ -26,7 +26,7 @@ public static class ServiceCollectionExtensions
             .AddActivity<DeviceChangedTrigger>();
 
         _ = builder.Services
-            .AddSingleton<Scoped<IWorkflowLaunchpad>>()
+            .AddSingleton<IWorkflowLaunchpad>()
             .AddBookmarkProvider<PropertyChangedEventBookmarkProvider>()
             .AddBookmarkProvider<DeviceChangedEventBookmarkProvider>()
             .AddSingleton<WorkflowDeviceSignaler>()
