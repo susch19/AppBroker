@@ -288,7 +288,9 @@ public class DeviceManager : IDisposable, IDeviceManager
 
         foreach (var deviceRes in getDeviceResponses)
         {
-            if (!long.TryParse(deviceRes.native.id, System.Globalization.NumberStyles.HexNumber, null, out var id))
+            if (deviceRes.native is null
+                || deviceRes.native.id is null
+                || !long.TryParse(deviceRes.native.id, System.Globalization.NumberStyles.HexNumber, null, out var id))
                 continue;
 
             if (!Devices.TryGetValue(id, out var dev))
@@ -316,9 +318,11 @@ public class DeviceManager : IDisposable, IDeviceManager
                 AddNewDeviceToDic(id, dev);
             }
 
-            foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
+            foreach (var item in deviceStates.Where(x => !string.IsNullOrWhiteSpace(x._id) && x._id.Contains(deviceRes.native.id)))
             {
-                var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item.common.name.ToLower().Replace(" ", "_"), new Parameter(item.val));
+                var itemId = item._id[(item._id.LastIndexOf(".") + 1)..].ToLower();
+
+                var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, itemId, new Parameter(item.val));
                 if (dev is XiaomiTempSensor)
                 {
                     if (ioObject.ValueName == "battery_voltage")

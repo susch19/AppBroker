@@ -5,7 +5,8 @@ using System.Collections.Generic;
 
 namespace PainlessMesh;
 
-public class Sub : IEquatable<Sub>
+[NonSucking.Framework.Serialization.Nooson]
+public partial class Sub : IEquatable<Sub>
 {
     //{"nodeId":1, "subs":[]}
     [JsonProperty("nodeId")]

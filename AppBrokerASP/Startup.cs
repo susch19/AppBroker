@@ -1,5 +1,6 @@
 ﻿
 using AppBrokerASP.Devices.Elsa;
+using AppBrokerASP.SignalRTesting;
 
 using AspNetCore.RouteAnalyzer;
 
@@ -8,10 +9,17 @@ using Elsa.Persistence.EntityFramework.Core.Extensions;
 using Elsa.Persistence.EntityFramework.Sqlite;
 
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+
+using System.Buffers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AppBrokerASP;
 
@@ -22,7 +30,7 @@ public class Startup
     {
         Configuration = configuration;
     }
-
+    
     public void ConfigureServices(IServiceCollection services)
     {
         _ = services.Configure<CookiePolicyOptions>(options =>
@@ -34,9 +42,14 @@ public class Startup
                   .AllowAnyHeader()
                   .AllowAnyOrigin()));
 
-        _ = services.AddSignalR(
+        var signalRBuilder = services.AddSignalR(
             opt => opt.EnableDetailedErrors = true
-            ).AddNewtonsoftJsonProtocol();
+            ).AddMessagePackProtocol()
+            .AddNewtonsoftJsonProtocol();
+
+
+        signalRBuilder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IHubProtocol, NewtonsoftJsonSmarthomeHubProtocol>());
+        //signalRBuilder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IHubProtocol, NewtonsoftJsonSmarthomeHubProtocol>());
         _ = services.AddRazorPages();
 
         var elsaSection = Configuration.GetSection("Elsa");
@@ -54,12 +67,13 @@ public class Startup
                  .AddActivitiesFrom<Startup>()
                  .AddFeatures(new[] { typeof(Startup) }, Configuration)
                  .AddWorkflowsFrom<Startup>()
-                 .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>())
+                 .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>()!)
              )
             .AddJavaScriptTypeDefinitionProvider<DeviceJavascriptProvider>()
             .AddJavaScriptTypeDefinitionProvider<DefaultAppbrokerJavascriptProvider>()
             .AddNotificationHandlersFrom<DefaultAppbrokerLiquidHandler>()
             .AddNotificationHandlersFrom<DeviceLiquidHandler>();
+
 
 
         _ = services

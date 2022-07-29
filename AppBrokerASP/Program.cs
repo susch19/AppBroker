@@ -18,9 +18,11 @@ public class Program
     public const bool IsDebug = true;
     private const int port = 5056;
 #else
-        public const bool IsDebug = false;
-        private const int port = 5055;
+    public const bool IsDebug = false;
+    private const int port = 5055;
 #endif
+
+    static SemaphoreSlim slim = new SemaphoreSlim(1, 1);
 
     public static void Main(string[] args)
     {
@@ -80,23 +82,23 @@ public class Program
 
             mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
 
-            WebApplicationBuilder? webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath = "wwwroot" });
+            WebApplicationBuilder? webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { /*Args = args,*/ WebRootPath = "wwwroot", });
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
                 ks.ListenAnyIP(tempPort);
-            }).UseStaticWebAssets();
+            });
 
             _ = webBuilder.Host.ConfigureLogging(logging =>
                        {
                            _ = logging.ClearProviders();
                            _ = logging.AddNLog();
                        });
+
             var startup = new Startup(webBuilder.Configuration);
             startup.ConfigureServices(webBuilder.Services);
 
 
             WebApplication? app = webBuilder.Build();
-
             _ = app.UseWebSockets();
             _ = app.UseCors("CorsPolicy");
             _ = app.UseRouting();
@@ -105,9 +107,36 @@ public class Program
             _ = app.UseEndpoints(e =>
             {
                 _ = e.MapFallbackToPage("/_Host");
-                _ = e.MapHub<SmartHome>("/SmartHome");
+                _ = e.MapHub<SmartHome>(pattern: "/SmartHome/{id}");
+                _ = e.MapHub<SmartHome>(pattern: "/SmartHome");
                 _ = e.MapControllers();
 
+            });
+
+
+
+            _ = Task.Run(async () =>
+            {
+                ConcurrentDictionary<TcpClient, TcpClient> tcpClients = new();
+
+                byte[] firstMessage = new byte[1];
+                int i = 0;
+                const string endpoint = "DESKTOP-ACHBV7O";
+                const ushort port = 5057;
+                void OnClientConnect(IAsyncResult x)
+                {
+                    var client = (TcpClient)x.AsyncState!;
+                    client.EndConnect(x);
+                    mainLogger.Warn("Busy Waiting for new Connection >>>>>>>>>>>>> " + i);
+                    _ = AcceptNewClient(client, mainLogger, tcpClients, firstMessage, i++).Result;
+                    client = new TcpClient();
+                    mainLogger.Warn("Waiting for TCP Connection >>>>>>>>>>>>> " + i);
+                    client.BeginConnect(endpoint, port, OnClientConnect, client);
+                }
+
+                var client = new TcpClient();
+                mainLogger.Warn("Waiting for TCP Connection >>>>>>>>>>>>> " + i);
+                client.BeginConnect(endpoint, port, OnClientConnect, client);
             });
 
             app.Run();
@@ -121,6 +150,83 @@ public class Program
         {
             NLog.LogManager.Shutdown();
         }
+    }
+
+    private static async Task<int> AcceptNewClient(TcpClient x, Logger mainLogger, ConcurrentDictionary<TcpClient, TcpClient> tcpClients, byte[] firstMessage, int i)
+    {
+        mainLogger.Warn("Starting new connection >>>>>>>>>>>>> " + i++);
+        var incomming = x;
+
+        var incommingStr = incomming.GetStream();
+
+        incommingStr.Write(Encoding.UTF8.GetBytes("/SmartHome/1234567/Server"));
+
+        incommingStr.ReadExactly(firstMessage);
+
+        var self = new TcpClient("localhost", 5056);
+        self.NoDelay = true;
+        var selfStr = self.GetStream();
+        tcpClients[incomming] = self;
+
+        _ = Task.Run(async () =>
+        {
+
+            mainLogger.Warn("Server started >>>>>>>>>>>>> " + (i - 1));
+            while (true)
+            {
+                try
+                {
+
+                    if (self.Available > 0)
+                    {
+                        var bytes = new byte[self.Available];
+                        selfStr.ReadExactly(bytes);
+                        mainLogger.Warn($"Send back {bytes.Length}");
+                        var bp = System.Text.Encoding.UTF8.GetString(bytes);
+                        incommingStr.Write(bytes);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    mainLogger.Warn($"Send error (Client:{incomming.Connected}, Self:{self.Connected}) {ex}");
+                    tcpClients.Remove(incomming, out _);
+                    incomming?.Close();
+                    self?.Close();
+                    break;
+
+                }
+                await Task.Delay(1);
+            }
+        });
+        _ = Task.Run(async () =>
+        {
+            while (true)
+            {
+                try
+                {
+                    if (incomming.Available > 0)
+                    {
+                        var bytes = new byte[incomming.Available];
+                        incommingStr.ReadExactly(bytes);
+                        var bp = System.Text.Encoding.UTF8.GetString(bytes);
+                        mainLogger.Warn($"Rec {bytes.Length}");
+                        selfStr.Write(bytes);
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    mainLogger.Warn($"Rec error (Client:{incomming.Connected}, Self:{self.Connected}) {ex}");
+
+                    tcpClients.Remove(incomming, out _);
+                    incomming?.Close();
+                    self?.Close();
+                    break;
+                }
+                await Task.Delay(1);
+            }
+        });
+        return i;
     }
 
     private static void AdvertiseServerPortsViaMDNS(ushort port)

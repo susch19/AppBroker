@@ -1,0 +1,202 @@
+{
+  "UniqueName": "OsvallaPanelLayout",
+  "TypeName": "OsvallaPanel",
+  "Ids": [],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "temperature",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontWeight": "bold"
+        },
+        "RowNr": 0,
+        "UnitOfMeasurement": " °C"
+      },
+      {
+        "Name": "humidity",
+        "Order": 1,
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 14.0,
+          "FontWeight": "normal"
+        },
+        "UnitOfMeasurement": " %"
+      },
+      {
+        "Name": "pressure",
+        "Order": 2,
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 14.0,
+          "FontWeight": "normal"
+        },
+        "UnitOfMeasurement": " kpa"
+      },
+      {
+        "Name": "id",
+        "Order": 2,
+        "RowNr": 2,
+        "ShowOnlyInDeveloperMode": true
+      },
+      {
+        "Name": "battery",
+        "Order": 0,
+        "SpecialType": "battery"
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "friendlyName",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "id",
+        "Order": 1,
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true
+      },
+      {
+        "Name": "temperature",
+        "Order": 0,
+        "DisplayName": "Temperature: ",
+        "UnitOfMeasurement": " °C",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "humidity",
+        "Order": 0,
+        "DisplayName": "Luftfeuchtigkeit: ",
+        "UnitOfMeasurement": " %",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "pressure",
+        "Order": 0,
+        "DisplayName": "Luftdruck: ",
+        "UnitOfMeasurement": " kPA",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "battery",
+        "Order": 0,
+        "DisplayName": "Battery: ",
+        "UnitOfMeasurement": " %",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "lastReceivedFormatted",
+        "Order": 0,
+        "DisplayName": "Zuletzt empfangen: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "Format": "dd"
+      },
+      {
+        "Name": "link_Quality",
+        "Order": 0,
+        "DisplayName": "Verbindungsqualität: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      }
+    ],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "home",
+        "Order": 1,
+        "LinkedDevice": null
+      },
+      {
+        "Id": 1,
+        "IconName": "off-59399",
+        "Order": 2,
+        "LinkedDevice": null
+      }
+    ],
+    "HistoryProperties": [
+      {
+        "PropertyName": "temperature",
+        "XAxisName": "Temperatur",
+        "UnitOfMeasurement": " °C",
+        "IconName": "XiaomiTempSensor",
+        "BrightThemeColor": 4292149248,
+        "DarkThemeColor": 4294922834
+      },
+      {
+        "PropertyName": "humidity",
+        "XAxisName": "rel. Luftfeuchtigkeit",
+        "UnitOfMeasurement": " %",
+        "IconName": "cloud",
+        "BrightThemeColor": 4280902399,
+        "DarkThemeColor": 4286755327
+      },
+      {
+        "PropertyName": "pressure",
+        "XAxisName": "Luftdruck",
+        "UnitOfMeasurement": " kPA",
+        "IconName": "barometer",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      }
+    ]
+  }
+}

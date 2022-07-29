@@ -19,9 +19,9 @@ namespace AppBroker.Elsa.Signaler;
 
 public class WorkflowPropertySignaler : IWorkflowPropertySignaler
 {
-    private static Scoped<IWorkflowLaunchpad> scopedWorkflowLaunchpad;
+    private static IWorkflowLaunchpad scopedWorkflowLaunchpad;
 
-    public WorkflowPropertySignaler(Scoped<IWorkflowLaunchpad> workflowLaunchpad)
+    public WorkflowPropertySignaler(IWorkflowLaunchpad workflowLaunchpad)
     {
         scopedWorkflowLaunchpad = workflowLaunchpad;
     }
@@ -34,6 +34,6 @@ public class WorkflowPropertySignaler : IWorkflowPropertySignaler
         var model = new PropertyChangedEvent<T>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue, DeviceName = friendlyName, DeviceId = id, TypeName = typeName };
         var bookmark = new PropertyChangedEventBookmark(propertyName);
         var launchContext = new WorkflowsQuery(nameof(PropertyChangedTrigger), bookmark);
-        _ = scopedWorkflowLaunchpad.UseService(async s => await s.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model)));
+        _ = scopedWorkflowLaunchpad.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model));
     }
 }
