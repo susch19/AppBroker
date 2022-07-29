@@ -7,6 +7,7 @@ public class ZigbeeConfig
     public string HttpUrl { get; set; }
     public string HistoryPath { get; set; }
     public bool NewSocketIoversion { get; set; }
+    public bool? Enabled { get; set; } // Nullable so old configs have it enabled
 
     public ZigbeeConfig()
     {
@@ -14,5 +15,6 @@ public class ZigbeeConfig
         HttpUrl = "";
         HistoryPath = "";
         NewSocketIoversion = false;
+        Enabled = true;
     }
 }

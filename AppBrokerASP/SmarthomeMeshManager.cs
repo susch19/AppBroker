@@ -46,7 +46,7 @@ public class SmarthomeMeshManager : IDisposable
     private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
     private bool running;
 
-    public SmarthomeMeshManager(int listenPort, uint nodeId = 1)
+    public SmarthomeMeshManager(bool enabled, int listenPort, uint nodeId = 1)
     {
         WaitBeforeWhoIAmSendAgain = new TimeSpan(0, 0, 10);
 
@@ -56,6 +56,9 @@ public class SmarthomeMeshManager : IDisposable
         WhoIAmSendTime = new();
         knownNodeIds = new() { new NodeSync(nodeID, 0), new NodeSync(0, 0) };
         this.listenPort = listenPort;
+
+        if (!enabled)
+            return;
 #if DEBUG
         Task.Delay(500).ContinueWith(_ =>
         {

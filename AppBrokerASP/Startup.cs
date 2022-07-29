@@ -59,34 +59,38 @@ public class Startup
 
         var elsaSection = Configuration.GetSection("Elsa");
 
-        //_ = services
-        //     .AddElsa(options => options
-        //         .UseEntityFrameworkPersistence(ef => ef.UseSqlite())
-        //         .AddConsoleActivities()
-        //         .AddHttpActivities(elsaSection.GetSection("Server").Bind)
-        //         .AddEmailActivities(elsaSection.GetSection("Smtp").Bind)
-        //         .AddQuartzTemporalActivities()
-        //         .AddJavaScriptActivities()
-        //         .AddFileActivities()
-        //         .AddPropertyActivities()
-        //         .AddActivitiesFrom<Startup>()
-        //         .AddFeatures(new[] { typeof(Startup) }, Configuration)
-        //         .AddWorkflowsFrom<Startup>()
-        //         .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>()!)
-        //     )
-        //    .AddJavaScriptTypeDefinitionProvider<DeviceJavascriptProvider>()
-        //    .AddJavaScriptTypeDefinitionProvider<DefaultAppbrokerJavascriptProvider>()
-        //    .AddNotificationHandlersFrom<DefaultAppbrokerLiquidHandler>()
-        //    .AddNotificationHandlersFrom<DeviceLiquidHandler>();
+        if (elsaSection.GetValue("Enabled", true))
+        {
+            _ = services
+             .AddElsa(options => options
+                 .UseEntityFrameworkPersistence(ef => ef.UseSqlite())
+                 .AddConsoleActivities()
+                 .AddHttpActivities(elsaSection.GetSection("Server").Bind)
+                 .AddEmailActivities(elsaSection.GetSection("Smtp").Bind)
+                 .AddQuartzTemporalActivities()
+                 .AddJavaScriptActivities()
+                 .AddFileActivities()
+                 .AddPropertyActivities()
+                 .AddActivitiesFrom<Startup>()
+                 .AddFeatures(new[] { typeof(Startup) }, Configuration)
+                 .AddWorkflowsFrom<Startup>()
+                 .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>())
+             )
+            .AddJavaScriptTypeDefinitionProvider<DeviceJavascriptProvider>()
+            .AddJavaScriptTypeDefinitionProvider<DefaultAppbrokerJavascriptProvider>()
+            .AddNotificationHandlersFrom<DefaultAppbrokerLiquidHandler>()
+            .AddNotificationHandlersFrom<DeviceLiquidHandler>();
 
+            _ = services
+                .AddElsaApiEndpoints();
+        }
 
-
-        //_ = services
-        //    .AddElsaApiEndpoints();
-
-        _ = services
-            .AddHostedMqttServer(mqttServer => mqttServer.WithoutDefaultEndpoint())
-            .AddMqttConnectionHandler()
-            .AddConnections();
+        if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+        {
+            _ = services
+                .AddHostedMqttServer(mqttServer => mqttServer.WithoutDefaultEndpoint())
+                .AddMqttConnectionHandler()
+                .AddConnections();
+        }
     }
 }

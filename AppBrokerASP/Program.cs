@@ -100,22 +100,33 @@ public class Program
 
             mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
 
-            WebApplicationBuilder? webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { /*Args = args,*/ WebRootPath = "wwwroot", });
+            WebApplicationBuilder? webBuilder = WebApplication
+                .CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath = "wwwroot" });
+
+            _ = webBuilder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                config.Sources.Clear();
+                _ = config.AddConfiguration(InstanceContainer.Instance.ConfigManager.Configuration);
+            });
+
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
                 ks.ListenAnyIP(tempPort);
-                ks.ListenAnyIP(InstanceContainer.Instance.ConfigManager.MqttConfig.Port, x => x.UseMqtt());
+
+                if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+                {
+                    ks.ListenAnyIP(InstanceContainer.Instance.ConfigManager.MqttConfig.Port, x => x.UseMqtt());
+                }
             }).UseStaticWebAssets();
 
             _ = webBuilder.Host.ConfigureLogging(logging =>
-                       {
-                           _ = logging.ClearProviders();
-                           _ = logging.AddNLog();
-                       });
+            {
+                _ = logging.ClearProviders();
+                _ = logging.AddNLog();
+            });
 
             var startup = new Startup(webBuilder.Configuration);
             startup.ConfigureServices(webBuilder.Services);
-            
 
             WebApplication? app = webBuilder.Build();
             _ = app.UseWebSockets();
@@ -130,23 +141,29 @@ public class Program
                 _ = e.MapHub<SmartHome>(pattern: "/SmartHome");
                 _ = e.MapControllers();
 
-                _ = e.MapConnectionHandler<MqttConnectionHandler>(
-                    "/mqtt",
-                    httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
-                    protocolList => protocolList.FirstOrDefault() ?? string.Empty);
-
+                if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+                {
+                    _ = e.MapConnectionHandler<MqttConnectionHandler>(
+                        "/mqtt",
+                        httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
+                        protocolList => protocolList.FirstOrDefault() ?? string.Empty);
+                }
             });
 
-            _ = app.UseMqttServer(server =>
+
+            if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
             {
-                // Todo: Do something with the server
-            });
+                _ = app.UseMqttServer(server =>
+                {
+                    // Todo: Do something with the server
+                    // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
+                });
+            }
 
             app.Run();
         }
         catch (Exception ex)
         {
-            // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
             mainLogger.Error(ex, "Stopped program because of exception");
             throw;
         }

@@ -4,6 +4,7 @@ public class ConfigManager
 {
     public IConfiguration Configuration { get; }
     public ZigbeeConfig ZigbeeConfig { get; }
+    public Zigbee2MqttConfig Zigbee2MqttConfig { get; }
     public PainlessMeshSettings PainlessMeshConfig { get; }
     public MqttConfig MqttConfig { get; }
     public ServerConfig ServerConfig { get; }
@@ -11,6 +12,7 @@ public class ConfigManager
 
     private static readonly string ConfigFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "appbroker");
     private const string ZigbeeConfigName = "zigbee.json";
+    private const string Zigbee2MqttConfigName = "zigbee2mqtt.json";
     private const string NlogConfigName = "nlog.json";
     private const string MqttConfigName = "mqtt.json";
 
@@ -28,6 +30,8 @@ public class ConfigManager
         var configuration = new ConfigurationBuilder()
             .AddJsonFile(ConfigName, false, true)
             .AddJsonFile(Path.Combine(info.FullName, ZigbeeConfigName), true, true)
+            .AddJsonFile(Path.Combine(info.FullName, Zigbee2MqttConfigName), true)
+
             .AddJsonFile(Path.Combine(info.FullName, NlogConfigName), true, true)
             .AddJsonFile(Path.Combine(info.FullName, MqttConfigName), true, true)
             .Build();
@@ -39,6 +43,9 @@ public class ConfigManager
 
         ZigbeeConfig = new ZigbeeConfig();
         configuration.GetSection(ZigbeeConfig.ConfigName).Bind(ZigbeeConfig);
+
+        Zigbee2MqttConfig = new Zigbee2MqttConfig();
+        configuration.GetSection(Zigbee2MqttConfig.ConfigName).Bind(Zigbee2MqttConfig);
 
         MqttConfig = new MqttConfig();
         configuration.GetSection(MqttConfig.ConfigName).Bind(MqttConfig);

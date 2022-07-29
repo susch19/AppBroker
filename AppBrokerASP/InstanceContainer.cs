@@ -23,7 +23,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         IconService = new IconService();
         ConfigManager = new ConfigManager();
         UpdateManager = new UpdateManager();
-        MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.ListenPort);
+        MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.Enabled, ConfigManager.PainlessMeshConfig.ListenPort);
         var localDeviceManager = new DeviceManager();
 
         DeviceManager = localDeviceManager;

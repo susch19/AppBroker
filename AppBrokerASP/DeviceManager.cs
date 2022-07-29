@@ -33,7 +33,6 @@ public class DeviceManager : IDisposable, IDeviceManager
     private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
     private readonly List<Type> types;
     private readonly Dictionary<string, Type> alternativeNamesForTypes = new(StringComparer.OrdinalIgnoreCase);
-    readonly Task temp;
     private static readonly HttpClient http = new();
 
     public DeviceManager()
@@ -59,7 +58,10 @@ public class DeviceManager : IDisposable, IDeviceManager
         InstanceContainer.Instance.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
         InstanceContainer.Instance.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
 
-        temp = ConnectToIOBroker();
+        if (Config.Enabled is null or true)
+        {
+            _ = ConnectToIOBroker();
+        }
     }
     private void AddNewDeviceToDic(Device device)
     {
