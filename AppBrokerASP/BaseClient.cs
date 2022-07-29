@@ -181,7 +181,7 @@ public class BaseClient : IDisposable
 
         Span<byte> buffer = stackalloc byte[sizeof(int) + sizeof(byte) + data.Length];
         _ = BitConverter.TryWriteBytes(buffer, nodeId);
-        _ = BitConverter.TryWriteBytes(buffer[sizeof(int)..], (byte)packageType);
+        buffer[sizeof(int)] =  (byte)packageType;
         data.CopyTo(buffer[(sizeof(int) + sizeof(byte))..]);
 
         Stream.Write(BitConverter.GetBytes(buffer.Length), 0, HeaderSize);

@@ -13,7 +13,7 @@ using Elsa.Services.Models;
 namespace AppBrokerASP.Activities;
 
 [Activity(Category = "Zigbee", DisplayName = "Setze Zigbee Wert")]
-public partial class SetZigbeeProperty : Activity 
+public partial class SetZigbeeProperty : Activity
 {
     [ActivityInput(OptionsProvider = typeof(DeviceIdProvider), UIHint = ActivityInputUIHints.Dropdown, DefaultSyntax = SyntaxNames.Literal, SupportedSyntaxes = new[] { SyntaxNames.Literal, SyntaxNames.Json, SyntaxNames.JavaScript, SyntaxNames.Liquid })]
     public string? DeviceId { get; set; }
@@ -41,7 +41,7 @@ public partial class SetZigbeeProperty : Activity
             return Fault($"Must pass device id or device name");
 
         Device? device = null;
-        if (DeviceId is null 
+        if (DeviceId is null
             || (!long.TryParse(DeviceId, System.Globalization.NumberStyles.HexNumber, System.Globalization.CultureInfo.CurrentCulture, out long id)
             && !long.TryParse(DeviceId, out id))
             || !IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev))

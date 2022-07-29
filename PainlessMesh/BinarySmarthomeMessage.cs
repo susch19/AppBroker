@@ -1,12 +1,10 @@
 ﻿using AppBroker.Core;
 
-using Azura;
-
-using System.Threading;
+using System.Collections.Generic;
 
 namespace PainlessMesh;
 
-
+[NonSucking.Framework.Serialization.Nooson]
 public partial class BinarySmarthomeMessage : BaseSmarthomeMessage
 {
     public SmarthomeHeader Header { get; set; }
@@ -15,6 +13,7 @@ public partial class BinarySmarthomeMessage : BaseSmarthomeMessage
     public override Command Command { get => base.Command; set => base.Command = value; }
 
     public ByteLengthList Parameters { get; set; }
+    public List<byte> Parameters2 { get; set; }
 
     public BinarySmarthomeMessage(uint nodeId, MessageType messageType, Command command, params byte[][] parameters) : this(nodeId, messageType, command, new ByteLengthList(parameters))
     {

@@ -6,7 +6,9 @@ using System.Security.Cryptography;
 
 namespace AppBroker.Core;
 
-public record SvgIcon(string Name, string Hash, [property: JsonIgnore] string Path, byte[]? Data);
+[NonSucking.Framework.Serialization.Nooson]
+
+public partial record SvgIcon(string Name, string Hash, [property: JsonIgnore] string Path, byte[]? Data);
 
 
 #pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms

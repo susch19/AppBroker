@@ -7,6 +7,18 @@
 		<EnablePreviewFeatures>True</EnablePreviewFeatures>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <LangVersion>preview</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <LangVersion>preview</LangVersion>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
+	</ItemGroup>
+
 	<ItemGroup>
 		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
 		<ProjectReference Include="..\PainlessMesh\PainlessMesh.csproj" />

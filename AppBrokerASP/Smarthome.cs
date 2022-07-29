@@ -57,6 +57,7 @@ public class SmartHome : Hub<ISmartHomeClient>
             _ = DbProvider.UpdateDeviceInDb(stored);
             stored.SendDataToAllSubscribers();
         }
+        
     }
 
     public dynamic? GetConfig(uint deviceId) => IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device) ? device.GetConfig() : null;
@@ -79,12 +80,12 @@ public class SmartHome : Hub<ISmartHomeClient>
         return Task.FromResult(new List<IoBrokerHistory>());
     }
 
-    public Task<IoBrokerHistory> GetIoBrokerHistory(long id, string dt, string propertyName)
+    public virtual Task<IoBrokerHistory> GetIoBrokerHistory(long id, string dt, string propertyName)
     {
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
         {
             DateTime date = DateTime.Parse(dt).Date;
-            return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), Enum.Parse<HistoryType>(propertyName, true));
+            return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
         }
         return Task.FromResult(new IoBrokerHistory());
     }
@@ -100,13 +101,13 @@ public class SmartHome : Hub<ISmartHomeClient>
     }
 
     // TODO: remove list, just return one item
-    public async Task<List<IoBrokerHistory>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
+    public virtual async Task<List<IoBrokerHistory>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
     {
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
         {
             return new List<IoBrokerHistory>()
                 {
-                    await d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), Enum.Parse<HistoryType>(propertyName, true))
+                    await d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), propertyName)
                 };
         }
 

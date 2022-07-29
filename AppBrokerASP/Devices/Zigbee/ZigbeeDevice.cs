@@ -34,6 +34,9 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
     [AppBroker.IgnoreField]
     private readonly ReadOnlyCollection<(string[] Names, PropertyInfo Info)> propertyInfos;
 
+    [AppBroker.IgnoreField]
+    private readonly HashSet<string> unknownProperties = new();
+
     public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId)
     {
         Socket = socket;
@@ -58,13 +61,19 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
     {
         try
         {
-
-            if (ioBrokerObject.ValueParameter.Value is null)
+            if (unknownProperties.Contains(ioBrokerObject.ValueName))
                 return;
 
-            var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => ioBrokerObject.ValueName.Contains(y, StringComparison.OrdinalIgnoreCase))).Info;
+            if (ioBrokerObject?.ValueParameter?.Value is null)
+                return;
+            var valName = ioBrokerObject.ValueName.Replace("_", "");
+            var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => valName.Equals(y, StringComparison.OrdinalIgnoreCase))).Info;
             if (prop == default)
+            {
+                Logger.Info($"Couldn't find proprty matching with {GetType().Name}.{valName}");
+                _ = unknownProperties.Add(ioBrokerObject.ValueName);
                 return;
+            }
 
             SetProperty(ioBrokerObject, prop);
             if (setLastReceived)
@@ -86,6 +95,11 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
             var strValue = ioBrokerObject.ValueParameter.Value.ToObject<string>();
             if (double.TryParse(strValue, out var val))
                 prop.SetValue(this, Convert.ChangeType(val, prop.PropertyType));
+        }
+        else if ((prop.PropertyType == typeof(float) || prop.PropertyType == typeof(double)))
+        {
+            prop.SetValue(this, Convert.ChangeType(ioBrokerObject.ValueParameter.Value.ToObject(prop.PropertyType), prop.PropertyType));
+
         }
         else if (prop.PropertyType == typeof(sbyte))
         {
@@ -111,11 +125,38 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
         {
             SetValueOnProperty<uint>(prop, ioBrokerObject.ValueParameter.Value.ToObject<long>());
         }
+        //else if (prop.PropertyType == typeof(sbyte))
+        //{
+        //    SetValueOnProperty<sbyte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<sbyte>());
+        //}
+        //else if (prop.PropertyType == typeof(byte))
+        //{
+        //    SetValueOnProperty<byte>(prop, ioBrokerObject.ValueParameter.Value.ToObject<byte>());
+        //}
+        //else if (prop.PropertyType == typeof(short))
+        //{
+        //    SetValueOnProperty<short>(prop, ioBrokerObject.ValueParameter.Value.ToObject<short>());
+        //}
+        //else if (prop.PropertyType == typeof(ushort))
+        //{
+        //    SetValueOnProperty<ushort>(prop, ioBrokerObject.ValueParameter.Value.ToObject<ushort>());
+        //}
+        //else if (prop.PropertyType == typeof(int))
+        //{
+        //    SetValueOnProperty<int>(prop, ioBrokerObject.ValueParameter.Value.ToObject<int>());
+        //}
+        //else if (prop.PropertyType == typeof(uint))
+        //{
+        //    SetValueOnProperty<uint>(prop, ioBrokerObject.ValueParameter.Value.ToObject<uint>());
+        //}
         else
         {
             prop.SetValue(this, Convert.ChangeType(ioBrokerObject.ValueParameter.Value.ToObject(prop.PropertyType), prop.PropertyType));
         }
     }
+
+    //private void SetValueOnProperty<T>(PropertyInfo prop, T v1)  where T : INumber<T>, IMinMaxValue<T> 
+    // => prop.SetValue(this, T.CreateSaturating(v1));
 
     [AppBroker.IgnoreField]
     private Dictionary<Type, MethodInfo> createSaturatingMethods = new();
@@ -133,11 +174,11 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
         prop.SetValue(this, res);
     }
 
-    public async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
+    public virtual async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
     {
-        var temp = GetHistory(start, end, HistoryType.Temperature);
-        var humidity = GetHistory(start, end, HistoryType.Humidity);
-        var pressure = GetHistory(start, end, HistoryType.Pressure);
+        var temp = GetHistory(start, end, HistoryType.Temperature.ToString());
+        var humidity = GetHistory(start, end, HistoryType.Humidity.ToString());
+        var pressure = GetHistory(start, end, HistoryType.Pressure.ToString());
 
         var result = new List<IoBrokerHistory>
             {
@@ -148,9 +189,9 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
         return result;
     }
 
-    public async Task<IoBrokerHistory> GetHistory(DateTimeOffset start, DateTimeOffset end, HistoryType type)
+    public virtual async Task<IoBrokerHistory> GetHistory(DateTimeOffset start, DateTimeOffset end, string type)
     {
-        var history = new IoBrokerHistory(type.ToString().ToLower());
+        var history = new IoBrokerHistory(type.ToLower());
 
         var readFromFile = ReadHistoryJSON(start.Date, history);
         if (readFromFile is not null)
@@ -172,9 +213,9 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
         return null;
     }
 
-    private async Task<HistoryRecord[]> GetHistoryRecords(DateTimeOffset start, DateTimeOffset end, HistoryType type)
+    private async Task<HistoryRecord[]> GetHistoryRecords(DateTimeOffset start, DateTimeOffset end, string type)
     {
-        var i = AdapterWithId + "." + type.ToString().ToLower();
+        var i = AdapterWithId + "." + type.ToLower();
 
         var endMs = end.ToUnixTimeMilliseconds();
         var history = await Socket.Emit("getHistory",
@@ -186,7 +227,7 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
                 //end = end.ToUnixTimeMilliseconds(),
                 ignoreNull = true,
                 aggregate = "none",
-                count = 200
+                count = 2000
             });
 
         return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.ts < endMs).ToArray();

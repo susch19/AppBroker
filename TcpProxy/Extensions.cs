@@ -1,14 +1,7 @@
-﻿using AppBroker.Core.Devices;
-
-using AppBrokerASP.Database.Model;
-using AppBrokerASP.Devices;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
+﻿
 using System.Diagnostics;
 
-namespace AppBrokerASP;
+namespace TcpProxy;
 
 public static class Extensions
 {
@@ -60,19 +53,5 @@ public static class Extensions
     public static void ReadExactly(this Stream stream, Span<byte> buffer) =>
         _ = stream.ReadAtLeastCore(buffer, buffer.Length, throwOnEndOfStream: true);
 
-    public static string ToJson<T>(this T t) => JsonConvert.SerializeObject(t);
-
-    public static T ToDeObject<T>(this JToken element) => JsonConvert.DeserializeObject<T>(element.ToString())!;
-    public static T ToDeObject<T>(this string element) => JsonConvert.DeserializeObject<T>(element)!;
-
-    public static List<JToken> ToJTokenList<T>(this IEnumerable<T> obj) => obj.Select(x => JToken.FromObject(x!)).ToList();  //JsonConvert.DeserializeObject<List<JToken>>(obj.ToJson());
-    public static JToken ToJToken<T>(this T obj) => JToken.FromObject(obj!);// JsonConvert.DeserializeObject<JToken>(obj.ToJson());
-
-    public static string[] ToStringArray(this ICollection<JToken> elements) => elements.Select(x => x.ToString()).ToArray();
-    public static string[] ToRawStringArray(this ICollection<JToken> elements) => elements.Select(x => x.ToString()).ToArray();
-
-    public static DeviceModel GetModel<T>(this T t) where T : Device => new() { Id = t.Id, TypeName = t.TypeName, FriendlyName = t.FriendlyName };
-
-    public static T GetDevice<T>(this DeviceModel model) where T : Device, new() => new() { Id = model.Id, TypeName = model.TypeName, FriendlyName = model.FriendlyName };
 
 }

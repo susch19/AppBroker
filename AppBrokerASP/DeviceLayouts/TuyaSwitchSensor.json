@@ -1,0 +1,220 @@
+{
+  "UniqueName": "TuyaLayout",
+  "TypeName": "TuyaSwitchSensor",
+  "Ids": [
+  ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "load_power",
+        "Order": 0,
+        "RowNr": 0,
+        "TextStyle": {
+          "FontSize": 20.0,
+          "FontWeight": "bold"
+        },
+        "UnitOfMeasurement": " W"
+      },
+      {
+        "Name": "current",
+        "Order": 1,
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontWeight": "normal"
+        },
+        "UnitOfMeasurement": " A"
+      },
+      {
+        "Name": "voltage",
+        "Order": 2,
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontWeight": "normal"
+        },
+        "UnitOfMeasurement": " V"
+      },
+      {
+        "Name": "id",
+        "Order": 2,
+        "RowNr": 2,
+        "ShowOnlyInDeveloperMode": true
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "friendlyName",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "id",
+        "Order": 1,
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true
+      },
+      {
+        "Name": "state",
+        "Order": 0,
+        "DisplayName": "Status: ",
+        "UnitOfMeasurement": "",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "load_power",
+        "Order": 0,
+        "DisplayName": "Verbrauch: ",
+        "UnitOfMeasurement": " W",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "current",
+        "Order": 0,
+        "DisplayName": "Stromstärke: ",
+        "UnitOfMeasurement": " A",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "voltage",
+        "Order": 0,
+        "DisplayName": "Spannung: ",
+        "UnitOfMeasurement": " V",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "energy",
+        "Order": 0,
+        "DisplayName": "Historischer Verbrauch: ",
+        "UnitOfMeasurement": " kWh",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "lastReceivedFormatted",
+        "Order": 0,
+        "DisplayName": "Zuletzt empfangen: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "Format": "dd"
+      },
+      {
+        "Name": "link_Quality",
+        "Order": 0,
+        "DisplayName": "Verbindungsqualität: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      }
+    ],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "home",
+        "Order": 1,
+        "LinkedDevice": null
+      },
+      {
+        "Id": 1,
+        "IconName": "off-59399",
+        "Order": 2,
+        "LinkedDevice": null
+      }
+    ],
+    "HistoryProperties": [
+      {
+        "PropertyName": "load_power",
+        "XAxisName": "Verbrauch",
+        "UnitOfMeasurement": " W",
+        "IconName": "XiaomiTempSensor",
+        "BrightThemeColor": 4292149248,
+        "DarkThemeColor": 4294922834
+      },
+      {
+        "PropertyName": "current",
+        "XAxisName": "Stromstärke",
+        "UnitOfMeasurement": " A",
+        "IconName": "cloud",
+        "BrightThemeColor": 4280902399,
+        "DarkThemeColor": 4286755327
+      },
+      {
+        "PropertyName": "energy",
+        "XAxisName": "Historischer Verbrauch",
+        "UnitOfMeasurement": " kWh",
+        "IconName": "droplet-59403",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      },
+      {
+        "PropertyName": "voltage",
+        "XAxisName": "Spannung",
+        "UnitOfMeasurement": " V",
+        "IconName": "flash-59419",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      }
+    ]
+  }
+}

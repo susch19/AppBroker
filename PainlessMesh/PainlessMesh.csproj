@@ -3,32 +3,30 @@
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
 	  <EnablePreviewFeatures>True</EnablePreviewFeatures>
+	  <Nullable>enable</Nullable>
+	  <!--<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
+	  <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+	  <CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>-->
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azura" Version="0.8.0" />
-    <PackageReference Include="Azura.Generator" Version="0.8.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <!--<PackageReference Include="NonSucking.Framework.Serialization" Version="0.1.0.35-alpha" />-->
-    <PackageReference Include="NLog" Version="5.0.0-rc1" />
+    <PackageReference Include="Azura" Version="0.9.0" />
+    <PackageReference Include="Azura.Generator" Version="0.9.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta1" />
+    <PackageReference Include="NonSucking.Framework.Serialization" Version="0.1.0.66-alpha" />
+    <PackageReference Include="NLog" Version="5.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
   </ItemGroup>
-
-	<!--<ItemGroup>
-		<Folder Include="GeneratedFiles\NonSucking.Framework.Serialization\NonSucking.Framework.Serialization.NoosonGenerator\" />
-	</ItemGroup>
-
-	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild">
-		<ItemGroup>
-			<Compile Remove="GeneratedFiles\**" />
-		</ItemGroup>
-	</Target>-->
 
 </Project>
