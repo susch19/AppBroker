@@ -9,6 +9,12 @@ using PainlessMesh;
 using AppBrokerASP.Configuration;
 using AppBroker.Core;
 using AppBroker.Core.Devices;
+using MQTTnet;
+using MQTTnet.Client;
+using MQTTnet.Extensions.ManagedClient;
+using AppBrokerASP.Zigbee2Mqtt;
+
+using Device = AppBroker.Core.Devices.Device;
 
 namespace AppBrokerASP;
 
@@ -55,6 +61,12 @@ public class DeviceManager : IDisposable, IDeviceManager
             ioBrokerManager = new IoBrokerManager(logger, http, Devices, alternativeNamesForTypes, Config);
             ioBrokerManager.NewDeviceAdded += NewDeviceAdded;
             _ = ioBrokerManager.ConnectToIOBroker();
+        }
+
+        if (InstanceContainer.Instance.ConfigManager.Zigbee2MqttConfig.Enabled)
+        {
+            var client = new Zigbee2MqttManager(InstanceContainer.Instance.ConfigManager.Zigbee2MqttConfig);
+            _ = client.Connect().ContinueWith((x) => _ = client.Subscribe());
         }
     }
     private void AddNewDeviceToDic(Device device)
@@ -135,143 +147,6 @@ public class DeviceManager : IDisposable, IDeviceManager
         }
 
         return newDevice;
-    }
-
-    public async Task GetZigbeeDevices(SocketIO socket)
-    {
-        if (client is null)
-        {
-            logger.Error("SocketIO Client is null");
-            return;
-        }
-
-        var allObjectsResponse = await socket.Emit("getObjects");
-        var allObjectscontentNew = allObjectsResponse?.GetValue(1).ToString();
-
-        if (allObjectscontentNew is null)
-        {
-            logger.Error("getObjects response is empty");
-            return;
-        }
-
-        var ioBrokerObject = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(allObjectscontentNew)?
-            .Where(x => x.Key.StartsWith("zigbee.0."))!
-            .ToDictionary(x => x.Key, x => x.Value.ToObject<ZigbeeIOBrokerProperty>())
-            .Values.AsEnumerable();
-
-        if (ioBrokerObject is null)
-        {
-            logger.Error($"Error deserializing IOBroker Property");
-
-            return;
-        }
-
-        const int maxUrlLength = 1900;
-
-        var baseStateRequest = @$"{Config.HttpUrl}/get/";
-        var idRequest = @$"{Config.HttpUrl}/get/";
-
-        var idsAlreadyInRequest = new List<ulong>();
-        var requests = new List<string>();
-
-        var currentStateRequest = baseStateRequest;
-
-        foreach (var item in ioBrokerObject)
-        {
-            if (item is null)
-                continue;
-
-            var matches = item._id.Split('.');
-            if (matches.Length > 2)
-            {
-                if (ulong.TryParse(matches[2].ToString(), System.Globalization.NumberStyles.HexNumber, null, out var id))
-                {
-                    if (!idsAlreadyInRequest.Contains(id))
-                    {
-                        idRequest += string.Join('.', matches.Take(3)) + ",";
-                        idsAlreadyInRequest.Add(id);
-                    }
-                    var addItem = item._id + ",";
-
-                    if (currentStateRequest.Length + addItem.Length > maxUrlLength)
-                    {
-                        requests.Add(currentStateRequest);
-                        currentStateRequest = baseStateRequest;
-                    }
-
-                    currentStateRequest += addItem;
-                }
-            }
-        }
-
-        if (currentStateRequest != baseStateRequest)
-            requests.Add(currentStateRequest);
-
-        var content = await http.GetStringAsync(idRequest);
-
-        var getDeviceResponses = JsonConvert.DeserializeObject<IoBrokerGetDeviceResponse[]>(content)!;
-
-        var deviceStates = new List<IoBrokerStateResponse>();
-
-        foreach (var stateRequest in requests)
-        {
-            content = await http.GetStringAsync(stateRequest);
-            deviceStates.AddRange(JsonConvert.DeserializeObject<IoBrokerStateResponse[]>(content)!);
-        }
-
-        foreach (var deviceRes in getDeviceResponses)
-        {
-            if (!long.TryParse(deviceRes.native.id, System.Globalization.NumberStyles.HexNumber, null, out var id))
-                continue;
-
-            if (!Devices.TryGetValue(id, out var dev))
-            {
-                dev = CreateDeviceFromName(deviceRes.common.type, id, client);
-
-                if (dev is null or default(Device))
-                {
-                    logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
-                    continue;
-                }
-
-                if (dev is ZigbeeDevice zd)
-                    zd.AdapterWithId = deviceRes._id;
-
-                //_ = Devices.TryAdd(id, dev);
-
-                if (!DbProvider.AddDeviceToDb(dev))
-                    _ = DbProvider.MergeDeviceWithDbData(dev);
-
-                // If name is only numbers, try to get better name
-                if (string.IsNullOrWhiteSpace(dev.FriendlyName) || long.TryParse(dev.FriendlyName, out _))
-                    dev.FriendlyName = deviceRes.common.name;
-
-                AddNewDeviceToDic(id, dev);
-            }
-
-            foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
-            {
-                var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item.common.name.ToLower().Replace(" ", "_"), new Parameter(item.val));
-                if (dev is XiaomiTempSensor)
-                {
-                    if (ioObject.ValueName == "battery_voltage")
-                        ioObject.ValueName = "voltage";
-                    else if (ioObject.ValueName == "battery_percent")
-                        ioObject.ValueName = "battery";
-                }
-                else if (dev is FloaltPanel)
-                {
-
-                    if (ioObject.ValueName == "color_temperature")
-                        ioObject.ValueName = "colortemp";
-                    else if (ioObject.ValueName == "switch_state")
-                        ioObject.ValueName = "state";
-                }
-                if (dev is ZigbeeDevice zd)
-                    zd.SetPropFromIoBroker(ioObject, false);
-            }
-            dev.Initialized = true;
-        }
     }
 
     protected virtual void Dispose(bool disposing)
