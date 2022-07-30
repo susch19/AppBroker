@@ -4,6 +4,7 @@ using MQTTnet;
 using Newtonsoft.Json;
 using NLog;
 using AppBrokerASP.Configuration;
+using Newtonsoft.Json.Linq;
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
@@ -13,6 +14,8 @@ public class Zigbee2MqttManager : IAsyncDisposable
     Device[]? devices = null;
     private readonly Zigbee2MqttConfig config;
     private readonly Logger logger;
+    private readonly Dictionary<string, long> friendlyNameToIdMapping = new();
+    private readonly Stack<(string, string)> cachedBeforeConnect = new();
 
     public Zigbee2MqttManager(Zigbee2MqttConfig zigbee2MqttConfig)
     {
@@ -27,7 +30,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
         try
         {
-        await mqtt.SubscribeAsync("zigbee2mqtt/#");
+            await mqtt.SubscribeAsync("zigbee2mqtt/#");
 
         }
         catch (Exception ex)
@@ -68,7 +71,15 @@ public class Zigbee2MqttManager : IAsyncDisposable
         {
             case "zigbee2mqtt/bridge/devices":
                 devices = JsonConvert.DeserializeObject<Device[]>(payload);
-                ;
+                foreach (var item in devices!)
+                {
+                    var dev = new Zigbee2MqttDevice(item, mqtt!);
+                    InstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
+                    friendlyNameToIdMapping[item.FriendlyName] = dev.Id;
+                }
+                while (cachedBeforeConnect.TryPop(out var item))
+                    TryInterpretTopicAsStateUpdate(item.Item1, item.Item2);
+
                 break;
 
             case "zigbee2mqtt/bridge/config":
@@ -101,16 +112,38 @@ public class Zigbee2MqttManager : IAsyncDisposable
                     _ => NLog.LogLevel.Info,
                 };
                 _ = logger.ForLogEvent(lvl).Message(g.Message).Callsite();
-                
+
                 break;
 
             case "zigbee2mqtt/bridge/extensions":
             default:
                 Console.WriteLine($"[{topic}] {payload}");
+                if (devices is null)
+                {
+                    cachedBeforeConnect.Push((topic, payload));
+                    break;
+                }
+                TryInterpretTopicAsStateUpdate(topic, payload);
                 break;
         }
 
         return Task.CompletedTask;
+    }
+
+    private void TryInterpretTopicAsStateUpdate(string topic, string payload)
+    {
+        var zigbeeLength = "zigbee2mqtt/".Length;
+        if (topic.Length > zigbeeLength)
+        {
+            var maybeFriendlyName = topic["zigbee2mqtt/".Length..];
+            if (friendlyNameToIdMapping.TryGetValue(maybeFriendlyName, out var id))
+            {
+                InstanceContainer
+                    .Instance
+                    .DeviceStateManager
+                    .PushNewState(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!);
+            }
+        }
     }
 
     public async ValueTask DisposeAsync()

@@ -1,0 +1,153 @@
+{
+  //"Id\":-8922170722047078453,\"TypeName\":\"": null,
+  "UniqueName": "Ikea Lampe",
+  "TypeName": "TRADFRI bulb E14 CWS opal 600lm",
+  "Ids": [ -8922170722047078453 ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "color_temp",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontWeight": "bold"
+        },
+        "RowNr": 0,
+        "UnitOfMeasurement": " K"
+      },
+     
+      {
+        "Name": "id",
+        "Order": 2,
+        "RowNr": 2,
+        "ShowOnlyInDeveloperMode": true
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "friendlyName",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "id",
+        "Order": 1,
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true
+      },
+
+      {
+        "Name": "color_mode",
+        "Order": 0,
+        "DisplayName": "Farbmodus: ",
+        "UnitOfMeasurement": "",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+
+      {
+        "Name": "state",
+        "Order": 0,
+        "DisplayName": "Status: ",
+        "UnitOfMeasurement": "",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "power_on_behavior",
+        "Order": 0,
+        "DisplayName": "Status beim Start: ",
+        "UnitOfMeasurement": "",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "color_temp_startup",
+        "Order": 0,
+        "DisplayName": "Farbtemperatur beim Start: ",
+        "UnitOfMeasurement": " K",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "lastReceivedFormatted",
+        "Order": 0,
+        "DisplayName": "Zuletzt empfangen: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "Format": "dd"
+      },
+      {
+        "Name": "linkquality",
+        "Order": 0,
+        "DisplayName": "Verbindungsqualität: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      }
+    ],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "home",
+        "Order": 1,
+        "LinkedDevice": null
+      }
+     
+    ],
+    "HistoryProperties": [
+     
+    ]
+  }
+}

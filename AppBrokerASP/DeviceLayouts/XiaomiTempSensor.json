@@ -1,7 +1,7 @@
 {
   "UniqueName": "TempSensorLayout",
-  "TypeName": "XiaomiTempSensor",
-  "Ids": [],
+  "TypeName": "lumi.weather",
+  "Ids": [ 6066005707881314 ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
@@ -239,6 +239,20 @@
         "SpecialType": "none"
       },
       {
+        "Name": "voltage",
+        "Order": 0,
+        "DisplayName": "Spannung: ",
+        "UnitOfMeasurement": " mV",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
         "Name": "lastReceivedFormatted",
         "Order": 0,
         "RowNr": 6,
@@ -254,7 +268,7 @@
         "Format": "dd"
       },
       {
-        "Name": "link_Quality",
+        "Name": "linkquality",
         "Order": 0,
         "RowNr": 7,
         "DisplayName": "Verbindungsqualität: ",

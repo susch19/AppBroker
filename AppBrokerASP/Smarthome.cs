@@ -9,6 +9,8 @@ using AppBrokerASP.IOBroker;
 
 using Microsoft.AspNetCore.SignalR;
 
+using Newtonsoft.Json;
+
 using PainlessMesh;
 
 using System.Reflection;
@@ -64,7 +66,13 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public async void SendUpdate(Device device) => await (Clients.All?.Update(device) ?? Task.CompletedTask);
 
-    public List<Device> GetAllDevices() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
+    public List<Device> GetAllDevices()
+    {
+        var devices = IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
+        var dev = JsonConvert.SerializeObject(devices);
+    
+        return devices; 
+    }
 
     public record struct DeviceOverview(long Id, IReadOnlyCollection<string> TypeNames, string FriendlyName);
     public List<DeviceOverview> GetDeviceOverview() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).Select(x => new DeviceOverview(x.Id, x.TypeNames, x.FriendlyName)).ToList();
@@ -144,6 +152,8 @@ public class SmartHome : Hub<ISmartHomeClient>
             subMessage += device.Id + "/" + device.FriendlyName + ", ";
         }
         Console.WriteLine(subMessage);
+        var dev = JsonConvert.SerializeObject(devices);
+
         return devices;
     }
 

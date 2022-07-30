@@ -2,6 +2,7 @@
 
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices.Elsa;
+using AppBrokerASP.Zigbee2Mqtt;
 
 using PainlessMesh.Ota;
 
@@ -16,6 +17,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     public ConfigManager ConfigManager { get; }
     public IDeviceManager DeviceManager { get; }
     public IconService IconService { get; }
+    public DeviceStateManager DeviceStateManager { get; } //TODO Interface and move to IInstanceContainer
 
     public InstanceContainer()
     {
@@ -25,6 +27,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         UpdateManager = new UpdateManager();
         MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.Enabled, ConfigManager.PainlessMeshConfig.ListenPort);
         var localDeviceManager = new DeviceManager();
+        DeviceStateManager = new();
 
         DeviceManager = localDeviceManager;
         DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);

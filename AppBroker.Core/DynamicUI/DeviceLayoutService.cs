@@ -226,6 +226,10 @@ public static class DeviceLayoutService
         }
         else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
         {
+            if (TypeDeviceLayouts.TryGetValue(device.TypeName, out ret))
+            {
+                return ret;
+            }
             foreach (string typeName in device.TypeNames)
             {
                 if (TypeDeviceLayouts.TryGetValue(typeName, out ret))

@@ -20,7 +20,7 @@ public partial class XiaomiTempSensor : ZigbeeDevice
     bool? overridenState;
     public new bool IsConnected => overridenState ?? Available;
     private float humidity;
-
+    
     private float pressure;
     private byte battery;
     private float voltage;
