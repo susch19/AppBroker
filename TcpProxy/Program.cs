@@ -317,31 +317,35 @@ void RemoveClient(TcpClient self,
 
 void PingServers()
 {
-    foreach (var (_, item) in servers)
+    while (true)
     {
-        connectionSemaphore.Wait();
-        try
+
+        foreach (var (_, item) in servers)
         {
-            for (int i = item.Count - 1; i >= 0; i--)
+            connectionSemaphore.Wait();
+            try
             {
-                (TcpClient client, NetworkStream str) = item[i];
-                if (!serverToClient.ContainsKey(client))
+                for (int i = item.Count - 1; i >= 0; i--)
                 {
-                    try
+                    (TcpClient client, NetworkStream str) = item[i];
+                    if (!serverToClient.ContainsKey(client))
                     {
-                        str.WriteByte(123);
-                    }
-                    catch
-                    {
-                        item.RemoveAt(i);
+                        try
+                        {
+                            str.WriteByte(123);
+                        }
+                        catch
+                        {
+                            item.RemoveAt(i);
+                        }
                     }
                 }
             }
+            finally
+            {
+                connectionSemaphore.Release();
+            }
         }
-        finally
-        {
-            connectionSemaphore.Release();
-        }
+        Thread.Sleep(10000);
     }
-    Thread.Sleep(10000);
 }
