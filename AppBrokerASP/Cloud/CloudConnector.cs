@@ -2,6 +2,7 @@
 
 using NLog;
 
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Text;
 
@@ -12,14 +13,13 @@ public class CloudConnector
     ConcurrentDictionary<TcpClient, TcpClient> tcpClients = new();
     private readonly Logger mainLogger;
     private readonly CloudConfig config;
-    private readonly byte[] firstMessage = new byte[1];
 
 
     public CloudConnector()
     {
         mainLogger = LogManager.GetCurrentClassLogger();
         config = InstanceContainer.Instance.ConfigManager.CloudConfig;
-        if (config.Enable)
+        if (config.Enabled)
         {
             var client = new TcpClient();
             mainLogger.Warn("Waiting for TCP Connection");
@@ -43,13 +43,29 @@ public class CloudConnector
         mainLogger.Warn("Starting new connection >>>>>>>>>>>>> ");
         var incomming = x;
 
-        var incommingStr = incomming.GetStream();
+        Stream incommingStr = incomming.GetStream();
 
-        incommingStr.Write(Encoding.UTF8.GetBytes($"/SmartHome/{config.ConnectionID}/Server"));
+        if (config.UseSSL)
+        {
 
-        incommingStr.ReadExactly(firstMessage);
+            incommingStr = new SslStream(incommingStr);
+            var ssl = incommingStr as SslStream;
+            ssl.AuthenticateAsClient(config.CloudServerHost);
 
-        var self = new TcpClient("localhost", Program.UsedPortForSignalR);
+        }
+
+        incommingStr.Write(Encoding.UTF8.GetBytes($"GET /SmartHome/{config.ConnectionID}/Server"));
+        //Thread.Sleep(250);
+        //incommingStr.Read(msg);
+        //var msgStr = Encoding.UTF8.GetString(msg);
+        Span<byte> firstMessage = stackalloc byte[1];
+
+        do
+        {
+            incommingStr.ReadExactly(firstMessage);
+        } while (firstMessage[0] != 1);
+
+        var self = new TcpClient(config.LocalHostName, Program.UsedPortForSignalR);
         self.NoDelay = true;
         var selfStr = self.GetStream();
         tcpClients[incomming] = self;
