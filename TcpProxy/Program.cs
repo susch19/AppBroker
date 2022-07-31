@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using TcpProxy;
@@ -12,11 +13,12 @@ using TcpProxy;
 Logger mainLogger = LogManager
     .Setup()
     .GetCurrentClassLogger()!;
-
+mainLogger.Info("Starting TCP Proxy");
 var v6Listener = new TcpListener(IPAddress.IPv6Any, 5057);
 v6Listener.Server.DualMode = true;
 
 v6Listener.Start();
+mainLogger.Info("Listening on Port 5057");
 
 ConcurrentDictionary<string, List<(TcpClient client, NetworkStream str)>> servers = new();
 ConcurrentDictionary<string, List<(TcpClient client, NetworkStream str)>> clients = new();
@@ -25,6 +27,18 @@ ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> clientToS
 ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> serverToClient = new();
 
 SemaphoreSlim connectionSemaphore = new SemaphoreSlim(1);
+
+int clientsAccepted = 0;
+v6Listener.BeginAcceptTcpClient(OnServerConnected, v6Listener);
+
+var waitForProcessShutdownStart = new ManualResetEvent(false);
+using var reg = PosixSignalRegistration.Create(OperatingSystem.IsWindows() ? PosixSignal.SIGINT : PosixSignal.SIGTERM, context =>
+{
+    context.Cancel = true;
+
+    waitForProcessShutdownStart.Set();
+});
+waitForProcessShutdownStart.WaitOne();
 
 async Task AddNewTcpClient(TcpClient self)
 {
@@ -245,7 +259,6 @@ async Task AddNewTcpClient(TcpClient self)
 
 }
 
-int clientsAccepted = 0;
 void OnServerConnected(IAsyncResult ar)
 {
     TcpListener? listener = (TcpListener)ar.AsyncState;
@@ -256,9 +269,8 @@ void OnServerConnected(IAsyncResult ar)
     WriteLog($"Ready for new Client {clientsAccepted}", ConsoleColor.Green);
 }
 
-v6Listener.BeginAcceptTcpClient(OnServerConnected, v6Listener);
 
-Console.ReadLine();
+
 void WriteLog(string message, ConsoleColor cc = ConsoleColor.White)
 {
     var before = Console.ForegroundColor;
