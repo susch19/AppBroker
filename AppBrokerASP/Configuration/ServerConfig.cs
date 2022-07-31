@@ -1,4 +1,7 @@
-﻿namespace AppBrokerASP.Configuration;
+﻿using System.Security.Cryptography;
+using System.Text;
+
+namespace AppBrokerASP.Configuration;
 
 public class ServerConfig
 {
@@ -7,6 +10,7 @@ public class ServerConfig
     public List<string> ListenUrls { get; set; }
     public string InstanceName { get; set; }
     public string ClusterId { get; set; }
+    public string EncryptionPassword { get; set; }
 
     public ServerConfig()
     {
@@ -14,5 +18,10 @@ public class ServerConfig
         ListenUrls = new();
         InstanceName = "AppBroker";
         ClusterId = "";
+        EncryptionPassword = Encoding.UTF8.GetString(SHA256.Create().ComputeHash(
+            Encoding.UTF8.GetBytes(
+            InstanceName +
+            Environment.CurrentDirectory +
+            Environment.UserDomainName)));
     }
 }

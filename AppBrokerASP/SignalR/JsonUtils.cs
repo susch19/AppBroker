@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using System.Buffers;
 using System.Globalization;
 
-namespace AppBrokerASP.SignalRTesting;
+namespace AppBrokerASP.SignalR;
 
 internal static class JsonUtils
 {

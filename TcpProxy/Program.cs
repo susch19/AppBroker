@@ -13,15 +13,13 @@ Logger mainLogger = LogManager
     .Setup()
     .GetCurrentClassLogger()!;
 
-//var v4Listener = new TcpListener(IPAddress.Any, 5057);
 var v6Listener = new TcpListener(IPAddress.IPv6Any, 5057);
 v6Listener.Server.DualMode = true;
-//var serverTcpListener = new TcpListener(IPAddress.Any, 5058);
 
-v6Listener.Start(1000);
+v6Listener.Start();
 
-ConcurrentDictionary<int, List<(TcpClient client, NetworkStream str)>> servers = new();
-ConcurrentDictionary<int, List<(TcpClient client, NetworkStream str)>> clients = new();
+ConcurrentDictionary<string, List<(TcpClient client, NetworkStream str)>> servers = new();
+ConcurrentDictionary<string, List<(TcpClient client, NetworkStream str)>> clients = new();
 
 ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> clientToServer = new();
 ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> serverToClient = new();
@@ -34,7 +32,7 @@ async Task AddNewTcpClient(TcpClient self)
     bool isServer = false;
     var selfStr = self.GetStream();
     self.NoDelay = true;
-    int id = 0;
+    string id = "";
     DateTime lastReceived = DateTime.UtcNow;
     while (true)
     {
@@ -90,7 +88,7 @@ async Task AddNewTcpClient(TcpClient self)
 
                 var pathValues = registerCall.Split('/');
 
-                id = int.Parse(pathValues[2].Split('?').First());
+                id = pathValues[2].Split('?').First();
 
                 if (registerCall.Contains("Server"))
                 {
@@ -164,7 +162,7 @@ async Task AddNewTcpClient(TcpClient self)
                     catch (Exception ex)
                     {
                         connection.client.Close();
-                        RemoveServer(self, clients, clientToServer, serverToClient, connectionSemaphore, id, connection);
+                        RemoveServer(self, id, connection);
                         WriteLog($"Close client {id}: {ex}", ConsoleColor.Red);
                     }
                 }
@@ -172,7 +170,7 @@ async Task AddNewTcpClient(TcpClient self)
                 {
 
                     self.Close();
-                    RemoveServer(self, clients, clientToServer, serverToClient, connectionSemaphore, id, connection);
+                    RemoveServer(self, id, connection);
                     WriteLog("Havent gotten any client to send message to :( " + self.GetHashCode(), ConsoleColor.Yellow);
                 }
             }
@@ -190,7 +188,7 @@ async Task AddNewTcpClient(TcpClient self)
                     catch (Exception ex)
                     {
                         connection.client.Close();
-                        RemoveClient(self, servers, clients, clientToServer, serverToClient, connectionSemaphore, id, connection);
+                        RemoveClient(self, id, connection);
                         WriteLog($"Close server {id}: {ex}", ConsoleColor.Red);
                     }
                 }
@@ -269,7 +267,7 @@ void WriteLog(string message, ConsoleColor cc = ConsoleColor.White)
     Console.ForegroundColor = before;
 }
 
-static void RemoveServer(TcpClient self, ConcurrentDictionary<int, List<(TcpClient client, NetworkStream str)>> clients, ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> clientToServer, ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> serverToClient, SemaphoreSlim connectionSemaphore, int id, (TcpClient client, NetworkStream str) connection)
+void RemoveServer(TcpClient self, string id, (TcpClient client, NetworkStream str) connection)
 {
     try
     {
@@ -285,7 +283,9 @@ static void RemoveServer(TcpClient self, ConcurrentDictionary<int, List<(TcpClie
     }
 }
 
-static void RemoveClient(TcpClient self, ConcurrentDictionary<int, List<(TcpClient client, NetworkStream str)>> servers, ConcurrentDictionary<int, List<(TcpClient client, NetworkStream str)>> clients, ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> clientToServer, ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> serverToClient, SemaphoreSlim connectionSemaphore, int id, (TcpClient client, NetworkStream str) connection)
+void RemoveClient(TcpClient self, 
+    string id, 
+    (TcpClient client, NetworkStream str) connection)
 {
     try
     {

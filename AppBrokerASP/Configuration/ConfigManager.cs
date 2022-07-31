@@ -6,6 +6,7 @@ public class ConfigManager
     public ZigbeeConfig ZigbeeConfig { get; }
     public PainlessMeshSettings PainlessMeshConfig { get; }
     public ServerConfig ServerConfig { get; }
+    public CloudConfig CloudConfig { get; }
 
     private static readonly string ConfigFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "appbroker");
     private const string ZigbeeConfigName = "zigbee.json";
@@ -38,5 +39,8 @@ public class ConfigManager
 
         ServerConfig = new ServerConfig();
         configuration.GetSection(ServerConfig.ConfigName).Bind(ServerConfig);
+
+        CloudConfig = new CloudConfig();
+        configuration.GetSection(CloudConfig.ConfigName).Bind(CloudConfig);
     }
 }

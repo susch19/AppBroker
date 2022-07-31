@@ -2,6 +2,10 @@
 
 using Makaretu.Dns;
 
+using MQTTnet.Client;
+using MQTTnet.Extensions.ManagedClient;
+using MQTTnet;
+
 using NLog;
 using NLog.Extensions.Logging;
 using NLog.Web;
@@ -9,6 +13,19 @@ using NLog.Web;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using MQTTnet.Channel;
+using System.Security.Cryptography.X509Certificates;
+using MQTTnet.Adapter;
+using MQTTnet.Diagnostics;
+using System.IdentityModel.Tokens.Jwt;
+using System.Threading.Channels;
+using MQTTnet.Formatter;
+using Org.BouncyCastle.Bcpg;
+using MQTTnet.Packets;
+using MQTTnet.Implementations;
+using NLog.Fluent;
+using MQTTnet.Server;
+using Microsoft.AspNetCore.Connections;
 
 namespace AppBrokerASP;
 
@@ -21,8 +38,7 @@ public class Program
     public const bool IsDebug = false;
     private const int port = 5055;
 #endif
-
-    static SemaphoreSlim slim = new SemaphoreSlim(1, 1);
+    public static ushort UsedPortForSignalR { get; private set; }
 
     public static void Main(string[] args)
     {
@@ -43,11 +59,11 @@ public class Program
             if (InstanceContainer.Instance.ConfigManager.PainlessMeshConfig.Enabled)
                 InstanceContainer.Instance.MeshManager.Start();
 
-            ushort tempPort = port;
+            UsedPortForSignalR = port;
             if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
                 mainLogger.Info($"ListenPort is not configured in the appsettings serverconfig section and therefore default port {port} will be used, when no port was passed into listen url.");
             else
-                tempPort = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort;
+                UsedPortForSignalR = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort;
 
             string[] listenUrls;
             if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Any())
@@ -63,7 +79,7 @@ public class Program
                             //TODO only override default ports? How do we advertise multiple ports or will there be a main port, multiple advertisments or what is the plan?
                             //if ((builder.Scheme == "http" && builder.Port == 80) || (builder.Scheme == "https" && builder.Port == 443))
                             //{
-                            Port = tempPort
+                            Port = UsedPortForSignalR
                         };
                         //}
                         listenUrls[i] = builder.ToString();
@@ -76,16 +92,16 @@ public class Program
             }
             else
             {
-                listenUrls = new[] { $"http://*:{tempPort}" };
+                listenUrls = new[] { $"http://*:{UsedPortForSignalR}" };
             }
-            AdvertiseServerPortsViaMDNS(tempPort);
+            AdvertiseServerPortsViaMDNS(UsedPortForSignalR);
 
             mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
 
             WebApplicationBuilder? webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { /*Args = args,*/ WebRootPath = "wwwroot", });
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
-                ks.ListenAnyIP(tempPort);
+                ks.ListenAnyIP(UsedPortForSignalR);
             });
 
             _ = webBuilder.Host.ConfigureLogging(logging =>
@@ -96,7 +112,7 @@ public class Program
 
             var startup = new Startup(webBuilder.Configuration);
             startup.ConfigureServices(webBuilder.Services);
-
+            
 
             WebApplication? app = webBuilder.Build();
             _ = app.UseWebSockets();
@@ -114,31 +130,6 @@ public class Program
             });
 
 
-
-            _ = Task.Run(async () =>
-            {
-                ConcurrentDictionary<TcpClient, TcpClient> tcpClients = new();
-
-                byte[] firstMessage = new byte[1];
-                int i = 0;
-                const string endpoint = "DESKTOP-ACHBV7O";
-                const ushort port = 5057;
-                void OnClientConnect(IAsyncResult x)
-                {
-                    var client = (TcpClient)x.AsyncState!;
-                    client.EndConnect(x);
-                    mainLogger.Warn("Busy Waiting for new Connection >>>>>>>>>>>>> " + i);
-                    _ = AcceptNewClient(client, mainLogger, tcpClients, firstMessage, i++).Result;
-                    client = new TcpClient();
-                    mainLogger.Warn("Waiting for TCP Connection >>>>>>>>>>>>> " + i);
-                    client.BeginConnect(endpoint, port, OnClientConnect, client);
-                }
-
-                var client = new TcpClient();
-                mainLogger.Warn("Waiting for TCP Connection >>>>>>>>>>>>> " + i);
-                client.BeginConnect(endpoint, port, OnClientConnect, client);
-            });
-
             app.Run();
         }
         catch (Exception ex)
@@ -152,82 +143,6 @@ public class Program
         }
     }
 
-    private static async Task<int> AcceptNewClient(TcpClient x, Logger mainLogger, ConcurrentDictionary<TcpClient, TcpClient> tcpClients, byte[] firstMessage, int i)
-    {
-        mainLogger.Warn("Starting new connection >>>>>>>>>>>>> " + i++);
-        var incomming = x;
-
-        var incommingStr = incomming.GetStream();
-
-        incommingStr.Write(Encoding.UTF8.GetBytes("/SmartHome/1234567/Server"));
-
-        incommingStr.ReadExactly(firstMessage);
-
-        var self = new TcpClient("localhost", 5056);
-        self.NoDelay = true;
-        var selfStr = self.GetStream();
-        tcpClients[incomming] = self;
-
-        _ = Task.Run(async () =>
-        {
-
-            mainLogger.Warn("Server started >>>>>>>>>>>>> " + (i - 1));
-            while (true)
-            {
-                try
-                {
-
-                    if (self.Available > 0)
-                    {
-                        var bytes = new byte[self.Available];
-                        selfStr.ReadExactly(bytes);
-                        mainLogger.Warn($"Send back {bytes.Length}");
-                        var bp = System.Text.Encoding.UTF8.GetString(bytes);
-                        incommingStr.Write(bytes);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    mainLogger.Warn($"Send error (Client:{incomming.Connected}, Self:{self.Connected}) {ex}");
-                    tcpClients.Remove(incomming, out _);
-                    incomming?.Close();
-                    self?.Close();
-                    break;
-
-                }
-                await Task.Delay(1);
-            }
-        });
-        _ = Task.Run(async () =>
-        {
-            while (true)
-            {
-                try
-                {
-                    if (incomming.Available > 0)
-                    {
-                        var bytes = new byte[incomming.Available];
-                        incommingStr.ReadExactly(bytes);
-                        var bp = System.Text.Encoding.UTF8.GetString(bytes);
-                        mainLogger.Warn($"Rec {bytes.Length}");
-                        selfStr.Write(bytes);
-
-                    }
-                }
-                catch (Exception ex)
-                {
-                    mainLogger.Warn($"Rec error (Client:{incomming.Connected}, Self:{self.Connected}) {ex}");
-
-                    tcpClients.Remove(incomming, out _);
-                    incomming?.Close();
-                    self?.Close();
-                    break;
-                }
-                await Task.Delay(1);
-            }
-        });
-        return i;
-    }
 
     private static void AdvertiseServerPortsViaMDNS(ushort port)
     {
