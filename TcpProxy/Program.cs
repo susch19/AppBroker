@@ -28,6 +28,8 @@ ConcurrentDictionary<TcpClient, (TcpClient client, NetworkStream str)> serverToC
 
 SemaphoreSlim connectionSemaphore = new SemaphoreSlim(1);
 
+Task.Run(PingServers);
+
 int clientsAccepted = 0;
 v6Listener.BeginAcceptTcpClient(OnServerConnected, v6Listener);
 
@@ -295,8 +297,8 @@ void RemoveServer(TcpClient self, string id, (TcpClient client, NetworkStream st
     }
 }
 
-void RemoveClient(TcpClient self, 
-    string id, 
+void RemoveClient(TcpClient self,
+    string id,
     (TcpClient client, NetworkStream str) connection)
 {
     try
@@ -311,4 +313,35 @@ void RemoveClient(TcpClient self,
     {
         _ = connectionSemaphore.Release();
     }
+}
+
+void PingServers()
+{
+    foreach (var (_, item) in servers)
+    {
+        connectionSemaphore.Wait();
+        try
+        {
+            for (int i = item.Count - 1; i >= 0; i--)
+            {
+                (TcpClient client, NetworkStream str) = item[i];
+                if (!serverToClient.ContainsKey(client))
+                {
+                    try
+                    {
+                        str.WriteByte(123);
+                    }
+                    catch
+                    {
+                        item.RemoveAt(i);
+                    }
+                }
+            }
+        }
+        finally
+        {
+            connectionSemaphore.Release();
+        }
+    }
+    Thread.Sleep(10000);
 }

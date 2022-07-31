@@ -30,13 +30,13 @@ public static class Extensions
         int totalRead = 0;
         while (totalRead < minimumBytes)
         {
-            int read = stream.Read(buffer.Slice(totalRead));
+            int read = stream.Read(buffer[totalRead..]);
             if (read == 0)
             {
-                if (throwOnEndOfStream)
-                {
-                    throw new EndOfStreamException();
-                }
+                //if (throwOnEndOfStream)
+                //{
+                //    throw new EndOfStreamException();
+                //}
 
                 return totalRead;
             }
