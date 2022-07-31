@@ -13,10 +13,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Runtime.Versioning;
 using System.Text;
 
 namespace AppBroker.Elsa.Signaler;
 
+[RequiresPreviewFeatures]
 public class WorkflowPropertySignaler : IWorkflowPropertySignaler
 {
     private static IWorkflowLaunchpad scopedWorkflowLaunchpad;

@@ -19,7 +19,7 @@ using System.Linq;
 using System;
 using Elsa.Activities.Signaling.Models;
 
-namespace AppBrokerASP.SignalRTesting;
+namespace AppBrokerASP.SignalR;
 
 /// <summary>
 /// Implements the SignalR Hub Protocol using Newtonsoft.Json.
@@ -40,10 +40,13 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
     private const string ProtocolName = "smarthome";
     private const int ProtocolVersion = 1;
 
-    /// <summary>
+    /// <summary> 
     /// Gets the serializer used to serialize invocation arguments and return values.
     /// </summary>
     public JsonSerializer PayloadSerializer { get; }
+
+    private readonly byte[] key;
+
 
     /// <summary>
     /// Initializes a new instance of the <see cref="NewtonsoftJsonSmarthomeHubProtocol"/> class.
@@ -60,6 +63,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
     public NewtonsoftJsonSmarthomeHubProtocol(IOptions<NewtonsoftJsonHubProtocolOptions> options)
     {
         PayloadSerializer = JsonSerializer.Create(options.Value.PayloadSerializerSettings);
+        key = SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(InstanceContainer.Instance.ConfigManager.ServerConfig.EncryptionPassword));
     }
 
     /// <inheritdoc />
@@ -82,9 +86,10 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
     {
         ReadOnlySequence<byte> decrypted;
         var len = GetLengthOfBytes(input.FirstSpan);
+        var iv = input.Slice(4, 16);
         try
         {
-            decrypted = DecryptStringFromBytes_Aes(input.FirstSpan.Slice(4, len), Encoding.UTF8.GetBytes("my 32 length key................"));
+            decrypted = DecryptStringFromBytes_Aes(input.FirstSpan.Slice(20, len), iv.ToArray());
 
         }
         catch (Exception)
@@ -93,7 +98,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
             return false;
         }
 
-        input = input.Slice(len + 4);
+        input = input.Slice(len + 20);
 
         if (!TextMessageParser.TryParseMessage(ref decrypted, out var payload))
         {
@@ -503,7 +508,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
 
         TextMessageFormatter.WriteRecordSeparator(bfw);
 
-        var enc = EncryptStringToBytes_Aes(bfw.WrittenSpan, Encoding.UTF8.GetBytes("my 32 length key................"));
+        var enc = EncryptStringToBytes_Aes(bfw.WrittenSpan);
 
         stream.Write(enc);
     }
@@ -796,10 +801,11 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         return new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
     }
 
-    static byte[] EncryptStringToBytes_Aes(ReadOnlySpan<byte> input, byte[] Key, byte[]? IV = null)
+    byte[] EncryptStringToBytes_Aes(ReadOnlySpan<byte> input)
     {
-        if (Key == null || Key.Length <= 0)
-            throw new ArgumentNullException(nameof(Key));
+        if (key == null || key.Length <= 0)
+            throw new ArgumentNullException(nameof(key));
+
 
         byte[] encrypted;
 
@@ -809,12 +815,8 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         {
             aesAlg.Padding = PaddingMode.PKCS7;
             aesAlg.Mode = CipherMode.CBC;
-            aesAlg.Key = Key;
-            if (IV != null && IV.Length > 0)
-                aesAlg.IV = IV;
-            else
-                aesAlg.IV = Encoding.UTF8.GetBytes("das123ist456ein7");
-            //aesAlg.BlockSize = 16;
+            aesAlg.Key = key;
+            aesAlg.GenerateIV();
             // Create an encryptor to perform the stream transform.
             ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
@@ -824,19 +826,15 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
                 using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
                 {
                     csEncrypt.WriteSpan(input, input.Length, false);
-                    //var toPad = ((16 - (input.Length % 16)) % 16) - 1;
-                    //if (toPad > 0)
-                    //{
-                    //    csEncrypt.Write(Enumerable.Repeat((byte)toPad, toPad).ToArray());
-                    //}
+
                     csEncrypt.FlushFinalBlock();
                 }
                 encrypted = msEncrypt.ToArray();
             }
+            // Return the encrypted bytes from the memory stream.
+            return GetBytesOfInt(encrypted.Length).Concat(aesAlg.IV).Concat(encrypted).ToArray();
         }
 
-        // Return the encrypted bytes from the memory stream.
-        return GetBytesOfInt(encrypted.Length).Concat(encrypted).ToArray();
     }
 
 
@@ -854,24 +852,23 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         return new byte[] { a, b, c, d };
     }
 
-    static ReadOnlySequence<byte> DecryptStringFromBytes_Aes(ReadOnlySpan<byte> cipherText, byte[] Key, byte[]? IV = null)
+    ReadOnlySequence<byte> DecryptStringFromBytes_Aes(ReadOnlySpan<byte> cipherText, byte[] iv)
     {
         // Check arguments.
         //if (cipherText == null || cipherText.Length <= 0)
         //    throw new ArgumentNullException(nameof(cipherText));
-        if (Key == null || Key.Length <= 0)
-            throw new ArgumentNullException(nameof(Key));
+        if (key == null || key.Length <= 0)
+            throw new ArgumentNullException(nameof(key));
+        if (iv == null || iv.Length <= 0)
+            throw new ArgumentNullException(nameof(iv));
 
         using (var aesAlg = Aes.Create())
         {
             aesAlg.Padding = PaddingMode.PKCS7;
             aesAlg.Mode = CipherMode.CBC;
-            aesAlg.Key = Key;
+            aesAlg.Key = key;
             //aesAlg.BlockSize = 16;
-            if (IV != null && IV.Length > 0)
-                aesAlg.IV = IV;
-            else
-                aesAlg.IV = Encoding.UTF8.GetBytes("das123ist456ein7");
+            aesAlg.IV = iv;
 
             ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 

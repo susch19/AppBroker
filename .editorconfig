@@ -84,7 +84,7 @@ csharp_style_expression_bodied_accessors = true:suggestion
 csharp_style_expression_bodied_constructors = false:suggestion
 csharp_style_expression_bodied_indexers = true:suggestion
 csharp_style_expression_bodied_lambdas = true:suggestion
-csharp_style_expression_bodied_local_functions = false
+csharp_style_expression_bodied_local_functions = false:silent
 csharp_style_expression_bodied_methods = when_on_single_line:suggestion
 csharp_style_expression_bodied_operators = true:suggestion
 csharp_style_expression_bodied_properties = true:suggestion
@@ -106,7 +106,7 @@ csharp_preferred_modifier_order = public,private,protected,internal,static,exter
 
 # Code-block preferences
 csharp_prefer_braces = when_multiline:suggestion
-csharp_prefer_simple_using_statement = true
+csharp_prefer_simple_using_statement = true:suggestion
 csharp_style_namespace_declarations = file_scoped:suggestion
 
 # Expression-level preferences
@@ -121,7 +121,7 @@ csharp_style_prefer_range_operator = true:warning
 csharp_style_prefer_tuple_swap = true
 csharp_style_throw_expression = true
 csharp_style_unused_value_assignment_preference = discard_variable:warning
-csharp_style_unused_value_expression_statement_preference = discard_variable:warning
+csharp_style_unused_value_expression_statement_preference = discard_variable:suggestion
 
 # 'using' directive preferences
 csharp_using_directive_placement = outside_namespace:warning
@@ -230,6 +230,11 @@ dotnet_diagnostic.CA1845.severity=warning
 dotnet_diagnostic.CA2016.severity=warning
 dotnet_diagnostic.CA2244.severity=warning
 dotnet_diagnostic.CA2246.severity=warning
+csharp_style_prefer_method_group_conversion = true:silent
+csharp_style_prefer_top_level_statements = true:silent
+
+# IDE0058: Expression value is never used
+dotnet_diagnostic.IDE0058.severity = suggestion
 
 [*.vb]
 dotnet_diagnostic.CA1047.severity=warning
@@ -288,3 +293,14 @@ dotnet_diagnostic.CA2242.severity=warning
 dotnet_diagnostic.CA2245.severity=warning
 dotnet_diagnostic.CA2249.severity=warning
 dotnet_diagnostic.CA2251.severity=suggestion
+dotnet_style_operator_placement_when_wrapping = beginning_of_line
+tab_width = 4
+indent_size = 4
+end_of_line = lf
+dotnet_style_coalesce_expression = true:suggestion
+dotnet_style_null_propagation = true:suggestion
+dotnet_style_prefer_is_null_check_over_reference_equality_method = true:warning
+dotnet_style_prefer_auto_properties = true:suggestion
+dotnet_style_object_initializer = true:suggestion
+dotnet_style_collection_initializer = true:suggestion
+dotnet_style_prefer_simplified_boolean_expressions = true:suggestion
