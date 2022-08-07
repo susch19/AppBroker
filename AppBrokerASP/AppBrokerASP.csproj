@@ -10,8 +10,6 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<NoWarn>CS0657;CA2252</NoWarn>
 		<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -67,11 +65,7 @@
 		<ProjectReference Condition="'$(DesignTimeBuild)'!='true'" Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
-	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild">
-		<ItemGroup>
-			<Compile Remove="GeneratedFiles\**" />
-		</ItemGroup>
-	</Target>
+	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild" />
 
 	<ItemGroup>
 		<None Update="cert.pem">
@@ -86,7 +80,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="GeneratedFiles\AppBroker.Generators\" />
 	  <Folder Include="Properties\" />
 	</ItemGroup>
 

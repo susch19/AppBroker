@@ -14,7 +14,7 @@ namespace AppBroker
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
     [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
-    sealed class IgnoreFieldAttribute : Attribute
+    internal sealed class IgnoreFieldAttribute : Attribute
     {
         public IgnoreFieldAttribute()
         {
@@ -30,7 +30,7 @@ namespace AppBroker
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
     [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
-    sealed class AddOverrideAttribute : Attribute
+    internal sealed class AddOverrideAttribute : Attribute
     {
         public AddOverrideAttribute()
         {
@@ -45,7 +45,7 @@ namespace AppBroker
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
     [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
-    sealed class IgnoreChangedFieldAttribute : Attribute
+    internal sealed class IgnoreChangedFieldAttribute : Attribute
     {
         public IgnoreChangedFieldAttribute()
         {
@@ -60,7 +60,7 @@ namespace AppBroker
 {
     [AttributeUsage(AttributeTargets.Field, Inherited = false, AllowMultiple = false)]
     [System.Diagnostics.Conditional(""NotifyPropertyChangedGenerator_DEBUG"")]
-    sealed class PropertyChangedAppbrokerAttribute : Attribute
+    internal sealed class PropertyChangedAppbrokerAttribute : Attribute
     {
         public PropertyChangedAppbrokerAttribute()
         {
@@ -78,7 +78,7 @@ namespace AppBroker
 
     [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
     [System.Diagnostics.Conditional(""ImplementNotifyPropertyChangedGenerator_DEBUG"")]
-    sealed class ClassPropertyChangedAppbrokerAttribute : Attribute
+    internal sealed class ClassPropertyChangedAppbrokerAttribute : Attribute
     {
         public ClassPropertyChangedAppbrokerAttribute(Type? typeName, bool callPropertyChanging = true, bool callPropertyChanged = false) : this(callPropertyChanging, callPropertyChanged)
         {
@@ -165,7 +165,7 @@ namespace AppBroker
 using System.Runtime.CompilerServices;
 namespace {namespaceName}
 {{
-    public partial class {classSymbol.Name}{additional}");
+    partial class {classSymbol.Name}{additional}");
 
             // if the class doesn't implement INotifyPropertyChanged already, add it
 
