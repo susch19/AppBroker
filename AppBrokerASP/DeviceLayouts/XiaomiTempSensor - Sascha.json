@@ -1,16 +1,14 @@
 {
-  "UniqueName": "SaschaTempSensorLayout",
-  "TypeName": "",
-  "Ids": [
-    6066005697233659
-  ],
+  "UniqueName": "TempSensorLayout",
+  "TypeName": "XiaomiTempSensor",
+  "Ids": [],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 20.0,
+          "FontSize": 25.0,
           "FontWeight": "bold"
         },
         "RowNr": 0,
@@ -21,7 +19,7 @@
         "Order": 1,
         "RowNr": 1,
         "TextStyle": {
-          "FontSize": 10.0,
+          "FontSize": 14.0,
           "FontWeight": "normal"
         },
         "UnitOfMeasurement": " %"
@@ -31,7 +29,7 @@
         "Order": 2,
         "RowNr": 1,
         "TextStyle": {
-          "FontSize": 10.0,
+          "FontSize": 14.0,
           "FontWeight": "normal"
         },
         "UnitOfMeasurement": " kpa"
@@ -44,7 +42,100 @@
       },
       {
         "Name": "battery",
+        "Order": 2,
+        "RowNr": 4,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": 0.0,
+                "Max": 100.0,
+                "Divisions": 100
+
+              }
+            }
+          ],
+          "Display": "Battery"
+        }
+      },
+      {
+        "Name": "battery",
         "Order": 0,
+        "EditInfo": {
+          "EditType": "icon",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 0,
+              "Max": 20,
+              "CodePoint": 59412,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 20,
+              "Max": 40,
+              "CodePoint": 59408,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 40,
+              "Max": 60,
+              "CodePoint": 59409,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 60,
+              "Max": 80,
+              "CodePoint": 59410,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 100,
+              "Min": 80,
+              "Max": 101,
+              "CodePoint": 59411,
+              "FontFamily": "Smarthome"
+            }
+          ]
+        },
+        "SpecialType": "right"
+      },
+      {
+        "Name": "isConnected",
+        "Order": 1,
+        "EditInfo": {
+          "EditType": "iconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": true,
+              "CodePoint": 59411,
+              "Parameters": [ false ]
+            },
+
+            {
+              "Command": "None",
+              "Value": false,
+              "CodePoint": 59411,
+              "FontFamily": "Smarthome",
+              "Parameters": [ true ]
+            }
+          ]
+        },
         "SpecialType": "right"
       }
     ]
@@ -54,6 +145,7 @@
       {
         "Name": "friendlyName",
         "Order": 0,
+        "RowNr": 0,
         "TextStyle": {
           "FontSize": 25.0,
           "FontFamily": "FontName",
@@ -66,6 +158,7 @@
       {
         "Name": "id",
         "Order": 1,
+        "RowNr": 1,
         "TextStyle": {
           "FontSize": 16.0,
           "FontFamily": "FontName",
@@ -79,6 +172,7 @@
       {
         "Name": "temperature",
         "Order": 0,
+        "RowNr": 2,
         "DisplayName": "Temperature: ",
         "UnitOfMeasurement": " °C",
         "TextStyle": {
@@ -93,6 +187,7 @@
       {
         "Name": "humidity",
         "Order": 0,
+        "RowNr": 3,
         "DisplayName": "Luftfeuchtigkeit: ",
         "UnitOfMeasurement": " %",
         "TextStyle": {
@@ -107,6 +202,7 @@
       {
         "Name": "pressure",
         "Order": 0,
+        "RowNr": 4,
         "DisplayName": "Luftdruck: ",
         "UnitOfMeasurement": " kPA",
         "TextStyle": {
@@ -121,6 +217,7 @@
       {
         "Name": "battery",
         "Order": 0,
+        "RowNr": 5,
         "DisplayName": "Battery: ",
         "UnitOfMeasurement": " %",
         "TextStyle": {
@@ -135,6 +232,7 @@
       {
         "Name": "lastReceivedFormatted",
         "Order": 0,
+        "RowNr": 6,
         "DisplayName": "Zuletzt empfangen: ",
         "TextStyle": {
           "FontSize": 16.0,
@@ -149,6 +247,7 @@
       {
         "Name": "link_Quality",
         "Order": 0,
+        "RowNr": 7,
         "DisplayName": "Verbindungsqualität: ",
         "TextStyle": {
           "FontSize": 16.0,
