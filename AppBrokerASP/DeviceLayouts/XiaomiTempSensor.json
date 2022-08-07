@@ -123,8 +123,7 @@
             {
               "Command": "None",
               "Value": true,
-              "CodePoint": 59412,
-              "FontFamily": "Smarthome",
+              "CodePoint": 59411,
               "Parameters": [ false ]
             },
 
@@ -133,7 +132,7 @@
               "Value": false,
               "CodePoint": 59411,
               "FontFamily": "Smarthome",
-              "Parameters": [true]
+              "Parameters": [ true ]
             }
           ]
         },
@@ -146,6 +145,7 @@
       {
         "Name": "friendlyName",
         "Order": 0,
+        "RowNr": 0,
         "TextStyle": {
           "FontSize": 25.0,
           "FontFamily": "FontName",
@@ -158,6 +158,7 @@
       {
         "Name": "id",
         "Order": 1,
+        "RowNr": 1,
         "TextStyle": {
           "FontSize": 16.0,
           "FontFamily": "FontName",
@@ -171,6 +172,7 @@
       {
         "Name": "temperature",
         "Order": 0,
+        "RowNr": 2,
         "DisplayName": "Temperature: ",
         "UnitOfMeasurement": " °C",
         "TextStyle": {
@@ -185,6 +187,7 @@
       {
         "Name": "humidity",
         "Order": 0,
+        "RowNr": 3,
         "DisplayName": "Luftfeuchtigkeit: ",
         "UnitOfMeasurement": " %",
         "TextStyle": {
@@ -199,6 +202,7 @@
       {
         "Name": "pressure",
         "Order": 0,
+        "RowNr": 4,
         "DisplayName": "Luftdruck: ",
         "UnitOfMeasurement": " kPA",
         "TextStyle": {
@@ -213,6 +217,7 @@
       {
         "Name": "battery",
         "Order": 0,
+        "RowNr": 5,
         "DisplayName": "Battery: ",
         "UnitOfMeasurement": " %",
         "TextStyle": {
@@ -227,6 +232,7 @@
       {
         "Name": "lastReceivedFormatted",
         "Order": 0,
+        "RowNr": 6,
         "DisplayName": "Zuletzt empfangen: ",
         "TextStyle": {
           "FontSize": 16.0,
@@ -241,6 +247,7 @@
       {
         "Name": "link_Quality",
         "Order": 0,
+        "RowNr": 7,
         "DisplayName": "Verbindungsqualität: ",
         "TextStyle": {
           "FontSize": 16.0,
