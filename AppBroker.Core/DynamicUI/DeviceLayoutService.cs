@@ -18,7 +18,9 @@ public static class DeviceLayoutService
     {
         fileSystemWatcher = new FileSystemWatcher(new DirectoryInfo("DeviceLayouts").FullName, "*.json")
         {
-            NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite
+            NotifyFilter = NotifyFilters.FileName |
+                NotifyFilters.LastWrite |
+                NotifyFilters.Security
         };
         fileSystemWatcher.Changed += FileChanged;
         fileSystemWatcher.Created += FileChanged;
@@ -69,8 +71,11 @@ public static class DeviceLayoutService
     }
     private static void FileChanged(object sender, FileSystemEventArgs e)
     {
+        var logger = NLog.LogManager.GetCurrentClassLogger();
+
         _ = Task.Delay(100).ContinueWith((t) =>
         {
+            logger.Info($"Layout change detected: {e.FullPath}");
             var (layout, hash) = GetHashAndFile(e.FullPath);
             bool updated = false;
 
