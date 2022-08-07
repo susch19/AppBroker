@@ -18,6 +18,7 @@ using System.Text;
 using System.Linq;
 using System;
 using Elsa.Activities.Signaling.Models;
+using System.IO.Compression;
 
 namespace AppBrokerASP.SignalR;
 
@@ -81,17 +82,84 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         return version == Version;
     }
     const byte RecordSep = 0x1e;
+
+    private class SpanStream : Stream
+    {
+        ReadOnlySequence<byte> _data;
+
+        public SpanStream(ReadOnlySequence<byte> data)
+        {
+            _data = data;
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => true;
+        public override bool CanWrite => false;
+        public override long Length => Math.Min( _data.Length, MaxLength);
+        public override long Position { get; set; }
+
+        internal long MaxLength { get; set; } = long.MaxValue;
+
+        public override void Flush() { }
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (Position == Length)
+                return 0;
+            _data.FirstSpan[(int)Position..(Math.Min(_data.FirstSpan.Length, (int)Position + count))]
+                .CopyTo(buffer.AsSpan(offset, count));
+            var read = (int)Math.Min(Length - Position, count);
+            Position += read;
+            return read;
+        }
+
+        public override long Seek(long offset, SeekOrigin origin)
+        {
+            switch (origin)
+            {
+                case SeekOrigin.Begin:
+                    return Position = offset;
+                case SeekOrigin.Current:
+                    return Position += offset;
+                case SeekOrigin.End:
+                    return Position = Length - offset;
+            }
+            return 0;
+        }
+
+        public override void SetLength(long value) => throw new NotImplementedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotImplementedException();
+    }
+
     /// <inheritdoc />
     public bool TryParseMessage(ref ReadOnlySequence<byte> input, IInvocationBinder binder, [NotNullWhen(true)] out HubMessage? message)
     {
         ReadOnlySequence<byte> decrypted;
-        var len = GetLengthOfBytes(input.FirstSpan);
-        var iv = input.Slice(4, 16);
+
+        using var ms = new SpanStream(input);
+        Span<byte> lenSpan = stackalloc byte[4];
+        ms.ReadExactly(lenSpan);
+        Span<byte> ivSpan = stackalloc byte[16];
+        ms.ReadExactly(ivSpan);
+
+
+        var len = GetLengthOfBytes(lenSpan);
+        ms.MaxLength = len+20;
+
+        //using var gzip = new GZipStream(ms, CompressionMode.Decompress);
+        //Span<byte> dataSpan = stackalloc byte[32684];
+        //var read = gzip.Read(dataSpan);
+        //var iv = input.Slice(4, 16);
         try
         {
-            decrypted = DecryptStringFromBytes_Aes(input.FirstSpan.Slice(20, len), iv.ToArray());
-
+            decrypted = DecryptStringFromBytes_Aes(ms, ivSpan.ToArray(), len);
         }
+        //var len = GetLengthOfBytes(input.FirstSpan);
+        //var iv = input.Slice(4, 16);
+        //try
+        //{
+        //    decrypted = DecryptStringFromBytes_Aes(input.FirstSpan.Slice(20, len), iv.ToArray());
+
+        //}
         catch (Exception)
         {
             message = null;
@@ -821,16 +889,23 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
             ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
             // Create the streams used for encryption.
+            
             using (MemoryStream msEncrypt = new MemoryStream())
-            {
-                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
-                {
-                    csEncrypt.WriteSpan(input, input.Length, false);
 
-                    csEncrypt.FlushFinalBlock();
-                }
+            using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write, true))
+
+            using (var zip = new GZipStream(csEncrypt, CompressionMode.Compress))
+            using (var buffered = new BufferedStream(zip))
+
+            {
+                buffered.WriteSpan(input, input.Length, false);
+                buffered.Flush();
+                zip.Flush();
+                csEncrypt.FlushFinalBlock();
+
                 encrypted = msEncrypt.ToArray();
             }
+            Console.WriteLine($"Encrypted: {input.Length} to {encrypted.Length}");
             // Return the encrypted bytes from the memory stream.
             return GetBytesOfInt(encrypted.Length).Concat(aesAlg.IV).Concat(encrypted).ToArray();
         }
@@ -852,7 +927,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         return new byte[] { a, b, c, d };
     }
 
-    ReadOnlySequence<byte> DecryptStringFromBytes_Aes(ReadOnlySpan<byte> cipherText, byte[] iv)
+    ReadOnlySequence<byte> DecryptStringFromBytes_Aes(Stream cipherText, byte[] iv, int len)
     {
         // Check arguments.
         //if (cipherText == null || cipherText.Length <= 0)
@@ -872,24 +947,23 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
 
             ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
 
-            using (MemoryStream msDecrypt = new MemoryStream(cipherText.ToArray()))
+
+            using (var csDecrypt = new CryptoStream(cipherText, decryptor, CryptoStreamMode.Read))
+            using (var zip = new GZipStream(csDecrypt, CompressionMode.Decompress))
+            using (var buffered = new BufferedStream(zip))
             {
-                using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
+                var bytes = new byte[32486];
+                int offset = 0, lastRead = 0;
+                ;
+                do
                 {
-                    var bytes = new byte[cipherText.Length];
-                    int offset = 0, lastRead = 0;
-                    ;
-                    do
-                    {
-                        lastRead = csDecrypt.Read(bytes, offset, bytes.Length - offset);
-                        offset += lastRead;
+                    lastRead = buffered.Read(bytes, offset, bytes.Length - offset);
+                    offset += lastRead;
 
-                    } while (lastRead > 0);
+                } while (lastRead > 0);
 
-                    return new ReadOnlySequence<byte>(bytes);
-                }
+                return new ReadOnlySequence<byte>(bytes[..offset]);
             }
-
 
         }
 

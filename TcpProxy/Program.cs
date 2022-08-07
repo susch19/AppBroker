@@ -33,6 +33,7 @@ Task.Run(PingServers);
 int clientsAccepted = 0;
 v6Listener.BeginAcceptTcpClient(OnServerConnected, v6Listener);
 
+
 var waitForProcessShutdownStart = new ManualResetEvent(false);
 using var reg = PosixSignalRegistration.Create(OperatingSystem.IsWindows() ? PosixSignal.SIGINT : PosixSignal.SIGTERM, context =>
 {

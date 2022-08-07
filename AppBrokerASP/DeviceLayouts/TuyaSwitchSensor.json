@@ -6,9 +6,173 @@
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
+        "Name": "state",
+        "Order": 1,
+        "RowNr": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            }
+          ],
+          "Display": "AN",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "AUS",
+          "ActiveValue": false
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 1,
+        "EditInfo": {
+          "EditType": "toggle",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            },
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "Status",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 2,
+        "EditInfo": {
+          "EditType": "dropdown",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true,
+              "DisplayName": "AN"
+            },
+            {
+              "Command": "Off",
+              "Value": false,
+              "DisplayName": "AUS"
+            },
+            {
+              "Command": "None",
+              "Value": "Custom",
+              "DisplayName": "Just for testing",
+              "Parameters": [ { "PropertyName": "CustomProperty" } ]
+            }
+          ],
+          "Display": "Status DropDown"
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "DeviceId": -6574912042886067214,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": -25.0,
+                "Max": 40.0,
+                "Divisions": 5
+              }
+            }
+          ],
+          //"Display": "Current",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 4,
+        "EditInfo": {
+          "EditType": "input",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": -25.0,
+                "Max": 40.0,
+                "Divisions": 5
+              }
+            }
+          ],
+          "Display": "Ein tolles Label",
+          "ActiveValue": true,
+          "HintText": "Toller Hint",
+          "KeyboardType": "number"
+        }
+      },
+
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 4,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": 0.0,
+                "Max": 2.0,
+                "Divisions": 100,
+                "Values": [
+                  {
+                    "Test": "TestFirst"
+                  },
+                  {
+                    "Other": 12
+                  },
+                  {
+                    "CompletelyDifferent": 12.6
+                  }
+                ]
+              }
+            }
+          ],
+          "Display": "Current",
+          "ActiveValue": true
+        }
+      },
+      {
         "Name": "load_power",
         "Order": 0,
-        "RowNr": 0,
+        "RowNr": 20,
         "TextStyle": {
           "FontSize": 20.0,
           "FontWeight": "bold"
@@ -18,7 +182,7 @@
       {
         "Name": "current",
         "Order": 1,
-        "RowNr": 1,
+        "RowNr": 30,
         "TextStyle": {
           "FontSize": 16.0,
           "FontWeight": "normal"
@@ -28,7 +192,7 @@
       {
         "Name": "voltage",
         "Order": 2,
-        "RowNr": 1,
+        "RowNr": 30,
         "TextStyle": {
           "FontSize": 16.0,
           "FontWeight": "normal"
@@ -38,7 +202,7 @@
       {
         "Name": "id",
         "Order": 2,
-        "RowNr": 2,
+        "RowNr": 40,
         "ShowOnlyInDeveloperMode": true
       }
     ]
@@ -46,8 +210,284 @@
   "DetailDeviceLayout": {
     "PropertyInfos": [
       {
+        "Name": "state",
+        "Order": 1,
+        "RowNr": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            }
+          ],
+          "Display": "AN",
+          "ActiveValue": true
+        },
+        "DisplayName": "Status: "
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "AUS",
+          "ActiveValue": false
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 1,
+        "EditInfo": {
+          "EditType": "toggle",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            },
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "Status",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 2,
+        "EditInfo": {
+          "EditType": "dropdown",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true,
+              "DisplayName": "AN"
+            },
+            {
+              "Command": "Off",
+              "Value": false,
+              "DisplayName": "AUS"
+            },
+            {
+              "Command": "None",
+              "Value": "Custom",
+              "DisplayName": "Just for testing",
+              "Parameters": [ { "PropertyName": "CustomProperty" } ]
+            }
+          ],
+          "Display": "Status DropDown"
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 8,
+        "EditInfo": {
+          "EditType": "IconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "Off",
+              "Value": true,
+              "DisplayName": "AnIcon",
+              "CodePoint": 57460
+            },
+            {
+              "Command": "On",
+              "Value": false,
+              "DisplayName": "AusIcon",
+              "CodePoint": 57461
+            }
+          ],
+          "Display": "Status DropDown"
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "Expanded": true,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": -25.0,
+                "Max": 40.0
+                //"Divisions": 5
+              }
+            }
+          ],
+          //"Display": "Current",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "DeviceId": -6574912042886067214,
+        "EditInfo": {
+          "EditType": "icon",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 20.0,
+              "Max": 40.0,
+              "CodePoint": 57460
+            },
+            {
+              "Command": "None",
+              "Value": 150.0,
+              "Min": 10.0,
+              "Max": 20.0,
+              "CodePoint": 57461
+            },
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 0.0,
+              "Max": 10.0,
+              "CodePoint": 57462
+            },
+            {
+              "Command": "None",
+              "Value": -50.0,
+              "Min": -100.0,
+              "Max": 0.0,
+              "CodePoint": 57463
+            }
+          ],
+          //"Display": "Current",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "EditInfo": {
+          "EditType": "FloatingActionButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 20.0,
+              "Max": 40.0,
+              "CodePoint": 57460,
+              "Parameters": [ "Current" ]
+            },
+            {
+              "Command": "None",
+              "Value": 150.0,
+              "Min": 10.0,
+              "Max": 20.0,
+              "CodePoint": 57461,
+              "Parameters": [ "Current2" ]
+            },
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 0.0,
+              "Max": 10.0,
+              "CodePoint": 57462,
+              "Parameters": [ "Current3" ]
+            },
+            {
+              "Command": "None",
+              "Value": -50.0,
+              "Min": -100.0,
+              "Max": 0.0,
+              "CodePoint": 57463,
+              "Parameters": [ "Current4" ]
+            }
+          ],
+          //"Display": "Current",
+          "ActiveValue": true
+        }
+      },
+      //{
+      //  "Name": "current",
+      //  "Order": 2,
+      //  "RowNr": 4,
+      //  "EditInfo": {
+      //    "EditType": "input",
+      //    "EditCommand": "Update",
+      //    "EditParameter": [
+      //      {
+      //        "Command": "None",
+      //        "Parameters": [ "Current" ],
+      //        "Value": {
+      //          "Min": -25.0,
+      //          "Max": 40.0,
+      //          "Divisions": 5
+      //        }
+      //      }
+      //    ],
+      //    "Display": "Ein tolles Label",
+      //    "ActiveValue": true,
+      //    "HintText": "Toller Hint",
+      //    "KeyboardType": "number"
+      //  }
+      //},
+
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 4,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": 0.0,
+                "Max": 2.0,
+                "Divisions": 2,
+                "Values": [
+                  {
+                    "Test": "TestFirst"
+                  },
+                  {
+                    "Other": 12
+                  },
+                  {
+                    "CompletelyDifferent": 12.6
+                  }
+                ]
+              }
+            }
+          ],
+          "Display": "Current"
+        }
+      },
+      {
         "Name": "friendlyName",
         "Order": 0,
+        "RowNr": 10,
         "TextStyle": {
           "FontSize": 25.0,
           "FontFamily": "FontName",
@@ -60,6 +500,7 @@
       {
         "Name": "id",
         "Order": 1,
+        "RowNr": 11,
         "TextStyle": {
           "FontSize": 16.0,
           "FontFamily": "FontName",
@@ -73,6 +514,7 @@
       {
         "Name": "state",
         "Order": 0,
+        "RowNr": 12,
         "DisplayName": "Status: ",
         "UnitOfMeasurement": "",
         "TextStyle": {
@@ -87,6 +529,7 @@
       {
         "Name": "load_power",
         "Order": 0,
+        "RowNr": 13,
         "DisplayName": "Verbrauch: ",
         "UnitOfMeasurement": " W",
         "TextStyle": {
@@ -101,6 +544,7 @@
       {
         "Name": "current",
         "Order": 0,
+        "RowNr": 14,
         "DisplayName": "Stromstärke: ",
         "UnitOfMeasurement": " A",
         "TextStyle": {
@@ -115,6 +559,7 @@
       {
         "Name": "voltage",
         "Order": 0,
+        "RowNr": 15,
         "DisplayName": "Spannung: ",
         "UnitOfMeasurement": " V",
         "TextStyle": {
@@ -129,6 +574,7 @@
       {
         "Name": "energy",
         "Order": 0,
+        "RowNr": 16,
         "DisplayName": "Historischer Verbrauch: ",
         "UnitOfMeasurement": " kWh",
         "TextStyle": {
@@ -143,6 +589,7 @@
       {
         "Name": "lastReceivedFormatted",
         "Order": 0,
+        "RowNr": 17,
         "DisplayName": "Zuletzt empfangen: ",
         "TextStyle": {
           "FontSize": 16.0,
@@ -157,6 +604,7 @@
       {
         "Name": "link_Quality",
         "Order": 0,
+        "RowNr": 18,
         "DisplayName": "Verbindungsqualität: ",
         "TextStyle": {
           "FontSize": 16.0,
