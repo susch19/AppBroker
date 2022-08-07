@@ -27,10 +27,10 @@
       {
         "Name": "PropNameUpdateable",
         "Order": 0,
-        "EditInfo": {
-          "EditType": "Update",
-          "EditCommand": 14
-        },
+        //"EditInfo": {
+        //  "EditType": "Update",
+        //  "EditCommand": 14
+        //},
         "TextStyle": {
           "FontSize": 12.0,
           "FontFamily": "FontName",
@@ -64,10 +64,10 @@
       {
         "Name": "PropNameTempTarget",
         "Order": 3,
-        "EditInfo": {
-          "EditType": "Update",
-          "EditCommand": 6
-        },
+        //"EditInfo": {
+        //  "EditType": "Update",
+        //  "EditCommand": 6
+        //},
         "TextStyle": {
           "FontSize": 12.0,
           "FontFamily": "FontName",

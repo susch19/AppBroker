@@ -3,6 +3,7 @@ using AppBrokerASP.Configuration;
 
 using Microsoft.AspNetCore.Mvc;
 
+using System.Security.Cryptography;
 using System.Text;
 
 namespace AppBrokerASP.Controllers;
@@ -21,6 +22,7 @@ public class SecurityController : ControllerBase
     [HttpGet]
     public AppCloudConfiguration GetSecurityInfo()
     {
-        return new AppCloudConfiguration(config.CloudServerHost, config.CloudServerPort, Encoding.UTF8.GetBytes(serverConfig.EncryptionPassword), config.ConnectionID);
+        return new AppCloudConfiguration(config.CloudServerHost, config.CloudServerPort,
+            SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(serverConfig.EncryptionPassword)), config.ConnectionID);
     }
 }

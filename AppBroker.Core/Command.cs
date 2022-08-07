@@ -1,5 +1,8 @@
-﻿namespace AppBroker.Core;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
+namespace AppBroker.Core;
+[JsonConverter(typeof(StringEnumConverter))]
 public enum Command
 {
     None,

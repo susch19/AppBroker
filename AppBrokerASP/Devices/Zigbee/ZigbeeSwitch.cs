@@ -33,6 +33,9 @@ public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
                 State = false;
                 await SetValue(nameof(State), State);
                 break;
+            case Command.None:
+                Console.WriteLine(string.Join(",", parameters.Select(x => x.ToObject<string>())));
+                break;
         }
     }
 }

@@ -39,11 +39,6 @@
         "Order": 2,
         "RowNr": 2,
         "ShowOnlyInDeveloperMode": true
-      },
-      {
-        "Name": "battery",
-        "Order": 0,
-        "SpecialType": "battery"
       }
     ]
   },

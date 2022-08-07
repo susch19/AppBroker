@@ -45,7 +45,7 @@
       {
         "Name": "battery",
         "Order": 0,
-        "SpecialType": "battery"
+        "SpecialType": "right"
       }
     ]
   },
