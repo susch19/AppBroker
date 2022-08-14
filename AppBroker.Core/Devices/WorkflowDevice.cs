@@ -13,7 +13,7 @@ namespace AppBroker.Core.Devices;
 
 [ClassPropertyChangedAppbroker]
 [RequiresPreviewFeatures]
-public abstract partial class WorkflowDevice<TPropertySignaler, TDeviceSignaler> : Device
+public abstract partial class WorkflowDevice<TPropertySignaler, TDeviceSignaler> : ConnectionDevice
     where TPropertySignaler : IWorkflowPropertySignaler
     where TDeviceSignaler : IWorkflowDeviceSignaler
 {

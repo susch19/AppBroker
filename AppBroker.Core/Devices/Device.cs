@@ -3,8 +3,21 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace AppBroker.Core.Devices;
+
+public abstract class ConnectionDevice  : Device
+{
+
+    public abstract bool IsConnected { get; set; }
+    protected ConnectionDevice(long nodeId) : base(nodeId)
+    {
+        IsConnected = true;
+    }
+    public override void StopDevice() => IsConnected = false;
+    public override void Reconnect(ByteLengthList parameter) => IsConnected = true;
+}
 
 public abstract class Device
 {
@@ -22,13 +35,13 @@ public abstract class Device
 
     public abstract string FriendlyName { get; set; }
 
-    public abstract bool IsConnected { get; set; }
-
     [JsonIgnore]
     public bool Initialized { get; set; }
 
     [JsonIgnore]
     protected NLog.Logger Logger { get; set; }
+
+    private readonly Timer sendLastDataTimer;
 
     public Device(long nodeId)
     {
@@ -36,10 +49,9 @@ public abstract class Device
         Id = nodeId;
         TypeName = GetType().Name;
         TypeNames = GetBaseTypeNames(GetType()).ToArray();
-        IsConnected = true;
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
-
+        sendLastDataTimer = new Timer((s) => Subscribers.ForEach(x => SendLastData(x.SmarthomeClient)), null, Timeout.Infinite, Timeout.Infinite);
     }
 
     private IEnumerable<string> GetBaseTypeNames(Type type)
@@ -61,19 +73,11 @@ public abstract class Device
     public virtual async void SendLastData(ISmartHomeClient client) => await client.Update(this);
     public virtual void SendLastData(List<ISmartHomeClient> clients) => clients.ForEach(async x => await x.Update(this));
 
-
-    private Task? dataSendTask;
     public void SendDataToAllSubscribers()
     {
-        if (dataSendTask != null && !dataSendTask.IsCompleted)
-            return;
-        dataSendTask = Task.Run(async () =>
-            {
-                await Task.Delay(250); //Wait for multiple property changes from endpoint, like zigbee
-                Subscribers.ForEach(x => SendLastData(x.SmarthomeClient));
-            });
+        sendLastDataTimer.Change(250, Timeout.Infinite);
     }
 
-    public virtual void StopDevice() => IsConnected = false;
-    public virtual void Reconnect(ByteLengthList parameter) => IsConnected = true;
+    public virtual void StopDevice() {}
+    public virtual void Reconnect(ByteLengthList parameter) { }
 }
