@@ -8,7 +8,7 @@
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 25.0,
+          "FontSize": 22.0,
           "FontWeight": "bold"
         },
         "RowNr": 0,
@@ -42,7 +42,7 @@
       },
       {
         "Name": "battery",
-        "Order": 2,
+        "Order": 3,
         "RowNr": 4,
         "EditInfo": {
           "EditType": "slider",
@@ -59,7 +59,16 @@
               }
             }
           ],
-          "Display": "Battery"
+          "Display": "Battery22",
+          "GradientColors": [
+
+            [ 255, 0, 0, 255 ],
+            [ 255, 0, 255, 0 ],
+            [ 255, 255, 0, 0 ],
+            [ 255, 66, 66, 66 ],
+
+            4294967296
+          ]
         }
       },
       {

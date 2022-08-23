@@ -118,24 +118,24 @@ namespace AppBroker
 
         public void Execute(GeneratorExecutionContext context)
         {
-            // retrieve the populated receiver 
-            if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
-                return;
+                // retrieve the populated receiver 
+                if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
+                    return;
 
-            //Debugger.Launch();
+                //Debugger.Launch();
 
-            // get the added attribute, and INotifyPropertyChanged
-            INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
-            INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
-            INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
-            INamedTypeSymbol overrideFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.AddOverrideAttribute");
+                // get the added attribute, and INotifyPropertyChanged
+                INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
+                INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
+                INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
+                INamedTypeSymbol overrideFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.AddOverrideAttribute");
 
-            foreach (var group in receiver.Classes)
-            {
-                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, overrideFieldSymbol, context);
-                context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
+                foreach (var group in receiver.Classes)
+                {
+                    string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, overrideFieldSymbol, context);
+                    context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
+                }
             }
-        }
 
         private bool BaseClassAlreadyHasAttribute(INamedTypeSymbol parent, string attributeName)
         {
@@ -161,7 +161,7 @@ namespace AppBroker
                 additional = $"<{string.Join(",", classSymbol.TypeParameters.Select(x => x.Name))}>";
 
             // begin building the generated source
-            StringBuilder source = new ($@"
+            StringBuilder source = new($@"
 using System.Runtime.CompilerServices;
 namespace {namespaceName}
 {{
@@ -189,14 +189,14 @@ namespace {namespaceName}
             {
                 _ = thingy.AdditionalAttributesForGeneratedProp.TryGetValue(fieldSymbol, out var additionalAttributes);
 
-                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol,overrideFieldSymbol, additionalAttributes, context);
+                ProcessField(source, fieldSymbol, attributeSymbol, ignoreAttributeSymbol, ignoreFieldSymbol, overrideFieldSymbol, additionalAttributes, context);
             }
 
             _ = source.Append("    }\n}");
             return source.ToString();
         }
 
-        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol,INamedTypeSymbol ignoreFieldSymbol, INamedTypeSymbol overrideFieldSymbol, List<AttributeListSyntax> additionalAttributes, GeneratorExecutionContext context)
+        private void ProcessField(StringBuilder source, IFieldSymbol fieldSymbol, ISymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, INamedTypeSymbol overrideFieldSymbol, List<AttributeListSyntax> additionalAttributes, GeneratorExecutionContext context)
         {
             // get the name and type of the field
             string fieldName = fieldSymbol.Name;
@@ -219,12 +219,12 @@ namespace {namespaceName}
                 //TODO: issue a diagnostic that we can't process this field
                 return;
 
-    //            NoosonGenerator.MakeDiagnostic("0005",
-    //"",
-    //"IEnumerable is not supported for deserialization, implement own deserializer or this value will be lost.",
-    //property.Symbol,
-    //DiagnosticSeverity.Error
-    //);
+                //            NoosonGenerator.MakeDiagnostic("0005",
+                //"",
+                //"IEnumerable is not supported for deserialization, implement own deserializer or this value will be lost.",
+                //property.Symbol,
+                //DiagnosticSeverity.Error
+                //);
             }
 
             if (additionalAttributes != null && additionalAttributes.Count > 0)
@@ -240,13 +240,13 @@ namespace {namespaceName}
                         {
                             context.ReportDiagnostic(
                                 Diagnostic.Create(
-                                    "AB0234", 
+                                    "AB0234",
                                     "Generator",
-                                    $"The type or namespace name '{addAttr.Name}' does not exist.' (did you use a the wrong namespace while declaring the fullname of the property attribute?)", 
-                                    DiagnosticSeverity.Error, 
-                                    DiagnosticSeverity.Error, 
-                                    true, 
-                                    0, 
+                                    $"The type or namespace name '{addAttr.Name}' does not exist.' (did you use a the wrong namespace while declaring the fullname of the property attribute?)",
+                                    DiagnosticSeverity.Error,
+                                    DiagnosticSeverity.Error,
+                                    true,
+                                    0,
                                     location: Location.Create(addAttr.SyntaxTree, addAttr.Span)));
                             _ = source.AppendLine($"        [{addAttr.ToFullString()}]");
                         }
@@ -377,7 +377,7 @@ namespace {namespaceName}
                             {
                                 thingy.Fields.Add(fieldSymbol);
 
-                                var declaringSyntax 
+                                var declaringSyntax
                                     = fieldSymbol
                                     .DeclaringSyntaxReferences
                                     .FirstOrDefault();

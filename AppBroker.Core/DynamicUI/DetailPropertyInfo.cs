@@ -2,7 +2,7 @@
 
 public class DetailPropertyInfo : LayoutBasePropertyInfo
 {
-    public int TabInfoId { get; set; }
-    public SpecialDetailType SpecialType { get; set; } = SpecialDetailType.None;
+    public int? TabInfoId { get; set; }
+    public bool BlurryCard { get; set; }
 
 }

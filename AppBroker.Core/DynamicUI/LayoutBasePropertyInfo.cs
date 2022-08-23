@@ -15,6 +15,7 @@ public class LayoutBasePropertyInfo
     public bool? ShowOnlyInDeveloperMode { get; set; }
     public long? DeviceId { get; set; }
     public bool? Expanded { get; set; }
+    public int? Precision { get; set; }
 
     [JsonExtensionData]
     public Dictionary<string, JToken>? ExtensionData { get; set; }

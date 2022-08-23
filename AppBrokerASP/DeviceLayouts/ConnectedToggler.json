@@ -1,0 +1,34 @@
+{
+  "UniqueName": "ConnectedToggler",
+  "TypeName": "ConnectedToggler",
+  "Ids": [],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "state",
+        "Order": 1,
+        "EditInfo": {
+          "EditType": "iconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": false,
+              "CodePoint": 59411,
+              "Parameters": [ false ]
+            },
+
+            {
+              "Command": "Off",
+              "Value": true,
+              "CodePoint": 59411,
+              "FontFamily": "Smarthome",
+              "Parameters": [ true ]
+            }
+          ]
+        },
+        "SpecialType": "right"
+      }
+    ]
+  }
+}

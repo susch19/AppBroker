@@ -106,21 +106,24 @@ public static class DeviceLayoutService
             if (!updated)
                 return;
 
+            HashSet<string> subs = new();
             foreach (KeyValuePair<long, Devices.Device> device in IInstanceContainer.Instance.DeviceManager.Devices)
             {
                 if (layout.Ids?.Contains(device.Key) ?? false)
                 {
-                    foreach (Subscriber? sub in device.Value.Subscribers)
+                    foreach (var sub in device.Value.Subscribers)
                     {
-                        _ = sub.SmarthomeClient.UpdateUi(layout, hash);
+                        if (subs.Add(sub.ConnectionId))
+                            _ = sub.SmarthomeClient.UpdateUi(layout, hash);
                     }
                     continue;
                 }
                 if (layout.TypeName is not null && device.Value.TypeNames.Contains(layout.TypeName))
                 {
-                    foreach (Subscriber? sub in device.Value.Subscribers)
+                    foreach (var sub in device.Value.Subscribers)
                     {
-                        _ = sub.SmarthomeClient.UpdateUi(layout, hash);
+                        if (subs.Add(sub.ConnectionId))
+                            _ = sub.SmarthomeClient.UpdateUi(layout, hash);
                     }
                     continue;
                 }
@@ -215,11 +218,11 @@ public static class DeviceLayoutService
     public static (DeviceLayout? layout, string hash)? GetDeviceLayout(string typeName)
         => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret : null;
 
-    public static (DeviceLayout? layout, string hash)? GetDeviceLayout(long deviceId)
+    public static (DeviceLayout? layout, string hash, bool byId)? GetDeviceLayout(long deviceId)
     {
         if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
         {
-            return ret;
+            return (ret.layout, ret.hash, true);
         }
         else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
         {
@@ -227,7 +230,7 @@ public static class DeviceLayoutService
             {
                 if (TypeDeviceLayouts.TryGetValue(typeName, out ret))
                 {
-                    return ret;
+                    return (ret.layout, ret.hash, false);
                 }
             }
         }
