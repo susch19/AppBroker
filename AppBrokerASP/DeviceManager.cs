@@ -61,10 +61,10 @@ public class DeviceManager : IDisposable, IDeviceManager
 
         temp = ConnectToIOBroker();
     }
-    private void AddNewDeviceToDic(long id, Device device)
+    private void AddNewDeviceToDic(Device device)
     {
-        if (Devices.TryAdd(id, device))
-            NewDeviceAdded?.Invoke(this, (id, device));
+        if (Devices.TryAdd(device.Id, device))
+            NewDeviceAdded?.Invoke(this, (device.Id, device));
     }
 
     private static List<string> GetAllNamesFor(Type y)
@@ -111,7 +111,7 @@ public class DeviceManager : IDisposable, IDeviceManager
                 return;
 
             logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
-            AddNewDeviceToDic(e.c.NodeId, newDevice);
+            AddNewDeviceToDic( newDevice);
             //_ = Devices.TryAdd(e.c.NodeId, newDevice);
 
             if (!DbProvider.AddDeviceToDb(newDevice))
@@ -315,7 +315,7 @@ public class DeviceManager : IDisposable, IDeviceManager
                 if (string.IsNullOrWhiteSpace(dev.FriendlyName) || long.TryParse(dev.FriendlyName, out _))
                     dev.FriendlyName = deviceRes.common.name;
 
-                AddNewDeviceToDic(id, dev);
+                AddNewDeviceToDic(dev);
             }
 
             foreach (var item in deviceStates.Where(x => !string.IsNullOrWhiteSpace(x._id) && x._id.Contains(deviceRes.native.id)))

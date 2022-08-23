@@ -54,12 +54,21 @@
               "Value": {
                 "Min": 0.0,
                 "Max": 100.0,
-                "Divisions": 100
+                "Divisions": 10
 
               }
             }
           ],
-          "Display": "Battery"
+          "Display": "Battery",
+          "GradientColors": [
+
+            [ 255, 0, 0, 255 ],
+            [ 255, 0, 255, 0 ],
+            [ 255, 255, 0, 0 ],
+            [ 255, 66, 66, 66 ],
+
+            4294967296
+          ]
         }
       },
       {

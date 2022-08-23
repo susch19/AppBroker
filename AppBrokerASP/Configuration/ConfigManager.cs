@@ -24,9 +24,9 @@ public class ConfigManager
         info.Create();
 
         var configuration = new ConfigurationBuilder()
-            .AddJsonFile(ConfigName)
-            .AddJsonFile(Path.Combine(info.FullName, ZigbeeConfigName), true)
-            .AddJsonFile(Path.Combine(info.FullName, NlogConfigName), true)
+            .AddJsonFile(ConfigName, false, true)
+            .AddJsonFile(Path.Combine(info.FullName, ZigbeeConfigName), true, true)
+            .AddJsonFile(Path.Combine(info.FullName, NlogConfigName), true, true)
             .Build();
 
         Configuration = configuration;

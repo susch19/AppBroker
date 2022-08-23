@@ -108,8 +108,18 @@
             }
           ],
           //"Display": "Current",
-          "ActiveValue": true
-        }
+          "ActiveValue": true,
+          "GradientColors": [
+
+            [ 255, 0, 0, 255 ],
+            [ 255, 0, 255, 0 ],
+            [ 255, 255, 0, 0 ],
+            [ 255, 66, 66, 66 ],
+
+            4294967296
+          ]
+        },
+        "Precision": 0
       },
       {
         "Name": "current",
@@ -177,7 +187,8 @@
           "FontSize": 20.0,
           "FontWeight": "bold"
         },
-        "UnitOfMeasurement": " W"
+        "UnitOfMeasurement": " W",
+        "Precision": 0
       },
       {
         "Name": "current",
@@ -187,7 +198,8 @@
           "FontSize": 16.0,
           "FontWeight": "normal"
         },
-        "UnitOfMeasurement": " A"
+        "UnitOfMeasurement": " A",
+        "Precision": 2
       },
       {
         "Name": "voltage",
@@ -197,7 +209,8 @@
           "FontSize": 16.0,
           "FontWeight": "normal"
         },
-        "UnitOfMeasurement": " V"
+        "UnitOfMeasurement": " V",
+        "Precision": 0
       },
       {
         "Name": "id",
@@ -213,6 +226,7 @@
         "Name": "state",
         "Order": 1,
         "RowNr": 0,
+        "TabInfoId": 0,
         "EditInfo": {
           "EditType": "Button",
           "EditCommand": "Update",
@@ -231,6 +245,7 @@
         "Name": "state",
         "Order": 2,
         "RowNr": 0,
+        "TabInfoId": 0,
         "EditInfo": {
           "EditType": "Button",
           "EditCommand": "Update",
@@ -248,6 +263,7 @@
         "Name": "state",
         "Order": 2,
         "RowNr": 1,
+        "TabInfoId": 0,
         "EditInfo": {
           "EditType": "toggle",
           "EditCommand": "Update",
@@ -269,6 +285,7 @@
         "Name": "state",
         "Order": 2,
         "RowNr": 2,
+        "TabInfoId": 0,
         "EditInfo": {
           "EditType": "dropdown",
           "EditCommand": "Update",
@@ -297,6 +314,7 @@
         "Name": "state",
         "Order": 2,
         "RowNr": 8,
+        "TabInfoId": 0,
         "EditInfo": {
           "EditType": "IconButton",
           "EditCommand": "Update",
@@ -321,6 +339,7 @@
         "Name": "current",
         "Order": 2,
         "RowNr": 3,
+        "TabInfoId": 0,
         "Expanded": true,
         "EditInfo": {
           "EditType": "slider",
@@ -337,13 +356,19 @@
             }
           ],
           //"Display": "Current",
-          "ActiveValue": true
+          "ActiveValue": true,
+          "GradientColors": [
+
+            [ 255, 66, 66, 66 ],
+            [ 255, 255, 255, 255 ]
+          ]
         }
       },
       {
         "Name": "current",
         "Order": 2,
         "RowNr": 3,
+        "TabInfoId": 0,
         "DeviceId": -6574912042886067214,
         "EditInfo": {
           "EditType": "icon",
@@ -386,6 +411,7 @@
         "Name": "current",
         "Order": 2,
         "RowNr": 3,
+        "TabInfoId": 0,
         "EditInfo": {
           "EditType": "FloatingActionButton",
           "EditCommand": "Update",
@@ -456,6 +482,7 @@
         "Name": "current",
         "Order": 2,
         "RowNr": 4,
+        "TabInfoId": 0,
         "EditInfo": {
           "EditType": "slider",
           "EditCommand": "Update",
@@ -481,6 +508,17 @@
               }
             }
           ],
+          "GradientColors": [
+
+            [ 255, 66, 66, 66 ],
+            [ 255, 255, 0, 0 ],
+            [ 255, 0, 255, 0 ],
+            [ 255, 0, 0, 255 ],
+
+            4294967296
+          ],
+
+
           "Display": "Current"
         }
       },
@@ -509,7 +547,8 @@
         },
         "TabInfoId": 0,
         "SpecialType": "none",
-        "ShowOnlyInDeveloperMode": true
+        "ShowOnlyInDeveloperMode": true,
+        "BlurryCard": true
       },
       {
         "Name": "state",
@@ -524,7 +563,8 @@
           "FontStyle": "normal"
         },
         "TabInfoId": 0,
-        "SpecialType": "none"
+        "SpecialType": "none",
+        "BlurryCard": true
       },
       {
         "Name": "load_power",
@@ -539,7 +579,9 @@
           "FontStyle": "normal"
         },
         "TabInfoId": 0,
-        "SpecialType": "none"
+        "SpecialType": "none",
+        "Precision": 0,
+        "BlurryCard": true
       },
       {
         "Name": "current",
@@ -554,7 +596,8 @@
           "FontStyle": "normal"
         },
         "TabInfoId": 0,
-        "SpecialType": "none"
+        "SpecialType": "none",
+        "Precision": 2
       },
       {
         "Name": "voltage",
@@ -569,7 +612,8 @@
           "FontStyle": "normal"
         },
         "TabInfoId": 0,
-        "SpecialType": "none"
+        "SpecialType": "none",
+        "Precision": 0
       },
       {
         "Name": "energy",
@@ -597,7 +641,7 @@
           "FontWeight": "normal",
           "FontStyle": "normal"
         },
-        "TabInfoId": 0,
+        "TabInfoId": 1,
         "SpecialType": "none",
         "Format": "dd"
       },
@@ -612,7 +656,7 @@
           "FontWeight": "normal",
           "FontStyle": "normal"
         },
-        "TabInfoId": 0,
+        "TabInfoId": 1,
         "SpecialType": "none"
       }
     ],
@@ -659,6 +703,14 @@
         "PropertyName": "voltage",
         "XAxisName": "Spannung",
         "UnitOfMeasurement": " V",
+        "IconName": "flash-59419",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      },
+      {
+        "PropertyName": "state",
+        "XAxisName": "Status",
+        "UnitOfMeasurement": " ",
         "IconName": "flash-59419",
         "BrightThemeColor": 4278241363,
         "DarkThemeColor": 4278249078
