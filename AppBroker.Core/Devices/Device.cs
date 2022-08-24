@@ -1,15 +1,15 @@
-﻿using AppBroker.Core.DynamicUI;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace AppBroker.Core.Devices;
 
-public abstract class ConnectionDevice  : Device
+public abstract partial class ConnectionDevice : Device
 {
+    [ObservableProperty]
+    public bool isConnected;
 
-    public abstract bool IsConnected { get; set; }
     protected ConnectionDevice(long nodeId) : base(nodeId)
     {
         IsConnected = true;
@@ -18,21 +18,25 @@ public abstract class ConnectionDevice  : Device
     public override void Reconnect(ByteLengthList parameter) => IsConnected = true;
 }
 
-public abstract class Device
+public abstract partial class Device : ObservableObject
 {
     public IReadOnlyCollection<string> TypeNames { get; }
 
     [JsonIgnore]
     public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
 
-    public abstract long Id { get; set; }
+    [ObservableProperty]
+    public long id;
 
-    public abstract string TypeName { get; set; }
+    [ObservableProperty]
+    public string typeName;
 
     [JsonIgnore]
-    public abstract bool ShowInApp { get; set; }
+    [ObservableProperty]
+    public bool showInApp;
 
-    public abstract string FriendlyName { get; set; }
+    [ObservableProperty]
+    public string friendlyName;
 
     [JsonIgnore]
     public bool Initialized { get; set; }
@@ -77,6 +81,6 @@ public abstract class Device
         sendLastDataTimer.Change(250, Timeout.Infinite);
     }
 
-    public virtual void StopDevice() {}
+    public virtual void StopDevice() { }
     public virtual void Reconnect(ByteLengthList parameter) { }
 }

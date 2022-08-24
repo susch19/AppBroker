@@ -1,6 +1,7 @@
 using AppBroker.Core;
 using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 using Elsa.Activities.StateMachine;
 
@@ -13,17 +14,29 @@ using System.Runtime.CompilerServices;
 namespace AppBrokerASP.Devices.Zigbee;
 
 [DeviceName("lumi.weather", "WSDCGQ11LM")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class XiaomiTempSensor : ZigbeeDevice
 {
     public event EventHandler<float>? TemperatureChanged;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsConnected))]
     bool? overridenState;
+
     public new bool IsConnected => overridenState ?? Available;
+
+    [ObservableProperty]
     private float humidity;
 
+    [ObservableProperty]
     private float pressure;
+
+    [ObservableProperty]
     private byte battery;
+
+    [ObservableProperty]
     private float voltage;
+
+    [ObservableProperty]
     private float temperature;
 
     public XiaomiTempSensor(long id, SocketIO socket) : base(id, socket)

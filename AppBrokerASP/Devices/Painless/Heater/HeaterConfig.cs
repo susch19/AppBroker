@@ -1,16 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+
+using Newtonsoft.Json;
 
 using System.Runtime.CompilerServices;
 
 namespace AppBrokerASP.Devices.Painless.Heater;
 
-[AppBroker.ClassPropertyChangedAppbroker]
-public partial class HeaterConfig
+public partial class HeaterConfig : ObservableObject
 {
+    [ObservableProperty]
     [property: JsonProperty("dayOfWeek"), JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     private DayOfWeek dayOfWeek;
+
+    [ObservableProperty]
     [property: JsonProperty("timeOfDay")]
     private DateTime timeOfDay;
+
+    [ObservableProperty]
     [property: JsonProperty("temperature")]
     private double temperature;
 

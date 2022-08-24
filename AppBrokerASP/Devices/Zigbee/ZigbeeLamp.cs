@@ -1,22 +1,25 @@
 ﻿using AppBroker.Core;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-using PainlessMesh;
+using Newtonsoft.Json.Linq;
 
 using SocketIOClient;
 
-using System.Threading.Tasks;
-
 namespace AppBrokerASP.Devices.Zigbee;
 
-[AppBroker.ClassPropertyChangedAppbroker]
 public abstract partial class ZigbeeLamp : UpdateableZigbeeDevice
 {
+    [ObservableProperty]
     private byte brightness;
+
+    [ObservableProperty]
     private bool state;
+
+    [ObservableProperty]
     private int colorTemp;
+
+    [ObservableProperty]
     [property: JsonProperty("transition_Time")]
     private float transitionTime;
 
