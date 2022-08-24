@@ -4,34 +4,39 @@ using AppBrokerASP.Database;
 using AppBrokerASP.Database.Model;
 using AppBrokerASP.Devices.Zigbee;
 
+using CommunityToolkit.Mvvm.ComponentModel;
+
 using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
 
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace AppBrokerASP.Devices.Painless.Heater;
 
 [DeviceName("heater")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class Heater : PainlessDevice, IDisposable
 {
+    [ObservableProperty]
     private HeaterConfig? temperature;
+
+    [ObservableProperty]
     private HeaterConfig? currentConfig;
+
+    [ObservableProperty]
     private HeaterConfig? currentCalibration;
+
+    [ObservableProperty]
     private long xiaomiTempSensor;
+
+    [ObservableProperty]
     private bool disableHeating;
+
+    [ObservableProperty]
     private bool disableLed;
 
-    [AppBroker.IgnoreField]
     private readonly Task? heaterSensorMapping;
-    [AppBroker.IgnoreField]
     private readonly List<HeaterConfig> timeTemps = new();
-    [AppBroker.IgnoreField]
     private bool disposed;
 
     public Heater(long id, ByteLengthList parameters) : base(id)

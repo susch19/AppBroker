@@ -1,18 +1,16 @@
 ﻿using AppBroker.Core;
 
-using Newtonsoft.Json.Linq;
+using CommunityToolkit.Mvvm.ComponentModel;
 
-using PainlessMesh;
+using Newtonsoft.Json.Linq;
 
 using SocketIOClient;
 
-using System.Threading.Tasks;
-
 namespace AppBrokerASP.Devices.Zigbee;
 
-[AppBroker.ClassPropertyChangedAppbroker]
 public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
 {
+    [ObservableProperty]
     private bool state;
 
     protected ZigbeeSwitch(long nodeId, SocketIO socket) : base(nodeId, socket)

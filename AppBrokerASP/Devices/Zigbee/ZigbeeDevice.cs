@@ -4,34 +4,39 @@ using AppBroker.Elsa.Signaler;
 using AppBrokerASP.Extension;
 using AppBrokerASP.IOBroker;
 
+using CommunityToolkit.Mvvm.ComponentModel;
+
 using Newtonsoft.Json;
 
 using SocketIOClient;
 
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Reflection;
 
 using static AppBrokerASP.IOBroker.IoBrokerHistory;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
-[AppBroker.ClassPropertyChangedAppbroker]
 public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySignaler, WorkflowDeviceSignaler>
 {
     protected SocketIO Socket { get; }
 
     //[property: JsonIgnore()]
+    [ObservableProperty]
     private DateTime lastReceived;
 
     public string LastReceivedFormatted => lastReceived.ToString("dd.MM.yyyy HH:mm:ss");
 
+    [ObservableProperty]
     [property: JsonProperty("link_Quality")]
     private byte linkQuality;
+
+    [ObservableProperty]
     private bool available;
+
+    [ObservableProperty]
     private string adapterWithId = "";
 
-    [AppBroker.IgnoreField]
     private readonly ReadOnlyCollection<(string[] Names, PropertyInfo Info)> propertyInfos;
 
     public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId)
@@ -117,8 +122,8 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
         }
     }
 
-    [AppBroker.IgnoreField]
     private Dictionary<Type, MethodInfo> createSaturatingMethods = new();
+
     private void SetValueOnProperty<T>(PropertyInfo prop, long v1) // where T : INumber<T>, IMinMaxValue<T> 
     // => prop.SetValue(this, resT.CreateSaturating(v1));
     {

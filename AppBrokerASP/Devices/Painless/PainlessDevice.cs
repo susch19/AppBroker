@@ -3,25 +3,30 @@ using AppBroker.Core;
 using AppBroker.Core.Devices;
 using AppBroker.Elsa.Signaler;
 
+using CommunityToolkit.Mvvm.ComponentModel;
+
 using PainlessMesh;
 using PainlessMesh.Ota;
 
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless;
 
-[AppBroker.ClassPropertyChangedAppbroker]
 public abstract partial class PainlessDevice : WorkflowDevice<WorkflowPropertySignaler, WorkflowDeviceSignaler>
 {
+    [ObservableProperty]
     private string iP = "";
 
+    [ObservableProperty]
     private uint firmwareVersionNr;
     public string FirmwareVersion => "Firmware Version: " + FirmwareVersionNr;
     protected string LogName => Id + "/" + FriendlyName;
+
+    [ObservableProperty]
     private string deviceName;
 
+    [ObservableProperty]
     private DateTime lastPartRequestReceived;
 
     protected PainlessDevice(long nodeId) : base(nodeId)

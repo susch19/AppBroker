@@ -6,26 +6,14 @@
 		<Nullable>enable</Nullable>
 		<EnablePreviewFeatures>True</EnablePreviewFeatures>
 		<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>
 		<NoWarn>CA2252</NoWarn>
+		<LangVersion>preview</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
 		<PackageReference Include="NLog.Extensions.Logging" Version="5.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-		<ProjectReference Condition="'$(DesignTimeBuild)'!='true'" Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="GeneratedFiles\AppBroker.Generators\" />
-	  <Folder Include="GeneratedFiles\AppBroker.Generators\AppBroker.Generators.NotifyPropertyChangedGenerator\" />
-	</ItemGroup>
-
-	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild">
-		<ItemGroup>
-			<Compile Remove="GeneratedFiles\**" />
-		</ItemGroup>
-	</Target>
 
 </Project>

@@ -1,28 +1,31 @@
-﻿using AppBroker.Core.DynamicUI;
-
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace AppBroker.Core.Devices;
 
-public abstract class Device
+public abstract partial class Device : ObservableObject
 {
     public IReadOnlyCollection<string> TypeNames { get; }
 
     [JsonIgnore]
     public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
 
-    public abstract long Id { get; set; }
+    [ObservableProperty]
+    private long id;
 
-    public abstract string TypeName { get; set; }
+    [ObservableProperty]
+    private string typeName;
 
     [JsonIgnore]
-    public abstract bool ShowInApp { get; set; }
+    [ObservableProperty]
+    private bool showInApp;
 
-    public abstract string FriendlyName { get; set; }
+    [ObservableProperty]
+    private string friendlyName;
 
-    public abstract bool IsConnected { get; set; }
+    [ObservableProperty]
+    private bool isConnected;
 
     [JsonIgnore]
     public bool Initialized { get; set; }
@@ -39,7 +42,6 @@ public abstract class Device
         IsConnected = true;
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
-
     }
 
     private IEnumerable<string> GetBaseTypeNames(Type type)

@@ -10,8 +10,6 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<NoWarn>CS0657;CA2252</NoWarn>
 		<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
-		<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-		<CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -30,14 +28,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="..\Configs\$(USERNAME)\appsettings.debug.json" Link="appsettings.debug.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
-	  <Content Include="..\Configs\$(USERNAME)\appsettings.json" Link="appsettings.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+		<Content Include="..\Configs\$(USERNAME)\appsettings.debug.json" Link="appsettings.debug.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+		<Content Include="..\Configs\$(USERNAME)\appsettings.json" Link="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
-	
+
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.RouteAnalyzer" Version="0.5.3" />
 		<PackageReference Include="MQTTnet.AspNetCore" Version="4.0.2.221" />
@@ -62,21 +60,14 @@
 	<ItemGroup>
 		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
 		<ProjectReference Include="..\PainlessMesh\PainlessMesh.csproj" />
-		<ProjectReference Condition="'$(DesignTimeBuild)'!='true'" Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
-
-	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild">
-		<ItemGroup>
-			<Compile Remove="GeneratedFiles\**" />
-		</ItemGroup>
-	</Target>
 
 	<ItemGroup>
 		<None Update="cert.pem">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="DeviceLayouts\TextFile.txt">
-		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 		<None Update="key.pem">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -84,8 +75,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="GeneratedFiles\AppBroker.Generators\" />
-	  <Folder Include="Properties\" />
+		<Folder Include="Properties\" />
 	</ItemGroup>
 
 </Project>

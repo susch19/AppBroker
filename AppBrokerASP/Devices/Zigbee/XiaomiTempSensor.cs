@@ -1,6 +1,7 @@
 using AppBroker.Core;
 using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 using SocketIOClient;
 
@@ -9,16 +10,24 @@ using System.Runtime.CompilerServices;
 namespace AppBrokerASP.Devices.Zigbee;
 
 [DeviceName("lumi.weather", "WSDCGQ11LM")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class XiaomiTempSensor : ZigbeeDevice
 {
     public event EventHandler<float>? TemperatureChanged;
     public new bool IsConnected => Available;
+
+    [ObservableProperty]
     private float humidity;
 
+    [ObservableProperty]
     private float pressure;
+
+    [ObservableProperty]
     private byte battery;
+
+    [ObservableProperty]
     private float voltage;
+
+    [ObservableProperty]
     private float temperature;
 
     public XiaomiTempSensor(long id, SocketIO socket) : base(id, socket)
