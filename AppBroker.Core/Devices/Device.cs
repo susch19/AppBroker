@@ -8,7 +8,7 @@ namespace AppBroker.Core.Devices;
 public abstract partial class ConnectionDevice : Device
 {
     [ObservableProperty]
-    public bool isConnected;
+    private bool isConnected;
 
     protected ConnectionDevice(long nodeId) : base(nodeId)
     {
@@ -26,17 +26,17 @@ public abstract partial class Device : ObservableObject
     public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
 
     [ObservableProperty]
-    public long id;
+    private long id;
 
     [ObservableProperty]
-    public string typeName;
+    private string typeName;
 
     [JsonIgnore]
     [ObservableProperty]
-    public bool showInApp;
+    private bool showInApp;
 
     [ObservableProperty]
-    public string friendlyName;
+    private string friendlyName;
 
     [JsonIgnore]
     public bool Initialized { get; set; }
