@@ -1,6 +1,8 @@
 ﻿
 using AppBroker.Core;
 
+using CommunityToolkit.Mvvm.ComponentModel;
+
 using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
@@ -8,16 +10,30 @@ using PainlessMesh;
 namespace AppBrokerASP.Devices.Painless;
 
 [DeviceName("ledstri")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class LedStrip : PainlessDevice
 {
+    [ObservableProperty]
     private string colorMode = "";
+
+    [ObservableProperty]
     private int delay;
+
+    [ObservableProperty]
     private int numberOfLeds;
+
+    [ObservableProperty]
     private int brightness;
+
+    [ObservableProperty]
     private uint step;
+
+    [ObservableProperty]
     private bool reverse;
+
+    [ObservableProperty]
     private uint colorNumber;
+
+    [ObservableProperty]
     private ushort version;
 
     public LedStrip(long id, ByteLengthList parameter) : base(id, parameter)

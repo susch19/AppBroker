@@ -5,19 +5,27 @@ using SocketIOClient;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using AppBrokerASP.IOBroker;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
 [DeviceName("TS011F_plug_1")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class TuyaSwitchSensor : ZigbeeSwitch
 {
-
+    [ObservableProperty]
     private bool childLock;
+
+    [ObservableProperty]
     private float current;
+
+    [ObservableProperty]
     private float energy;
+
+    [ObservableProperty]
     [property: JsonProperty("load_power")]
     private float loadPower;
+
+    [ObservableProperty]
     private float voltage;
 
     public TuyaSwitchSensor(long nodeId, SocketIO socket) : base(nodeId, socket)
