@@ -28,9 +28,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Content Include="..\Configs\$(USERNAME)\appsettings.debug.susch.json" Link="appsettings.debug.susch.json">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
 	  <Content Include="..\Configs\$(USERNAME)\appsettings.debug.json" Link="appsettings.debug.json">
 	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	  </Content>
@@ -66,10 +63,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
 		<ProjectReference Include="..\PainlessMesh\PainlessMesh.csproj" />
-		<ProjectReference Condition="'$(DesignTimeBuild)'!='true'" Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
-
-	<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild" />
 
 	<ItemGroup>
 		<None Update="cert.pem">

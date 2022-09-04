@@ -28,6 +28,7 @@ using MQTTnet.Implementations;
 using NLog.Fluent;
 using MQTTnet.Server;
 using Microsoft.AspNetCore.Connections;
+using System.Globalization;
 
 namespace AppBrokerASP;
 
@@ -111,7 +112,11 @@ public class Program
 
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
-                ks.ListenAnyIP(tempPort);
+                foreach (var url in listenUrls)
+                {
+                    var uri = new Uri(url);
+                    ks.Listen(CreateIPEndPoint(uri.Host + ":" + uri.Port));
+                }
 
                 if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
                 {
@@ -173,7 +178,29 @@ public class Program
         }
     }
 
+    private static IPEndPoint CreateIPEndPoint(string endPoint)
+    {
+        string[] ep = endPoint.Split(':');
+        if (ep.Length < 2)
+            throw new FormatException("Invalid endpoint format");
 
+        IPAddress? ip;
+        if (ep.Length > 2)
+        {
+            if (!IPAddress.TryParse(string.Join(":", ep, 0, ep.Length - 1), out ip))
+                throw new FormatException("Invalid ip-adress");
+        }
+        else
+        {
+            if (!IPAddress.TryParse(ep[0], out ip))
+                throw new FormatException("Invalid ip-adress");
+        }
+
+        if (!int.TryParse(ep[^1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out int port))
+            throw new FormatException("Invalid port");
+        
+        return new IPEndPoint(ip, port);
+    }
     private static void AdvertiseServerPortsViaMDNS(ushort port)
     {
         MulticastService mdns = new();

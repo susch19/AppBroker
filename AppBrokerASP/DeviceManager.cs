@@ -69,7 +69,7 @@ public class DeviceManager : IDisposable, IDeviceManager
             _ = client.Connect().ContinueWith((x) => _ = client.Subscribe());
         }
     }
-    private void AddNewDeviceToDic(Device device)
+    public void AddNewDevice(Device device)
     {
         if (Devices.TryAdd(device.Id, device))
             NewDeviceAdded?.Invoke(this, (device.Id, device));
@@ -119,7 +119,7 @@ public class DeviceManager : IDisposable, IDeviceManager
                 return;
 
             logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
-            AddNewDeviceToDic( newDevice);
+            AddNewDevice( newDevice);
             //_ = Devices.TryAdd(e.c.NodeId, newDevice);
 
             if (!DbProvider.AddDeviceToDb(newDevice))

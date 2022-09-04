@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Devices;
 
 using Elsa.Models;
 
@@ -13,7 +14,6 @@ using Npgsql.Replication;
 using System.Globalization;
 using System.Text;
 
-using BrokerDevice = AppBroker.Core.Devices.Device;
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
@@ -43,7 +43,7 @@ public class DeviceStateManager
     }
 }
 
-public class Zigbee2MqttDevice : BrokerDevice
+public class Zigbee2MqttDevice : ConnectionDevice
 {
     private readonly Device device;
     private readonly IManagedMqttClient client;

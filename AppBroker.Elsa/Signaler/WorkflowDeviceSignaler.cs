@@ -8,34 +8,36 @@ using Elsa.Models;
 using Elsa.Services;
 using Elsa.Services.Models;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
 
 namespace AppBroker.Elsa.Signaler;
 
-public class WorkflowDeviceSignaler : IWorkflowDeviceSignaler
-{
-    private static IWorkflowLaunchpad scopedWorkflowLaunchpad;
-
 [RequiresPreviewFeatures]
 public class WorkflowDeviceSignaler : IWorkflowDeviceSignaler
 {
-    private static IWorkflowLaunchpad scopedWorkflowLaunchpad;
+    private static IServiceProvider? provider;
 
-    public WorkflowDeviceSignaler(IWorkflowLaunchpad workflowLaunchpad)
+    public WorkflowDeviceSignaler(IServiceProvider serviceProvider)
     {
-        scopedWorkflowLaunchpad = workflowLaunchpad;
+        provider = serviceProvider;
     }
 
     public static void DeviceChanged<TDevice, TValue>(TValue newValue, TValue oldValue, TDevice device, string deviceName, long deviceId, string typeName, [CallerMemberName] string propertyName = "")
     {
-        if (scopedWorkflowLaunchpad is null || Equals(newValue, oldValue))
+
+        if (provider is null || Equals(newValue, oldValue))
             return;
+
+        using var scope = provider.CreateScope();
+        var launchpad =scope.ServiceProvider.GetRequiredService<IWorkflowLaunchpad>();
 
         var model = new DeviceChangedEvent<TDevice, TValue>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue, Device = device, DeviceName = deviceName, DeviceId = deviceId, TypeName = typeName };
         var bookmark = new DeviceChangedEventBookmark(propertyName, deviceName, deviceId, typeName);
         var launchContext = new WorkflowsQuery(nameof(DeviceChangedTrigger), bookmark);
-        _ = scopedWorkflowLaunchpad.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model));
+        _ = launchpad.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model));
     }
 }

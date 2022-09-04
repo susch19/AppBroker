@@ -65,7 +65,7 @@ internal class ReportingConfig : BaseJson
     public float MinimumReportInterval { get; set; }
 
     [JsonProperty("reportable_change")]
-    public float ReportableChange { get; set; }
+    public JToken ReportableChange { get; set; }
 }
 
 internal class EndpointDescription : BaseJson

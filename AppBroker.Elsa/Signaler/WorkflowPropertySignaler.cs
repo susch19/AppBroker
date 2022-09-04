@@ -8,6 +8,8 @@ using Elsa.Models;
 using Elsa.Services;
 using Elsa.Services.Models;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text;
@@ -17,21 +19,23 @@ namespace AppBroker.Elsa.Signaler;
 [RequiresPreviewFeatures]
 public class WorkflowPropertySignaler : IWorkflowPropertySignaler
 {
-    private static IWorkflowLaunchpad scopedWorkflowLaunchpad;
+    private static IServiceProvider? provider;
 
-    public WorkflowPropertySignaler(IWorkflowLaunchpad workflowLaunchpad)
+    public WorkflowPropertySignaler(IServiceProvider serviceProvider)
     {
-        scopedWorkflowLaunchpad = workflowLaunchpad;
+        provider = serviceProvider;
     }
 
     public static void PropertyChanged<T>(T newValue, T oldValue, string friendlyName, long id, string typeName, [CallerMemberName] string propertyName = "")
     {
-        if (scopedWorkflowLaunchpad is null || Equals(newValue, oldValue))
+        if (provider is null || Equals(newValue, oldValue))
             return;
+        using var scope = provider.CreateScope();
+        var launchpad = scope.ServiceProvider.GetRequiredService<IWorkflowLaunchpad>();
 
         var model = new PropertyChangedEvent<T>() { PropertyName = propertyName, NewValue = newValue, OldValue = oldValue, DeviceName = friendlyName, DeviceId = id, TypeName = typeName };
         var bookmark = new PropertyChangedEventBookmark(propertyName);
         var launchContext = new WorkflowsQuery(nameof(PropertyChangedTrigger), bookmark);
-        _ = scopedWorkflowLaunchpad.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model));
+        _ = launchpad.CollectAndDispatchWorkflowsAsync(launchContext, new WorkflowInput(model));
     }
 }

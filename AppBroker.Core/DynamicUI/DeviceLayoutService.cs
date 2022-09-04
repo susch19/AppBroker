@@ -228,7 +228,7 @@ public static class DeviceLayoutService
         {
             if (TypeDeviceLayouts.TryGetValue(device.TypeName, out ret))
             {
-                return ret;
+                return (ret.layout, ret.hash, false);
             }
             foreach (string typeName in device.TypeNames)
             {
