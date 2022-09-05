@@ -474,6 +474,8 @@ internal class GenericExposedFeature : BaseJson
 
     [JsonProperty("features")]
     public GenericExposedFeature[] Features { get; set; }
+
+    public virtual bool ValidateValue(object value) => true;
 }
 
 internal class BinaryFeature : GenericExposedFeature

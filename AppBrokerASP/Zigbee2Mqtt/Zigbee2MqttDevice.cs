@@ -1,27 +1,22 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Devices;
 
-using Elsa.Models;
-
 using MQTTnet;
 using MQTTnet.Extensions.ManagedClient;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Npgsql.Replication;
-
 using System.Globalization;
-using System.Text;
 
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
 public class DeviceStateManager
 {
-    private  ConcurrentDictionary<long, Dictionary<string, JToken>> deviceStates = new();
+    private readonly ConcurrentDictionary<long, Dictionary<string, JToken>> deviceStates = new();
 
-    public  bool ManagesDevice(long id) => deviceStates.ContainsKey(id);
+    public bool ManagesDevice(long id) => deviceStates.ContainsKey(id);
 
     //TODO Router or Mainspower get from Zigbee2Mqtt
     public Dictionary<string, JToken>? GetCurrentState(long id)
@@ -34,12 +29,12 @@ public class DeviceStateManager
         => deviceStates.TryGetValue(id, out result);
 
     //TODO History of states
-    public  void PushNewState(long id, Dictionary<string, JToken> newState)
+    public void PushNewState(long id, Dictionary<string, JToken> newState)
     {
         deviceStates[id] = newState;
-        if(InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
+        if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
             device.SendDataToAllSubscribers();
-        
+
     }
 }
 
@@ -78,7 +73,7 @@ public class Zigbee2MqttDevice : ConnectionDevice
         if (!topic.EndsWith(device.IEEEAddress))
             return Task.CompletedTask;
 
-        state = JsonConvert.DeserializeObject<Dictionary<string, JToken>>( e.ApplicationMessage.ConvertPayloadToString())!;
+        state = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(e.ApplicationMessage.ConvertPayloadToString())!;
 
         return Task.CompletedTask;
     }
@@ -87,6 +82,43 @@ public class Zigbee2MqttDevice : ConnectionDevice
     public async Task FetchCurrentData()
     {
         await client.EnqueueAsync($"zigbee2mqtt/{Id}/get", @"{""state"": """"}");
+    }
+
+    internal Task SetValue(SetFeatureValue value)
+    {
+        return SetValues(new Dictionary<string, object>() { { value.Feature.Property, value } });
+    }
+
+    internal Task SetValues(SetFeatureValue[] values)
+    {
+        return SetValues(values.Where(CanSetValue).ToDictionary(x => x.Feature.Property, x => x.Value));
+    }
+
+    internal record SetFeatureValue(GenericExposedFeature Feature, object Value);
+
+    private static bool CanSetValue(SetFeatureValue value)
+    {
+        if (!value.Feature.Access.HasFlag(FeatureAccessMode.Write))
+        {
+            // TODO: log warning, eg. for light type it has child features which you can set
+            return false;
+        }
+
+        if (!value.Feature.ValidateValue(value))
+        {
+            // TODO: log warning
+            return false;
+        }
+
+        return true;
+    }
+
+    private async Task SetValues(Dictionary<string, object> values)
+    {
+        if (!values.Any())
+            return;
+
+        await client.EnqueueAsync($"zigbee2mqtt/{Id}/set", JsonConvert.SerializeObject(values));
     }
 
     public override Task UpdateFromApp(Command command, List<JToken> parameters)
