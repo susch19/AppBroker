@@ -555,6 +555,9 @@ internal class EnumFeature : GenericExposedFeature
     {
         Type = GenericFeatureType.Enum;
     }
+
+    public override bool ValidateValue(object value) 
+        => Values.Contains(value);
 }
 
 internal class LightFeature : GenericExposedFeature
