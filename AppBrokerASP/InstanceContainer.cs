@@ -2,6 +2,7 @@
 
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices.Elsa;
+using AppBrokerASP.Javascript;
 using AppBrokerASP.Zigbee2Mqtt;
 
 using PainlessMesh.Ota;
@@ -12,6 +13,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
 {
     public static InstanceContainer Instance { get; private set; } = null!;
     public IDeviceTypeMetaDataManager DevicePropertyManager { get; }
+    public JavaScriptEngineManager JavaScriptEngineManager { get; }
     public SmarthomeMeshManager MeshManager { get; }
     public IUpdateManager UpdateManager { get; }
     public ConfigManager ConfigManager { get; }
@@ -33,6 +35,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         var localDeviceManager = new DeviceManager();
         DeviceManager = localDeviceManager;
         DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);
+        JavaScriptEngineManager = new JavaScriptEngineManager();
     }
 
     public void Dispose()

@@ -17,9 +17,45 @@ public class DeviceStateManager
         deviceStates.TryGetValue(id, out var result);
         return result;
     }
+    public JToken? GetSingleState(long id, string propertyName)
+    {
+        if (!deviceStates.TryGetValue(id, out var result))
+            return null;
+        result.TryGetValue(propertyName, out var val);
+        return val;
+    }
 
     public bool TryGetCurrentState(long id, out Dictionary<string, JToken>? result)
         => deviceStates.TryGetValue(id, out result);
+
+    public void SetSingleState(long id, string propertyName, JToken newVal)
+    {
+
+        if (deviceStates.TryGetValue(id, out var oldState))
+        {
+            bool changed = !oldState.ContainsKey(propertyName) || !JToken.DeepEquals(oldState[propertyName], newVal);
+
+            if (!changed)
+                return;
+
+            var oldVal = oldState.GetValueOrDefault(propertyName);
+            InstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
+            StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
+            oldState[propertyName] = newVal;
+        }
+        else
+        {
+
+            InstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName); //TODO Don't enable all by default, rather provide a gui for setting it
+            InstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
+            StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
+
+            deviceStates[id] = new Dictionary<string, JToken> { { propertyName, newVal } };
+        }
+
+        if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
+            device.SendDataToAllSubscribers();
+    }
 
     public void PushNewState(long id, Dictionary<string, JToken> newState)
     {

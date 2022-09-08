@@ -164,7 +164,10 @@ public class Program
                     // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
                 });
             }
-
+            if (InstanceContainer.Instance.ConfigManager.ServerConfig.EnableJavaScript)
+            {
+                InstanceContainer.Instance.JavaScriptEngineManager.Initialize();
+            }
             app.Run();
         }
         catch (Exception ex)
