@@ -12,37 +12,12 @@ using System.Globalization;
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
-public class DeviceStateManager
-{
-    private readonly ConcurrentDictionary<long, Dictionary<string, JToken>> deviceStates = new();
-
-    public bool ManagesDevice(long id) => deviceStates.ContainsKey(id);
-
-    //TODO Router or Mainspower get from Zigbee2Mqtt
-    public Dictionary<string, JToken>? GetCurrentState(long id)
-    {
-        deviceStates.TryGetValue(id, out var result);
-        return result;
-    }
-
-    public bool TryGetCurrentState(long id, out Dictionary<string, JToken>? result)
-        => deviceStates.TryGetValue(id, out result);
-
-    //TODO History of states
-    public void PushNewState(long id, Dictionary<string, JToken> newState)
-    {
-        deviceStates[id] = newState;
-        if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
-            device.SendDataToAllSubscribers();
-
-    }
-}
-
 public class Zigbee2MqttDevice : ConnectionDevice
 {
+    internal record SetFeatureValue(GenericExposedFeature Feature, object Value);
+
     private readonly Device device;
     private readonly IManagedMqttClient client;
-    private Dictionary<string, JToken> state = new();
 
     public override long Id { get; set; }
     public override string TypeName { get; set; }
@@ -63,21 +38,7 @@ public class Zigbee2MqttDevice : ConnectionDevice
         ShowInApp = true;
         FriendlyName = device.FriendlyName;
         IsConnected = true;
-        client.ApplicationMessageReceivedAsync += Client_ApplicationMessageReceivedAsync;
     }
-
-    private Task Client_ApplicationMessageReceivedAsync(MQTTnet.Client.MqttApplicationMessageReceivedEventArgs e)
-    {
-        var topic = e.ApplicationMessage.Topic;
-
-        if (!topic.EndsWith(device.IEEEAddress))
-            return Task.CompletedTask;
-
-        state = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(e.ApplicationMessage.ConvertPayloadToString())!;
-
-        return Task.CompletedTask;
-    }
-
 
     public async Task FetchCurrentData()
     {
@@ -94,7 +55,6 @@ public class Zigbee2MqttDevice : ConnectionDevice
         return SetValues(values.Where(CanSetValue).ToDictionary(x => x.Feature.Property, x => x.Value));
     }
 
-    internal record SetFeatureValue(GenericExposedFeature Feature, object Value);
 
     private static bool CanSetValue(SetFeatureValue value)
     {

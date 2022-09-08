@@ -198,7 +198,7 @@ public class Program
 
         if (!int.TryParse(ep[^1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out int port))
             throw new FormatException("Invalid port");
-        
+
         return new IPEndPoint(ip, port);
     }
     private static void AdvertiseServerPortsViaMDNS(ushort port)

@@ -2,6 +2,8 @@
 
 using AppBrokerASP.Devices;
 
+using Microsoft.EntityFrameworkCore;
+
 namespace AppBrokerASP.Database;
 
 public static class DbProvider
@@ -9,7 +11,8 @@ public static class DbProvider
     public static BrokerDbContext BrokerDbContext => new();
     static DbProvider()
     {
-        _ = BrokerDbContext.Database.EnsureCreated();
+        using var ctx = BrokerDbContext;
+        _ = ctx.Database.EnsureCreated();
     }
 
     public static bool AddDeviceToDb(Device d)
