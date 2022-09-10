@@ -3,6 +3,8 @@ using AppBroker.Core;
 using AppBroker.Core.Devices;
 using AppBroker.Elsa.Signaler;
 
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
 using PainlessMesh;
 using PainlessMesh.Ota;
 
@@ -13,7 +15,7 @@ using System.Threading.Tasks;
 namespace AppBrokerASP.Devices.Painless;
 
 [AppBroker.ClassPropertyChangedAppbroker]
-public abstract partial class PainlessDevice : WorkflowDevice<WorkflowPropertySignaler, WorkflowDeviceSignaler>
+public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
 {
     private string iP = "";
 
@@ -21,10 +23,9 @@ public abstract partial class PainlessDevice : WorkflowDevice<WorkflowPropertySi
     public string FirmwareVersion => "Firmware Version: " + FirmwareVersionNr;
     protected string LogName => Id + "/" + FriendlyName;
     private string deviceName;
-
     private DateTime lastPartRequestReceived;
 
-    protected PainlessDevice(long nodeId) : base(nodeId)
+    protected PainlessDevice(long nodeId, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {
         deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
         InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
@@ -35,7 +36,7 @@ public abstract partial class PainlessDevice : WorkflowDevice<WorkflowPropertySi
 
     }
 
-    protected PainlessDevice(long nodeId, ByteLengthList parameter) : base(nodeId)
+    protected PainlessDevice(long nodeId, ByteLengthList parameter, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName +".js")))
     {
         deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
         InterpretParameters(parameter);

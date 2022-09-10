@@ -9,18 +9,10 @@ using AppBrokerASP.IOBroker;
 namespace AppBrokerASP.Devices.Zigbee;
 
 [DeviceName("TS011F_plug_1")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class TuyaSwitchSensor : ZigbeeSwitch
 {
 
-    private bool childLock;
-    private float current;
-    private float energy;
-    [property: JsonProperty("load_power")]
-    private float loadPower;
-    private float voltage;
-
-    public TuyaSwitchSensor(long nodeId, SocketIO socket) : base(nodeId, socket)
+    public TuyaSwitchSensor(long nodeId, SocketIO socket) : base(nodeId, socket, nameof(TuyaSwitchSensor))
     {
         ShowInApp = true;
     }

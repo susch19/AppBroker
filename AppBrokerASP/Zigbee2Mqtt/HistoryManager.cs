@@ -8,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
-public class HistoryManager
+public class HistoryManager : IHistoryManager
 {
     static HistoryManager()
     {

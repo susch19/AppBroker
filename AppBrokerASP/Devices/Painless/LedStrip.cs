@@ -20,7 +20,7 @@ public partial class LedStrip : PainlessDevice
     private uint colorNumber;
     private ushort version;
 
-    public LedStrip(long id, ByteLengthList parameter) : base(id, parameter)
+    public LedStrip(long id, ByteLengthList parameter) : base(id, parameter, "PainlessMeshLedStrip")
     {
         ShowInApp = true;
 

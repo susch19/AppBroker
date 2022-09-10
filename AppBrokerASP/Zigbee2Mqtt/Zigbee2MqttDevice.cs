@@ -1,6 +1,8 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Devices;
 
+using AppBrokerASP.Devices;
+
 using MQTTnet;
 using MQTTnet.Extensions.ManagedClient;
 
@@ -12,24 +14,16 @@ using System.Globalization;
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
-public class Zigbee2MqttDevice : ConnectionDevice
+public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
 {
     internal record SetFeatureValue(GenericExposedFeature Feature, object Value);
 
     private readonly Device device;
     private readonly IManagedMqttClient client;
 
-    public override long Id { get; set; }
-    public override string TypeName { get; set; }
-    public override bool ShowInApp { get; set; }
-    public override string FriendlyName { get; set; }
-    public override bool IsConnected { get; set; }
-
-    [JsonExtensionData]
-    public Dictionary<string, JToken>? State => InstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id);
 
     internal Zigbee2MqttDevice(Device device, IManagedMqttClient client)
-        : base(long.Parse(device.IEEEAddress[2..], NumberStyles.HexNumber))
+        : base(long.Parse(device.IEEEAddress[2..], NumberStyles.HexNumber), device.ModelId, new FileInfo(Path.Combine("JSExtensionDevices", device.ModelId + ".js")))
     {
         this.device = device;
         this.client = client;
@@ -37,7 +31,6 @@ public class Zigbee2MqttDevice : ConnectionDevice
         TypeName = device.ModelId;
         ShowInApp = true;
         FriendlyName = device.FriendlyName;
-        IsConnected = true;
     }
 
     public async Task FetchCurrentData()

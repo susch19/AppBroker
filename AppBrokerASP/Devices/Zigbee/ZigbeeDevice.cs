@@ -4,6 +4,8 @@ using AppBroker.Elsa.Signaler;
 using AppBrokerASP.Extension;
 using AppBrokerASP.IOBroker;
 
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
 using Newtonsoft.Json;
 
 using SocketIOClient;
@@ -16,8 +18,7 @@ using static AppBrokerASP.IOBroker.IoBrokerHistory;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
-[AppBroker.ClassPropertyChangedAppbroker]
-public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySignaler, WorkflowDeviceSignaler>
+public partial class ZigbeeDevice : ConnectionJavaScriptDevice
 {
     protected SocketIO Socket { get; }
 
@@ -26,10 +27,14 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
 
     public string LastReceivedFormatted => lastReceived.ToString("dd.MM.yyyy HH:mm:ss");
 
-    [property: JsonProperty("link_Quality")]
-    private byte linkQuality;
-    private bool available;
-    private string adapterWithId = "";
+
+    public System.DateTime LastReceived { get; set; }
+    [JsonPropertyAttribute("link_Quality")]
+    public byte LinkQuality { get; set; }
+
+    public bool Available { get => Connected; set => Connected = value; }
+
+    public string AdapterWithId { get; set; }
 
     [AppBroker.IgnoreField]
     private readonly ReadOnlyCollection<(string[] Names, PropertyInfo Info)> propertyInfos;
@@ -37,7 +42,28 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
     [AppBroker.IgnoreField]
     private readonly HashSet<string> unknownProperties = new();
 
-    public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId)
+    public ZigbeeDevice(long nodeId, SocketIO socket, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
+    {
+        TypeName = typeName;
+        Socket = socket;
+
+        propertyInfos =
+            Array.AsReadOnly(
+                GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Concat(typeof(ZigbeeDevice).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+                .Select(x =>
+                {
+                    var attr = x.GetCustomAttribute<JsonPropertyAttribute>();
+                    return
+                    (string.IsNullOrEmpty(attr?.PropertyName)
+                    ? (new string[] { x.Name })
+                    : (new string[] { x.Name, attr.PropertyName }),
+                    x);
+                })
+            .ToArray());
+    }
+
+    public ZigbeeDevice(long nodeId, SocketIO socket) : base(nodeId, null, null)
     {
         Socket = socket;
 
@@ -68,6 +94,7 @@ public abstract partial class ZigbeeDevice : WorkflowDevice<WorkflowPropertySign
                 return;
             var valName = ioBrokerObject.ValueName.Replace("_", "");
             var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => valName.Equals(y, StringComparison.OrdinalIgnoreCase))).Info;
+            SetState(valName, ioBrokerObject.ValueParameter.Value);
             if (prop == default)
             {
                 Logger.Info($"Couldn't find proprty matching with {GetType().Name}.{valName}");

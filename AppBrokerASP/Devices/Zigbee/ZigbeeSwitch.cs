@@ -10,12 +10,11 @@ using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
-[AppBroker.ClassPropertyChangedAppbroker]
 public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
 {
-    private bool state;
+    private bool State { get; set; }
 
-    protected ZigbeeSwitch(long nodeId, SocketIO socket) : base(nodeId, socket)
+    protected ZigbeeSwitch(long nodeId, SocketIO socket, string typeName) : base(nodeId, socket, typeName)
     {
         ShowInApp = true;
     }

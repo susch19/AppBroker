@@ -905,7 +905,6 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
 
                 encrypted = msEncrypt.ToArray();
             }
-            Console.WriteLine($"Encrypted: {input.Length} to {encrypted.Length}");
             // Return the encrypted bytes from the memory stream.
             return GetBytesOfInt(encrypted.Length).Concat(aesAlg.IV).Concat(encrypted).ToArray();
         }

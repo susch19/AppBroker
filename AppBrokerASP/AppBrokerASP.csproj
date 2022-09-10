@@ -38,7 +38,6 @@
 	
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.RouteAnalyzer" Version="0.5.3" />
-		<PackageReference Include="Jint" Version="3.0.0-beta-2040" />
 		<PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="6.0.7" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="6.0.7">
 		  <PrivateAssets>all</PrivateAssets>
@@ -85,6 +84,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Folder Include="Devices\Dynamic\" />
 	  <Folder Include="Properties\" />
 	</ItemGroup>
 

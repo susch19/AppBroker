@@ -43,8 +43,8 @@ public class IoBrokerManager
 
         if (!alternativeNamesForTypes.TryGetValue(deviceName, out var type) || type is null)
         {
-            logger.Error($"Failed to get device with name {deviceName}");
-            return null;
+            logger.Warn($"Failed to get device with name {deviceName}, using generic zigbee device instead");
+            return new ZigbeeDevice((long)ctorArgs[0], (SocketIO)ctorArgs[1], deviceName);
         }
 
         var newDeviceObj = Activator.CreateInstance(type, ctorArgs);

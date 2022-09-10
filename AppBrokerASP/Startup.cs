@@ -10,6 +10,7 @@ using Elsa.Persistence.EntityFramework.Sqlite;
 using MQTTnet.AspNetCore;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using AppBrokerASP.Javascript;
 
 namespace AppBrokerASP;
 
@@ -43,6 +44,7 @@ public class Startup
         _ = services.AddRazorPages();
          
         _ = services.AddApiVersioning();
+        _ = services.AddSingleton<JavaScriptEngineManager>();
         var container = InstanceContainer.Instance;
         _ = services.AddSingleton(new CloudConnector());
         _ = services.AddSingleton<IInstanceContainer>(container);

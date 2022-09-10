@@ -1,15 +1,21 @@
 ﻿using AppBroker.Core.DynamicUI;
 
+using AppBrokerASP;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace AppBroker.Core.Devices;
 
-public abstract class ConnectionDevice  : Device
+public abstract class ConnectionDevice : Device
 {
 
     public abstract bool IsConnected { get; set; }
+    public ConnectionDevice(long nodeId, string typeName) : base(nodeId, typeName)
+    {
+        IsConnected = true;
+    }
     protected ConnectionDevice(long nodeId) : base(nodeId)
     {
         IsConnected = true;
@@ -20,7 +26,7 @@ public abstract class ConnectionDevice  : Device
 
 public abstract class Device
 {
-    public IReadOnlyCollection<string> TypeNames { get; }
+    public List<string> TypeNames { get; }
 
     [JsonIgnore]
     public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
@@ -42,12 +48,25 @@ public abstract class Device
 
     private readonly Timer sendLastDataTimer;
 
+
+    [JsonExtensionData]
+    public Dictionary<string, JToken>? DynamicStateData => IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id);
+
+    public Device(long nodeId, string? typeName) : this(nodeId)
+    {
+        if (!string.IsNullOrWhiteSpace(typeName))
+        {
+            TypeName = typeName;
+            TypeNames.Insert(0, typeName);
+        }
+    }
+
     public Device(long nodeId)
     {
         Initialized = false;
         Id = nodeId;
         TypeName = GetType().Name;
-        TypeNames = GetBaseTypeNames(GetType()).ToArray();
+        TypeNames = GetBaseTypeNames(GetType()).ToList();
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
         sendLastDataTimer = new Timer((s) => Subscribers.ForEach(x => SendLastData(x.SmarthomeClient)), null, Timeout.Infinite, Timeout.Infinite);
@@ -77,6 +96,15 @@ public abstract class Device
         sendLastDataTimer.Change(250, Timeout.Infinite);
     }
 
-    public virtual void StopDevice() {}
+    public virtual void StopDevice() { }
     public virtual void Reconnect(ByteLengthList parameter) { }
+
+    public JToken? GetState(string name)
+    {
+        var currentState = DynamicStateData;
+        return currentState is null || !currentState.TryGetValue(name, out var val) ? null : val;
+    }
+
+    public virtual void SetState(string name, JToken newValue)
+        => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, name, newValue);
 }

@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 namespace AppBrokerASP.Devices.Zigbee;
 
 [DeviceName("TRADFRI bulb E27 CWS opal 600lm", "TRADFRI bulb E14 CWS opal 600lm", "LED1624G9")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class TradfriLedBulb : UpdateableZigbeeDevice
 {
     [AppBroker.IgnoreField]
@@ -24,14 +23,14 @@ public partial class TradfriLedBulb : UpdateableZigbeeDevice
     public byte Brightness
     {
         get => brightness;
-        set => _ = RaiseAndSetIfChanged(ref brightness, Math.Clamp(value, (byte)0, (byte)100));
+        set => brightness = Math.Clamp(value, (byte)0, (byte)100);
     }
 
-    private string color = "#0000FF";
-    private bool state;
+    private string Color { get; set; } = "#0000FF";
+    private bool State { get; set; }
 
     public TradfriLedBulb(long nodeId, SocketIO socket) :
-        base(nodeId, socket)
+        base(nodeId, socket, nameof(TradfriLedBulb))
     {
         ShowInApp = true;
     }

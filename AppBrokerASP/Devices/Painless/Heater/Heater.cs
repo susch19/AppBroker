@@ -34,7 +34,7 @@ public partial class Heater : PainlessDevice, IDisposable
     [AppBroker.IgnoreField]
     private bool disposed;
 
-    public Heater(long id, ByteLengthList parameters) : base(id)
+    public Heater(long id, ByteLengthList parameters) : base(id, "PainlessMeshHeater")
     {
         using BrokerDbContext? cont = DbProvider.BrokerDbContext;
         timeTemps.AddRange(
@@ -59,7 +59,9 @@ public partial class Heater : PainlessDevice, IDisposable
 
         }
         Initialized = true;
+        IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
     }
+
 
     protected override void InterpretParameters(ByteLengthList parameters)
     {
@@ -121,7 +123,6 @@ public partial class Heater : PainlessDevice, IDisposable
                 {
                     if (device is XiaomiTempSensor sensor)
                     {
-                        sensor.TemperatureChanged += XiaomiTempSensorTemperaturChanged;
                         SendLastTempData();
                         XiaomiTempSensor = device.Id;
                     }
@@ -307,6 +308,7 @@ public partial class Heater : PainlessDevice, IDisposable
         _ = cont.SaveChanges();
     }
 
+
     private bool UpdateDeviceMappingInDb(long tempId, long oldId)
     {
         using BrokerDbContext? cont = DbProvider.BrokerDbContext;
@@ -320,8 +322,6 @@ public partial class Heater : PainlessDevice, IDisposable
         foreach (DeviceMappingModel? oldMapping in oldMappings)
         {
             AppBroker.Core.Devices.Device? oldsensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;
-            if (oldsensor is not null and XiaomiTempSensor xts)
-                xts.TemperatureChanged -= XiaomiTempSensorTemperaturChanged;
             _ = cont.Remove(oldMapping);
         }
         _ = cont.SaveChanges();
@@ -332,15 +332,19 @@ public partial class Heater : PainlessDevice, IDisposable
             Child = tempSensor
         });
 
-        if (sensor is XiaomiTempSensor xiaomiTempSensor)
-            xiaomiTempSensor.TemperatureChanged += XiaomiTempSensorTemperaturChanged;
         XiaomiTempSensor = sensor.Id;
         _ = cont.SaveChanges();
         return true;
     }
 
-    private void XiaomiTempSensorTemperaturChanged(object? sender, float temp)
+
+
+    private void DeviceStateManager_StateChanged(object? sender, StateChangeArgs e)
     {
+        if (e.Id != XiaomiTempSensor || e.PropertyName != "Temperature")
+            return;
+
+        var temp = e.NewValue.Value<float>();
         var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToBinary());
         InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
@@ -365,10 +369,12 @@ public partial class Heater : PainlessDevice, IDisposable
     private void SendLastTempData()
     {
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out AppBroker.Core.Devices.Device? device)
-                && device is XiaomiTempSensor sensor
-                && sensor.Temperature > 5f)
+                && device is XiaomiTempSensor sensor)
         {
-            XiaomiTempSensorTemperaturChanged(this, sensor.Temperature);
+            var existing = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(sensor.Id
+                , "temperature");
+            if (existing is not null)
+                DeviceStateManager_StateChanged(this, new(sensor.Id, "temperature", null, existing));
         }
     }
 

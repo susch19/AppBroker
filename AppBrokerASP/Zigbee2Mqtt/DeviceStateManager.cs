@@ -3,9 +3,9 @@
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
-public class DeviceStateManager
+public class DeviceStateManager : IDeviceStateManager
 {
-    public event EventHandler<StateChangeArgs> StateChanged;
+    public event EventHandler<StateChangeArgs>? StateChanged;
 
     private readonly ConcurrentDictionary<long, Dictionary<string, JToken>> deviceStates = new();
 
@@ -17,6 +17,24 @@ public class DeviceStateManager
         deviceStates.TryGetValue(id, out var result);
         return result;
     }
+    public object? GetSingleStateValue(long id, string propertyName)
+    {
+        if (!deviceStates.TryGetValue(id, out var result))
+            return null;
+        if (!result.TryGetValue(propertyName, out var val) || val is null)
+            return val;
+        return val.Type switch
+        {
+            JTokenType.Integer => val.Value<long>(),
+            JTokenType.Float => val.Value<double>(),
+            JTokenType.String or JTokenType.Guid or JTokenType.Uri => val.Value<string>(),
+            JTokenType.Boolean => val.Value<bool>(),
+            JTokenType.Date => val.Value<DateTime>(),
+            JTokenType.TimeSpan => val.Value<TimeSpan>(),
+            _ => val.ToString(),
+        };
+    }
+
     public JToken? GetSingleState(long id, string propertyName)
     {
         if (!deviceStates.TryGetValue(id, out var result))
@@ -39,21 +57,22 @@ public class DeviceStateManager
                 return;
 
             var oldVal = oldState.GetValueOrDefault(propertyName);
-            InstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
+            IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName);
+            IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
             StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
             oldState[propertyName] = newVal;
         }
         else
         {
 
-            InstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName); //TODO Don't enable all by default, rather provide a gui for setting it
-            InstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
+            IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName); //TODO Don't enable all by default, rather provide a gui for setting it
+            IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
             StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
 
             deviceStates[id] = new Dictionary<string, JToken> { { propertyName, newVal } };
         }
 
-        if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
             device.SendDataToAllSubscribers();
     }
 

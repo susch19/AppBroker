@@ -237,6 +237,7 @@ public static class DeviceLayoutService
                     return (ret.layout, ret.hash, false);
                 }
             }
+
         }
         return null;
 

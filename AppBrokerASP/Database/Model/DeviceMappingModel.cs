@@ -9,7 +9,7 @@ public class DeviceMappingModel
     public long Id { get; set; }
 
     [ForeignKey("ParentId")]
-    public DeviceModel? Parent { get; set; }
+    public virtual DeviceModel? Parent { get; set; }
     [ForeignKey("ChildId")]
-    public DeviceModel? Child { get; set; }
+    public virtual DeviceModel? Child { get; set; }
 }

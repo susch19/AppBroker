@@ -74,8 +74,8 @@ public class SmartHome : Hub<ISmartHomeClient>
         return devices; 
     }
 
-    public record struct DeviceOverview(long Id, IReadOnlyCollection<string> TypeNames, string FriendlyName);
-    public List<DeviceOverview> GetDeviceOverview() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).Select(x => new DeviceOverview(x.Id, x.TypeNames, x.FriendlyName)).ToList();
+    public record struct DeviceOverview(long Id, string TypeName, IReadOnlyCollection<string> TypeNames, string FriendlyName);
+    public List<DeviceOverview> GetDeviceOverview() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).Select(x => new DeviceOverview(x.Id, x.TypeName, x.TypeNames, x.FriendlyName)).ToList();
 
 
     public Task<List<IoBrokerHistory>> GetIoBrokerHistories(long id, string dt)

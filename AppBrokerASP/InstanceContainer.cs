@@ -19,8 +19,8 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     public ConfigManager ConfigManager { get; }
     public IDeviceManager DeviceManager { get; }
     public IconService IconService { get; }
-    public DeviceStateManager DeviceStateManager { get; } //TODO Interface and move to IInstanceContainer
-    public HistoryManager HistoryManager { get; } //TODO Interface and move to IInstanceContainer
+    public IDeviceStateManager DeviceStateManager { get; }
+    public IHistoryManager HistoryManager { get; } 
 
     public InstanceContainer()
     {
@@ -29,9 +29,9 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         ConfigManager = new ConfigManager();
         UpdateManager = new UpdateManager();
         MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.Enabled, ConfigManager.PainlessMeshConfig.ListenPort);
-        DeviceStateManager = new();
+        DeviceStateManager = new DeviceStateManager();
 
-        HistoryManager = new();
+        HistoryManager = new HistoryManager();
         var localDeviceManager = new DeviceManager();
         DeviceManager = localDeviceManager;
         DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);

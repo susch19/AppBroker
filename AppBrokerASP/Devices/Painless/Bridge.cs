@@ -2,7 +2,7 @@
 
 public class Bridge : PainlessDevice
 {
-    public Bridge(long nodeId, List<string> parameter) : base(nodeId)
+    public Bridge(long nodeId, List<string> parameter) : base(nodeId, "PainlessMeshBridge")
     {
         ShowInApp = false;
     }
