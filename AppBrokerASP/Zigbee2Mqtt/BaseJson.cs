@@ -286,7 +286,9 @@ internal enum LogLevel
     Info,
 
     [EnumMember(Value = "warning")]
-    Warning
+    Warning,
+    [EnumMember(Value ="debug")]
+    Debug,
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
