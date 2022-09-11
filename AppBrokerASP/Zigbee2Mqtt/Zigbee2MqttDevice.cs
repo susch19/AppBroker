@@ -21,14 +21,14 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
     private readonly Device device;
     private readonly IManagedMqttClient client;
 
+    private static string GetId(Device d) => d.Definition?.Model ?? d.ModelId ?? d.Type.ToString();
 
-    internal Zigbee2MqttDevice(Device device, IManagedMqttClient client)
-        : base(long.Parse(device.IEEEAddress[2..], NumberStyles.HexNumber), device.ModelId, new FileInfo(Path.Combine("JSExtensionDevices", device.ModelId + ".js")))
+    internal Zigbee2MqttDevice(Device device, long id, IManagedMqttClient client)
+        : base(id, GetId(device), new FileInfo(Path.Combine("JSExtensionDevices", $"{GetId(device)}.js")))
     {
         this.device = device;
         this.client = client;
 
-        TypeName = device.ModelId;
         ShowInApp = true;
         FriendlyName = device.FriendlyName;
     }

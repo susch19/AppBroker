@@ -5,6 +5,8 @@ using Newtonsoft.Json;
 using NLog;
 using AppBrokerASP.Configuration;
 using Newtonsoft.Json.Linq;
+using Microsoft.AspNetCore.Server.IISIntegration;
+using System.Globalization;
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
@@ -73,7 +75,10 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 devices = JsonConvert.DeserializeObject<Device[]>(payload);
                 foreach (var item in devices!)
                 {
-                    var dev = new Zigbee2MqttDevice(item, mqtt!);
+                    var id = long.Parse(item.IEEEAddress[2..], NumberStyles.HexNumber);
+                    if (item.Type == DeviceType.Coordinator || IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
+                        continue;
+                    var dev = new Zigbee2MqttDevice(item, id, mqtt!);
                     InstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
                     friendlyNameToIdMapping[item.FriendlyName] = dev.Id;
                 }
