@@ -1,5 +1,7 @@
 ﻿using AppBroker.Core;
 
+using Jint.Native;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -13,11 +15,7 @@ namespace AppBrokerASP.Devices.Zigbee;
 
 public abstract partial class ZigbeeLamp : UpdateableZigbeeDevice
 {
-    public byte Brightness { get; set; }
-    public bool State { get; set; }
-    public int ColorTemp { get; set; }
-    [property: JsonProperty("transition_Time")]
-    public float TransitionTime { get; set; }
+
 
     public ZigbeeLamp(long nodeId, SocketIO socket, string typeName) : base(nodeId, socket, typeName)
     {
@@ -29,8 +27,9 @@ public abstract partial class ZigbeeLamp : UpdateableZigbeeDevice
         switch (command)
         {
             case Command.Delay:
-                TransitionTime = parameters[0].ToObject<float>();
-                await SetValue(nameof(TransitionTime), TransitionTime);
+                var transitionTime = parameters[0].ToObject<float>();
+                SetState(nameof(transitionTime), transitionTime);
+                await SetValue(nameof(transitionTime), transitionTime);
                 break;
         }
     }
@@ -40,20 +39,23 @@ public abstract partial class ZigbeeLamp : UpdateableZigbeeDevice
         switch (command)
         {
             case Command.Temp:
-                ColorTemp = parameters[0].ToObject<int>();
-                await SetValue(nameof(ColorTemp), ColorTemp);
+                var colorTemp = parameters[0].ToObject<int>();
+                SetState(nameof(colorTemp), colorTemp);
+                await SetValue(nameof(colorTemp), colorTemp);
                 break;
             case Command.Brightness:
-                Brightness = parameters[0].ToObject<byte>();
-                await SetValue(nameof(Brightness), Brightness);
+                var brightness = Math.Clamp(parameters[0].ToObject<byte>(), (byte)0, (byte)100);
+                SetState(nameof(brightness), brightness);
+                await SetValue(nameof(brightness), brightness);
                 break;
             case Command.SingleColor:
-                State = true;
-                await SetValue(nameof(State), State);
+                var state = true;
+                SetState(nameof(state), state);
+                await SetValue(nameof(state), state);
                 break;
             case Command.Off:
-                State = false;
-                await SetValue(nameof(State), State);
+                state = true;
+                await SetValue(nameof(state), state);
                 break;
             default:
                 break;

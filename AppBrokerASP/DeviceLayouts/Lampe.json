@@ -6,7 +6,7 @@
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
-        "Name": "color_temp",
+        "Name": "colortemp",
         "Order": 0,
         "TextStyle": {
           "FontSize": 25.0,
@@ -53,7 +53,7 @@
       },
 
       {
-        "Name": "color_mode",
+        "Name": "colorMode",
         "Order": 0,
         "DisplayName": "Farbmodus: ",
         "UnitOfMeasurement": "",

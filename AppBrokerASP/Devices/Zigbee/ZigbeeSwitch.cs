@@ -12,7 +12,6 @@ namespace AppBrokerASP.Devices.Zigbee;
 
 public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
 {
-    private bool State { get; set; }
 
     protected ZigbeeSwitch(long nodeId, SocketIO socket, string typeName) : base(nodeId, socket, typeName)
     {
@@ -24,13 +23,13 @@ public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
         switch (command)
         {
             case Command.On:
-                State = true;
-                await SetValue(nameof(State), State);
+                SetState("state", true);
+                await SetValue("state", true);
                 break;
 
             case Command.Off:
-                State = false;
-                await SetValue(nameof(State), State);
+                SetState("state", false);
+                await SetValue("state", false);
                 break;
             case Command.None:
                 Console.WriteLine(string.Join(",", parameters.Select(x => x.ToObject<string>())));

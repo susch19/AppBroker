@@ -6,9 +6,6 @@ namespace AppBrokerASP.Devices.Zigbee;
 
 public partial class ZigbeeContactSensor : ZigbeeDevice
 {
-
-    private double temperature;
-    private bool state;
     public ZigbeeContactSensor(long nodeId, SocketIO socket) : base(nodeId, socket, nameof(ZigbeeContactSensor))
     {
         ShowInApp = true;

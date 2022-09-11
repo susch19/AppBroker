@@ -7,7 +7,7 @@
     "DashboardProperties": [
       {
         "Name": "state",
-        "Order": 1,
+        "Order": 0,
         "RowNr": 0,
         "EditInfo": {
           "EditType": "Button",

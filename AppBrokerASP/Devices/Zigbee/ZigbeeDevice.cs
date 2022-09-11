@@ -13,12 +13,14 @@ using SocketIOClient;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 using static AppBrokerASP.IOBroker.IoBrokerHistory;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
-public partial class ZigbeeDevice : ConnectionJavaScriptDevice
+[AppBroker.ClassPropertyChangedAppbroker]
+public partial class ZigbeeDevice : PropChangedJavaScriptDevice
 {
     protected SocketIO Socket { get; }
 
@@ -27,13 +29,7 @@ public partial class ZigbeeDevice : ConnectionJavaScriptDevice
 
     public string LastReceivedFormatted => lastReceived.ToString("dd.MM.yyyy HH:mm:ss");
 
-
-    public System.DateTime LastReceived { get; set; }
-    [JsonPropertyAttribute("link_Quality")]
-    public byte LinkQuality { get; set; }
-
-    public bool Available { get => Connected; set => Connected = value; }
-
+    [JsonIgnore]
     public string AdapterWithId { get; set; }
 
     [AppBroker.IgnoreField]
@@ -41,6 +37,7 @@ public partial class ZigbeeDevice : ConnectionJavaScriptDevice
 
     [AppBroker.IgnoreField]
     private readonly HashSet<string> unknownProperties = new();
+
 
     public ZigbeeDevice(long nodeId, SocketIO socket, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {
@@ -87,24 +84,26 @@ public partial class ZigbeeDevice : ConnectionJavaScriptDevice
     {
         try
         {
-            if (unknownProperties.Contains(ioBrokerObject.ValueName))
-                return;
+
+            var valName = Regex.Replace(ioBrokerObject.ValueName, "_([a-z])", x => x.Value[1..].ToUpperInvariant());
+            var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => valName.Equals(y, StringComparison.OrdinalIgnoreCase))).Info;
+            SetState(valName, ioBrokerObject.ValueParameter.Value);
 
             if (ioBrokerObject?.ValueParameter?.Value is null)
                 return;
-            var valName = ioBrokerObject.ValueName.Replace("_", "");
-            var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => valName.Equals(y, StringComparison.OrdinalIgnoreCase))).Info;
-            SetState(valName, ioBrokerObject.ValueParameter.Value);
-            if (prop == default)
+            var hasProp = !unknownProperties.Contains(ioBrokerObject.ValueName);
+            if (!hasProp && prop == default)
             {
-                Logger.Info($"Couldn't find proprty matching with {GetType().Name}.{valName}");
                 _ = unknownProperties.Add(ioBrokerObject.ValueName);
                 return;
             }
-
-            SetProperty(ioBrokerObject, prop);
+            else if (hasProp && prop != default)
+                SetProperty(ioBrokerObject, prop);
             if (setLastReceived)
+            {
                 LastReceived = DateTime.Now;
+                SetState("lastReceived", DateTime.Now);
+            }
             SendDataToAllSubscribers();
 
         }

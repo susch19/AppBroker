@@ -6,7 +6,6 @@ namespace AppBroker.Core.DynamicUI;
 
 public class EditParameter
 {
-    [JsonConverter(typeof(StringEnumConverter))]
     public Command Command { get; set; }
     public JToken Value { get; set; } = default!;
     public int? Id { get; set; }

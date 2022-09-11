@@ -20,7 +20,6 @@ public partial class XiaomiTempSensor : ZigbeeDevice
     public XiaomiTempSensor(long id, SocketIO socket) : base(id, socket, nameof(XiaomiTempSensor))
     {
         ShowInApp = true;
-        Available = true;
     }
 
     //public override async Task UpdateFromApp(Command command, List<JToken> parameters)

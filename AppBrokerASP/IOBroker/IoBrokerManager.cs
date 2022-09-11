@@ -6,6 +6,7 @@ using AppBrokerASP.Extension;
 using SocketIOClient;
 using AppBrokerASP.Database;
 using AppBroker.Core.Devices;
+using System.Text.RegularExpressions;
 
 namespace AppBrokerASP.IOBroker;
 
@@ -44,7 +45,7 @@ public class IoBrokerManager
         if (!alternativeNamesForTypes.TryGetValue(deviceName, out var type) || type is null)
         {
             logger.Warn($"Failed to get device with name {deviceName}, using generic zigbee device instead");
-            return new ZigbeeDevice((long)ctorArgs[0], (SocketIO)ctorArgs[1], deviceName);
+            return new UpdateableZigbeeDevice((long)ctorArgs[0], (SocketIO)ctorArgs[1], deviceName);
         }
 
         var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
@@ -234,22 +235,10 @@ public class IoBrokerManager
 
             foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
             {
-                var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item.common.name.ToLower().Replace(" ", "_"), new Parameter(item.val));
-                if (dev is XiaomiTempSensor)
-                {
-                    if (ioObject.ValueName == "battery_voltage")
-                        ioObject.ValueName = "voltage";
-                    else if (ioObject.ValueName == "battery_percent")
-                        ioObject.ValueName = "battery";
-                }
-                else if (dev is FloaltPanel)
-                {
+                var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item._id[(item._id.LastIndexOf(".") + 1)..], new Parameter(item.val));
+                if (ioObject.ValueName == "msg_from_zigbee" || ioObject.ValueName == "device_query")
+                    continue;
 
-                    if (ioObject.ValueName == "color_temperature")
-                        ioObject.ValueName = "colortemp";
-                    else if (ioObject.ValueName == "switch_state")
-                        ioObject.ValueName = "state";
-                }
                 if (dev is ZigbeeDevice zd)
                     zd.SetPropFromIoBroker(ioObject, false);
             }

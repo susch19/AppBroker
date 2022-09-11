@@ -16,8 +16,10 @@ public class HistoryManager : IHistoryManager
         ctx.Database.Migrate();
     }
 
-    public void StoreNewState(long id, string name, JToken? oldValue, JToken newValue)
+    public void StoreNewState(long id, string name, JToken? oldValue, JToken? newValue)
     {
+        if (newValue is null)
+            return;
         using var ctx = new HistoryContext();
 
         var histProp = ctx.Properties

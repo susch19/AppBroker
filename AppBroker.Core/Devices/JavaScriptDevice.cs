@@ -48,13 +48,15 @@ public class ConnectionJavaScriptDevice : JavaScriptDevice
             isConnected = value;
             SetState("isConnected", value);
         }
-    }
+    } 
     public ConnectionJavaScriptDevice(FileInfo info) : base(info)
     {
+        Connected = true;
     }
 
     public ConnectionJavaScriptDevice(long id, string? typeName, FileInfo? info) : base(id, typeName, info)
     {
+        Connected = true;
     }
 
     public override void StopDevice() => Connected = false;
@@ -222,7 +224,7 @@ public class JavaScriptDevice : Device
 
         runningIntervalls.Clear();
 
-        IInstanceContainer.Instance.JavaScriptEngineManager
+        ExtendEngine(IInstanceContainer.Instance.JavaScriptEngineManager
             .GetEngineWithDefaults(LogManager.GetLogger(FriendlyName + "_" + Id))
             .SetValue("device", this)
             .SetValue("interval", Interval)
@@ -237,8 +239,13 @@ public class JavaScriptDevice : Device
             .SetValue("checkForChanges", HasChanges)
             .SetValue("rebuild", RebuildEngine)
             .SetValue("httpGet", (string s) => client.GetAsync(s).Result)
-            .SetValue("httpPost", (string s, HttpContent? content) => client.PostAsync(s, content).Result)
-            .Execute(fileInfo.Content);
+            .SetValue("httpPost", (string s, HttpContent? content) => client.PostAsync(s, content).Result))
+        .Execute(fileInfo.Content);
+    }
+
+    protected virtual Engine ExtendEngine(Engine engine)
+    {
+        return engine;
     }
 }
 
