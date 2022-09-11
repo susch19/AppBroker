@@ -34,27 +34,32 @@ public class JavaScriptEngineManager
     }
 
     private readonly List<JavaScriptFile> files = new();
-    private ILogger logger;
+    private readonly ILogger logger;
+    private readonly DirectoryInfo jsDeviceDirectory;
 
     public JavaScriptEngineManager()
     {
         logger = LogManager.GetCurrentClassLogger();
+        jsDeviceDirectory = new DirectoryInfo("./JSDevices");
+        jsDeviceDirectory.Create();
     }
 
     public void Initialize()
     {
         IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
-        var scriptFiles = Directory.GetFiles("./JSDevices", "*.js", SearchOption.AllDirectories);
+        var scriptFiles = jsDeviceDirectory.GetFiles("*.js", SearchOption.AllDirectories);
         foreach (var item in scriptFiles)
         {
-            var dv = new JavaScriptDevice(new FileInfo(item));
+            var dv = new JavaScriptDevice(item);
             IInstanceContainer.Instance.DeviceManager.AddNewDevice(dv);
         }
     }
 
     private void DeviceStateManager_StateChanged(object? sender, StateChangeArgs e)
     {
-        var currentFiles = Directory.GetFiles("./Scripts", "*.js").Select(x => new FileInfo(x)).ToArray();
+
+
+        var currentFiles = jsDeviceDirectory.GetFiles("*.js").ToArray();
 
         for (int i = 0; i < currentFiles.Length; i++)
         {
