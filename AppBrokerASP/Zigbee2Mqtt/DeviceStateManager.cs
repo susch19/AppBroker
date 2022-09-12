@@ -60,6 +60,7 @@ public class DeviceStateManager : IDeviceStateManager
             IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName);
             IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
             StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
+            AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
             oldState[propertyName] = newVal;
         }
         else
@@ -67,6 +68,7 @@ public class DeviceStateManager : IDeviceStateManager
 
             IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName); //TODO Don't enable all by default, rather provide a gui for setting it
             IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
+            AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
             StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
 
             deviceStates[id] = new Dictionary<string, JToken> { { propertyName, newVal } };
@@ -95,6 +97,7 @@ public class DeviceStateManager : IDeviceStateManager
                 var oldVal = oldState.GetValueOrDefault(item);
                 var newVal = newState[item];
                 InstanceContainer.Instance.HistoryManager.StoreNewState(id, item, oldVal, newVal);
+                AddStatesForBackwartsCompatibilityForOldApp(id, item, newVal);
                 StateChanged?.Invoke(this, new(id, item, oldVal, newVal));
                 oldState[item] = newVal;
             }
@@ -106,12 +109,26 @@ public class DeviceStateManager : IDeviceStateManager
             {
                 InstanceContainer.Instance.HistoryManager.EnableHistory(id, item.Key); //TODO Don't enable all by default, rather provide a gui for setting it
                 InstanceContainer.Instance.HistoryManager.StoreNewState(id, item.Key, null, item.Value);
-
+                AddStatesForBackwartsCompatibilityForOldApp(id, item.Key, item.Value);
             }
             deviceStates[id] = newState;
         }
 
         if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
             device.SendDataToAllSubscribers();
+    }
+
+    public void AddStatesForBackwartsCompatibilityForOldApp(long id, string name, JToken value)
+    {
+        string newPropName = name switch
+        {
+            "linkQuality" => "link_Quality",
+            "transitionTime" => "transition_Time",
+            "colorTemp" => "colortemp",
+            _ => ""
+        };
+        if (string.IsNullOrWhiteSpace(newPropName))
+            return;
+        SetSingleState(id, newPropName, value);
     }
 }
