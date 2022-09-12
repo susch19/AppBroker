@@ -7,6 +7,7 @@ using SocketIOClient;
 using AppBrokerASP.Database;
 using AppBroker.Core.Devices;
 using System.Text.RegularExpressions;
+using NonSucking.Framework.Extension.Threading;
 
 namespace AppBrokerASP.IOBroker;
 
@@ -59,6 +60,7 @@ public class IoBrokerManager
         return newDevice;
     }
 
+
     public async Task ConnectToIOBroker()
     {
         client = new SocketIO(new Uri(Config.SocketIOUrl), new SocketIOOptions()
@@ -66,10 +68,12 @@ public class IoBrokerManager
             EIO = Config.NewSocketIoversion ? 4 : 3
         });
 
+        ScopedSemaphore stateSemaphroe = new();
         client.OnAny(async (eventName, response) =>
         {
             if (IoBrokerZigbee.TryParse(eventName, response.ToString(), out var zo) && zo is not null)
             {
+                using var _ = stateSemaphroe.Wait();
                 if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
                 {
                     try
@@ -111,6 +115,7 @@ public class IoBrokerManager
             try
             {
 
+                using var _ = stateSemaphroe.Wait();
                 await GetZigbeeDevices(client);
             }
             catch (Exception ex)

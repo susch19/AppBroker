@@ -1,6 +1,11 @@
-﻿using Jint;
+﻿using AppBroker.Core.Javascript;
+
+using Jint;
+
+using NiL.JS.Core;
 
 using SocketIOClient;
+
 using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Zigbee;
@@ -13,10 +18,16 @@ public class UpdateableZigbeeDevice : ZigbeeDevice
 
     }
 
-    public virtual Task SetValue(string property, object value) 
+    public virtual Task SetValue(string property, object value)
         => Socket.EmitAsync("setState", $"{AdapterWithId}.{property.ToLower()}", value);
 
-    protected override Engine ExtendEngine(Engine engine) 
+    protected override Context ExtendEngine(Context engine)
+    {
+        engine.DefineFunction("setIoBrokerValue", SetValue);
+        return base.ExtendEngine(engine);
+    }
+
+    protected override Engine ExtendEngine(Engine engine)
         => base.ExtendEngine(engine
             .SetValue("setIoBrokerValue", SetValue));
 }

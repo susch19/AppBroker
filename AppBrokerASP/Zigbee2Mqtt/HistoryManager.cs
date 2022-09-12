@@ -61,7 +61,7 @@ public class HistoryManager : IHistoryManager
 
     public void EnableHistory(long id, string name)
     {
-
+        return;
         using var ctx = new HistoryContext();
         var histProp = ctx.Properties
             .FirstOrDefault(x => x.PropertyName == name && x.Device.DeviceId == id);

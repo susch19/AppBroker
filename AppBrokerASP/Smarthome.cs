@@ -178,7 +178,8 @@ public class SmartHome : Hub<ISmartHomeClient>
 
             if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device))
             {
-                _ = device.Subscribers.RemoveAll(x => x.ConnectionId == connectionId);
+
+                _ = device.Subscribers.RemoveWhere(x => x.ConnectionId == connectionId);
                 subMessage += device.Id + "/" + device.FriendlyName + ", ";
             }
         }

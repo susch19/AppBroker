@@ -6,6 +6,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
+using NonSucking.Framework.Extension.Threading;
+
+using System.Collections.Concurrent;
+
 namespace AppBroker.Core.Devices;
 
 public abstract class ConnectionDevice : Device
@@ -29,7 +33,7 @@ public abstract class Device
     public List<string> TypeNames { get; }
 
     [JsonIgnore]
-    public List<Subscriber> Subscribers { get; } = new List<Subscriber>();
+    public HashSet<Subscriber> Subscribers { get; } = new HashSet<Subscriber>();
 
     public abstract long Id { get; set; }
 
@@ -46,11 +50,11 @@ public abstract class Device
     [JsonIgnore]
     protected NLog.Logger Logger { get; set; }
 
-    private readonly Timer sendLastDataTimer;
-
 
     [JsonExtensionData]
     public Dictionary<string, JToken>? DynamicStateData => IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id);
+    private readonly Timer sendLastDataTimer;
+    private static ConcurrentDictionary<string, ScopedSemaphore> subscriberSemaphores = new();
 
     public Device(long nodeId, string? typeName) : this(nodeId)
     {
@@ -61,6 +65,7 @@ public abstract class Device
         }
     }
 
+    List<Subscriber> toRemove = new();
     public Device(long nodeId)
     {
         Initialized = false;
@@ -69,7 +74,17 @@ public abstract class Device
         TypeNames = GetBaseTypeNames(GetType()).ToList();
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
-        sendLastDataTimer = new Timer((s) => Subscribers.ForEach(x => SendLastData(x.SmarthomeClient)), null, Timeout.Infinite, Timeout.Infinite);
+        sendLastDataTimer = new Timer(async (s) =>
+        {
+            foreach (var item in Subscribers)
+            {
+                if (!await SendLastData(item))
+                    toRemove.Add(item);
+
+            }
+            toRemove.ForEach(x => Subscribers.Remove(x));
+            toRemove.Clear();
+        }, null, Timeout.Infinite, Timeout.Infinite);
     }
 
     private IEnumerable<string> GetBaseTypeNames(Type type)
@@ -88,7 +103,23 @@ public abstract class Device
 
     public virtual dynamic? GetConfig() => null;
 
-    public virtual async void SendLastData(ISmartHomeClient client) => await client.Update(this);
+    public virtual async Task<bool> SendLastData(Subscriber client)
+    {
+        try
+        {
+            if (!subscriberSemaphores.TryGetValue(client.ConnectionId, out var semaphore))
+                subscriberSemaphores[client.ConnectionId] = semaphore = new();
+            using (semaphore.Wait())
+                await client.SmarthomeClient.Update(this);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error(ex);
+            return false;
+        }
+        return true;
+    }
+
     public virtual void SendLastData(List<ISmartHomeClient> clients) => clients.ForEach(async x => await x.Update(this));
 
     public void SendDataToAllSubscribers()

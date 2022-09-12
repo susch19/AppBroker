@@ -1,12 +1,17 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Devices;
+using AppBroker.Core.Javascript;
 
 using AppBrokerASP.Javascript;
 
 using Jint;
 
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using NiL.JS;
+using NiL.JS.Core;
 
 using NLog;
 
@@ -48,7 +53,7 @@ public class ConnectionJavaScriptDevice : JavaScriptDevice
             isConnected = value;
             SetState("isConnected", value);
         }
-    } 
+    }
     public ConnectionJavaScriptDevice(FileInfo info) : base(info)
     {
         Connected = true;
@@ -80,6 +85,7 @@ public class JavaScriptDevice : Device
     private readonly HashSet<Guid> runningIntervalls = new();
     private readonly ScopedSemaphore semaphore = new ScopedSemaphore();
     private JavaScriptFile fileInfo;
+    private Context engine;
 
     static JavaScriptDevice()
     {
@@ -88,7 +94,7 @@ public class JavaScriptDevice : Device
 
     public JavaScriptDevice(FileInfo info) : base(0)
     {
-        fileInfo = new JavaScriptFile(info.LastWriteTimeUtc, info, File.ReadAllText(info.FullName));
+        fileInfo = new JavaScriptFile() with { File = info, LastWriteTimeUtc = info.LastWriteTimeUtc, Content = File.ReadAllText(info.FullName) };
         Id = long.Parse(Path.GetFileNameWithoutExtension(info.Name));
         //client.GetAsync("").Result.Content.ReadAsStringAsync()
         RebuildEngine();
@@ -223,27 +229,58 @@ public class JavaScriptDevice : Device
             fileInfo = fileInfo with { LastWriteTimeUtc = fileInfo.File.LastWriteTimeUtc, Content = File.ReadAllText(fileInfo.File.FullName) };
 
         runningIntervalls.Clear();
+        var logger = LogManager.GetLogger(FriendlyName + "_" + Id);
+        engine = ExtendEngine(IInstanceContainer.Instance.JavaScriptEngineManager
+            .GetNilJSEngineWithDefaults(logger)
+            );
+        engine.DefineVariable("device").Assign(JSValue.Marshal(this));
+        engine.DefineFunction("interval", Interval)
+        .DefineFunction("setTimeout", SetTimeout)
+        .DefineFunction("timedTrigger", TimeTrigger)
+        .DefineFunction("stopInterval", StopInterval)
+        .DefineFunction("onUpdateFromApp", UpdateFromAppJS)
+        .DefineFunction("onOptionsFromApp", OptionsFromAppJS)
+        .DefineFunction("removeUpdateFromApp", RemoveUpdateFromAppJS)
+        .DefineFunction("removeOptionsFromApp", RemoveOptionsFromAppJS)
+        .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
+        .DefineFunction("checkForChanges", HasChanges)
+        .DefineFunction("rebuild", RebuildEngine)
+        .DefineFunction("forceGC", ()=>GC.Collect())
+        .DefineFunction("httpGet", (string s) => client.GetAsync(s).Result)
+        .DefineFunction("httpPost",(string s, HttpContent? content) => client.PostAsync(s, content).Result);
 
-        ExtendEngine(IInstanceContainer.Instance.JavaScriptEngineManager
-            .GetEngineWithDefaults(LogManager.GetLogger(FriendlyName + "_" + Id))
-            .SetValue("device", this)
-            .SetValue("interval", Interval)
-            .SetValue("setTimeout", SetTimeout)
-            .SetValue("timedTrigger", TimeTrigger)
-            .SetValue("stopInterval", StopInterval)
-            .SetValue("onUpdateFromApp", UpdateFromAppJS)
-            .SetValue("onOptionsFromApp", OptionsFromAppJS)
-            .SetValue("removeUpdateFromApp", RemoveUpdateFromAppJS)
-            .SetValue("removeOptionsFromApp", RemoveOptionsFromAppJS)
-            .SetValue("sendDataToAllSubscribers", SendDataToAllSubscribers)
-            .SetValue("checkForChanges", HasChanges)
-            .SetValue("rebuild", RebuildEngine)
-            .SetValue("httpGet", (string s) => client.GetAsync(s).Result)
-            .SetValue("httpPost", (string s, HttpContent? content) => client.PostAsync(s, content).Result))
-        .Execute(fileInfo.Content);
+        //engine.Debugging = true;
+        //engine.DebuggerCallback += Context_DebuggerCallback;
+        engine.Eval(fileInfo.Content);
+    }
+
+    private void Context_DebuggerCallback(Context sender, DebuggerCallbackEventArgs e)
+    {
+        Console.Clear();
+        for (var i = 0; i < fileInfo.Content.Length; i++)
+        {
+            if (i >= e.Statement.Position && i <= e.Statement.EndPosition)
+            {
+                Console.Write(fileInfo.Content[i]);
+            }
+
+        }
+
+        Console.WriteLine();
+
+        Console.WriteLine("Variables:");
+        Console.WriteLine(string.Join(Environment.NewLine, new ContextDebuggerProxy(sender).Variables.Select(x => x.Key + ": " + x.Value)));
+
+        Console.WriteLine();
+        Console.WriteLine("Output:");
+
     }
 
     protected virtual Engine ExtendEngine(Engine engine)
+    {
+        return engine;
+    }
+    protected virtual Context ExtendEngine(Context engine)
     {
         return engine;
     }
