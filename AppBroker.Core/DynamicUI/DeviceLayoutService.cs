@@ -98,6 +98,7 @@ public static class DeviceLayoutService
                 {
                     typeName = layout.TypeNames[index];
                 }
+                index++;
             }
             while (typeName is not null);
 
