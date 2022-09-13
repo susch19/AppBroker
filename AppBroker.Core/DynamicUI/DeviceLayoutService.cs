@@ -77,70 +77,82 @@ public static class DeviceLayoutService
         {
             logger.Info($"Layout change detected: {e.FullPath}");
             var (layout, hash) = GetHashAndFile(e.FullPath);
-            bool updated = false;
 
             if (layout is null)
                 return;
-            int index = 0;
-            string? typeName = layout.TypeName;
-            do
-            {
-                if(typeName is not null)
-                {
-                    if (!TypeDeviceLayouts.TryGetValue(typeName, out var layoutType) || layoutType.hash != hash)
-                    {
-                        TypeDeviceLayouts[typeName] = (layout, hash);
-                        updated = true;
-                    }
-                }
-                typeName = null;
-                if(layout.TypeNames is not null && layout.TypeNames.Length > index)
-                {
-                    typeName = layout.TypeNames[index];
-                }
-                index++;
-            }
-            while (typeName is not null);
-
-            if (layout.Ids is not null)
-            {
-                foreach (long id in layout.Ids)
-                {
-                    if (InstanceDeviceLayouts.TryGetValue(id, out var layoutType) && layoutType.hash == hash)
-                        continue;
-                    {
-                        InstanceDeviceLayouts[id] = (layout, hash);
-
-                    }
-                }
-            }
-
-            if (!updated)
-                return;
 
             HashSet<string> subs = new();
-            foreach (KeyValuePair<long, Devices.Device> device in IInstanceContainer.Instance.DeviceManager.Devices)
+
+            CheckLayout(layout, hash, subs);
+            if (layout.TypeNames is not null)
             {
-                if (layout.Ids?.Contains(device.Key) ?? false)
+                foreach (var item in layout.TypeNames)
                 {
-                    foreach (var sub in device.Value.Subscribers)
-                    {
-                        if (subs.Add(sub.ConnectionId))
-                            _ = sub.SmarthomeClient.UpdateUi(layout, hash);
-                    }
-                    continue;
-                }
-                if (layout.TypeName is not null && device.Value.TypeNames.Contains(layout.TypeName))
-                {
-                    foreach (var sub in device.Value.Subscribers)
-                    {
-                        if (subs.Add(sub.ConnectionId))
-                            _ = sub.SmarthomeClient.UpdateUi(layout, hash);
-                    }
-                    continue;
+                    CheckLayout(layout with { TypeName = item }, hash, subs);
+
                 }
             }
+
+            CheckLayoutIds(layout, hash, subs);
         });
+    }
+    private static void CheckLayoutIds(DeviceLayout layout, string hash, HashSet<string> subs)
+    {
+        bool updated = false;
+        if (layout.Ids is not null)
+        {
+            foreach (long id in layout.Ids)
+            {
+                if (InstanceDeviceLayouts.TryGetValue(id, out var layoutType) && layoutType.hash == hash)
+                    continue;
+
+                InstanceDeviceLayouts[id] = (layout, hash);
+                updated = true;
+            }
+        }
+
+        if (!updated)
+            return;
+
+        foreach (KeyValuePair<long, Devices.Device> device in IInstanceContainer.Instance.DeviceManager.Devices)
+        {
+            if (layout.Ids?.Contains(device.Key) ?? false)
+            {
+                foreach (var sub in device.Value.Subscribers)
+                {
+                    if (subs.Add(sub.ConnectionId))
+                        _ = sub.SmarthomeClient.UpdateUi(layout, hash);
+                }
+            }
+        }
+    }
+    private static void CheckLayout(DeviceLayout layout, string hash, HashSet<string> subs)
+    {
+        bool updated = false;
+        if (layout.TypeName is not null)
+        {
+            if (!TypeDeviceLayouts.TryGetValue(layout.TypeName, out var layoutType) || layoutType.hash != hash)
+            {
+                TypeDeviceLayouts[layout.TypeName] = (layout, hash);
+                updated = true;
+            }
+        }
+
+        if (!updated)
+            return;
+        foreach (KeyValuePair<long, Devices.Device> device in IInstanceContainer.Instance.DeviceManager.Devices)
+        {
+
+            if (layout.TypeName is not null && device.Value.TypeNames.Contains(layout.TypeName))
+            {
+                foreach (var sub in device.Value.Subscribers)
+                {
+                    if (subs.Add(sub.ConnectionId))
+                        _ = sub.SmarthomeClient.UpdateUi(layout, hash);
+                }
+                continue;
+            }
+        }
     }
 
     public static void ReloadLayouts()
@@ -161,8 +173,14 @@ public static class DeviceLayoutService
 
                 if (layout.TypeName is not null && !TypeDeviceLayouts.ContainsKey(layout.TypeName))
                     TypeDeviceLayouts.Add(layout.TypeName, (layout, hash));
-                else
-                {/* TODO: warning*/}
+                else if (layout.TypeNames is not null)
+                {
+                    foreach (var item in layout.TypeNames)
+                    {
+                        if(!TypeDeviceLayouts.ContainsKey(item))
+                            TypeDeviceLayouts.Add(item, (layout, hash));
+                    }
+                }
 
                 if (layout.Ids is not null)
                 {
@@ -182,49 +200,6 @@ public static class DeviceLayoutService
         }
     }
 
-    //public static DetailDeviceLayout? GetDetailDeviceLayout(string typeName)
-    //    => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret.layout.DetailDeviceLayout : null;
-
-    //public static DetailDeviceLayout? GetDetailDeviceLayout(long deviceId)
-    //{
-    //    if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
-    //    {
-    //        return ret.layout.DetailDeviceLayout;
-    //    }
-    //    else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
-    //    {
-    //        foreach (string typeName in device.TypeNames)
-    //        {
-    //            DetailDeviceLayout? res = GetDetailDeviceLayout(typeName);
-    //            if (res is not null)
-    //                return res;
-    //        }
-    //    }
-    //    return null;
-
-    //}
-
-    //public static DashboardDeviceLayout? GetDashboardDeviceLayout(string typeName)
-    //    => TypeDeviceLayouts.TryGetValue(typeName, out var ret) ? ret.layout.DashboardDeviceLayout : null;
-
-    //public static DashboardDeviceLayout? GetDashboardDeviceLayout(long deviceId)
-    //{
-    //    if (InstanceDeviceLayouts.TryGetValue(deviceId, out var ret))
-    //    {
-    //        return ret.layout.DashboardDeviceLayout;
-    //    }
-    //    else if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Devices.Device? device))
-    //    {
-    //        foreach (string typeName in device.TypeNames)
-    //        {
-    //            DashboardDeviceLayout? res = GetDashboardDeviceLayout(typeName);
-    //            if (res is not null)
-    //                return res;
-    //        }
-    //    }
-    //    return null;
-
-    //}
 
 
     public static (DeviceLayout? layout, string hash)? GetDeviceLayout(string typeName)
