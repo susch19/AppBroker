@@ -28,7 +28,7 @@ public abstract class ConnectionDevice : Device
     public override void Reconnect(ByteLengthList parameter) => IsConnected = true;
 }
 
-public abstract class Device
+public abstract class Device : IDisposable
 {
     public List<string> TypeNames { get; }
 
@@ -54,7 +54,7 @@ public abstract class Device
     [JsonExtensionData]
     public Dictionary<string, JToken>? DynamicStateData => IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id);
     private readonly Timer sendLastDataTimer;
-    private static ConcurrentDictionary<string, ScopedSemaphore> subscriberSemaphores = new();
+    private readonly List<Subscriber> toRemove = new();
 
     public Device(long nodeId, string? typeName) : this(nodeId)
     {
@@ -65,7 +65,6 @@ public abstract class Device
         }
     }
 
-    List<Subscriber> toRemove = new();
     public Device(long nodeId)
     {
         Initialized = false;
@@ -107,10 +106,7 @@ public abstract class Device
     {
         try
         {
-            if (!subscriberSemaphores.TryGetValue(client.ConnectionId, out var semaphore))
-                subscriberSemaphores[client.ConnectionId] = semaphore = new();
-            using (semaphore.Wait())
-                await client.SmarthomeClient.Update(this);
+            await client.SmarthomeClient.Update(this);
         }
         catch (Exception ex)
         {
@@ -136,6 +132,15 @@ public abstract class Device
         return currentState is null || !currentState.TryGetValue(name, out var val) ? null : val;
     }
 
+    public virtual void ReceivedNewState(string name, JToken newValue)
+    {
+
+    }
     public virtual void SetState(string name, JToken newValue)
         => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, name, newValue);
+
+    public void Dispose()
+    {
+        sendLastDataTimer?.Dispose();
+    }
 }

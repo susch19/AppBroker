@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core.Devices;
+using AppBroker.Core.DynamicUI;
 using AppBroker.Core.Javascript;
 
 using AppBrokerASP.Devices;
@@ -21,8 +22,33 @@ using ILogger = NLog.ILogger;
 namespace AppBrokerASP.Javascript;
 public class JavaScriptEngineManager
 {
-    private readonly ConcurrentQueue<Engine> engines = new();
+    private readonly HttpClient client;
 
+    private readonly List<JavaScriptFile> files = new();
+    private readonly ScopedSemaphore filesSemaphore = new();
+    private readonly ILogger logger;
+    private readonly DirectoryInfo jsDeviceDirectory;
+    private readonly DirectoryInfo scriptsDirectory;
+
+    public JavaScriptEngineManager()
+    {
+        logger = LogManager.GetCurrentClassLogger();
+        jsDeviceDirectory = new DirectoryInfo("./JSDevices");
+        jsDeviceDirectory.Create();
+        scriptsDirectory = new DirectoryInfo("./Scripts");
+
+        client = new();
+    }
+    public void Initialize()
+    {
+        IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
+        var scriptFiles = jsDeviceDirectory.GetFiles("*.js", SearchOption.AllDirectories);
+        foreach (var item in scriptFiles)
+        {
+            var dv = new JavaScriptDevice(item);
+            IInstanceContainer.Instance.DeviceManager.AddNewDevice(dv);
+        }
+    }
 
     public Context GetNilJSEngineWithDefaults(ILogger logger)
     {
@@ -30,10 +56,17 @@ public class JavaScriptEngineManager
         var jsEngine = new Context();
         jsEngine.DefineVariable("newtonsoftLinq").Assign(new NamespaceProvider("Newtonsoft.Json.Linq"));
         jsEngine.DefineConstructor(typeof(LogLevel));
-        jsEngine.DefineFunction("log", new Action<object>(logger.Trace))
-        .DefineFunction("logWithLevel", new Action<NLog.LogLevel, object>(logger.Log))
-        .DefineFunction("setState", new Action<long, string, JSValue>((id, name, val) => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(id, name, JToken.FromObject(val.Value))))
-        .DefineFunction("getState", new Func<long, string, object?>(IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue));
+        jsEngine
+            .DefineFunction("log", new Action<object>(logger.Trace))
+            .DefineFunction("logWithLevel", new Action<NLog.LogLevel, object>(logger.Log))
+            .DefineFunction("setState", new Action<long, string, JSValue>((id, name, val) => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(id, name, JToken.FromObject(val.Value))))
+            .DefineFunction("getState", new Func<long, string, object?>(IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue))
+            .DefineFunction("setTimeout", (Action method, int delay) => Task.Delay(delay).ContinueWith((t) => method?.Invoke()))
+            .DefineFunction("forceGC", () => GC.Collect())
+            .DefineFunction("httpGet", (string s) => client.GetAsync(s).Result)
+            .DefineFunction("httpPost", (string s, HttpContent? content) => client.PostAsync(s, content).Result)
+            .DefineFunction("reloadDynamicLayouts", DeviceLayoutService.ReloadLayouts)
+        ;
         return jsEngine;
     }
 
@@ -53,30 +86,7 @@ public class JavaScriptEngineManager
         ; //Add more easy to use methods
     }
 
-    private readonly List<JavaScriptFile> files = new();
-    private readonly ScopedSemaphore filesSemaphore = new();
-    private readonly ILogger logger;
-    private readonly DirectoryInfo jsDeviceDirectory;
-    private readonly DirectoryInfo scriptsDirectory;
 
-    public JavaScriptEngineManager()
-    {
-        logger = LogManager.GetCurrentClassLogger();
-        jsDeviceDirectory = new DirectoryInfo("./JSDevices");
-        jsDeviceDirectory.Create();
-        scriptsDirectory = new DirectoryInfo("./Scripts");
-    }
-
-    public void Initialize()
-    {
-        IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
-        var scriptFiles = jsDeviceDirectory.GetFiles("*.js", SearchOption.AllDirectories);
-        foreach (var item in scriptFiles)
-        {
-            var dv = new JavaScriptDevice(item);
-            IInstanceContainer.Instance.DeviceManager.AddNewDevice(dv);
-        }
-    }
     private void DeviceStateManager_StateChanged(object? sender, StateChangeArgs e)
     {
         if (!scriptsDirectory.Exists)

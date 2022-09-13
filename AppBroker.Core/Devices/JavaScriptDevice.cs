@@ -81,16 +81,11 @@ public class JavaScriptDevice : Device
     public override string FriendlyName { get; set; }
 
 
-    private static readonly HttpClient client;
     private readonly HashSet<Guid> runningIntervalls = new();
     private readonly ScopedSemaphore semaphore = new ScopedSemaphore();
     private JavaScriptFile fileInfo;
     private Context engine;
 
-    static JavaScriptDevice()
-    {
-        client = new();
-    }
 
     public JavaScriptDevice(FileInfo info) : base(0)
     {
@@ -115,7 +110,6 @@ public class JavaScriptDevice : Device
         //client.GetAsync("").Result.Content.ReadAsStringAsync()
     }
 
-    private void SetTimeout(Action method, int delay) => Task.Delay(delay).ContinueWith((t) => method?.Invoke());
     private EventHandler<CommandParameters> UpdateFromAppJS(Action<object, CommandParameters> method)
     {
         var evHandler = new EventHandler<CommandParameters>(
@@ -235,19 +229,16 @@ public class JavaScriptDevice : Device
             );
         engine.DefineVariable("device").Assign(JSValue.Marshal(this));
         engine.DefineFunction("interval", Interval)
-        .DefineFunction("setTimeout", SetTimeout)
-        .DefineFunction("timedTrigger", TimeTrigger)
-        .DefineFunction("stopInterval", StopInterval)
-        .DefineFunction("onUpdateFromApp", UpdateFromAppJS)
-        .DefineFunction("onOptionsFromApp", OptionsFromAppJS)
-        .DefineFunction("removeUpdateFromApp", RemoveUpdateFromAppJS)
-        .DefineFunction("removeOptionsFromApp", RemoveOptionsFromAppJS)
-        .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
-        .DefineFunction("checkForChanges", HasChanges)
-        .DefineFunction("rebuild", RebuildEngine)
-        .DefineFunction("forceGC", ()=>GC.Collect())
-        .DefineFunction("httpGet", (string s) => client.GetAsync(s).Result)
-        .DefineFunction("httpPost",(string s, HttpContent? content) => client.PostAsync(s, content).Result);
+            .DefineFunction("timedTrigger", TimeTrigger)
+            .DefineFunction("stopInterval", StopInterval)
+            .DefineFunction("onUpdateFromApp", UpdateFromAppJS)
+            .DefineFunction("onOptionsFromApp", OptionsFromAppJS)
+            .DefineFunction("removeUpdateFromApp", RemoveUpdateFromAppJS)
+            .DefineFunction("removeOptionsFromApp", RemoveOptionsFromAppJS)
+            .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
+            .DefineFunction("checkForChanges", HasChanges)
+            .DefineFunction("rebuild", RebuildEngine)
+            ;
 
         //engine.Debugging = true;
         //engine.DebuggerCallback += Context_DebuggerCallback;

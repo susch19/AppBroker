@@ -1,0 +1,54 @@
+{
+  "UniqueName": "WeatherDevice",
+  "TypeName": "WeatherDevice",
+  "Ids": [],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "temperature",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 24.0,
+          "FontWeight": "bold"
+        },
+        "RowNr": 0,
+        "UnitOfMeasurement": " °C"
+      },
+      {
+        "Name": "clock",
+        "Order": 1,
+        "RowNr": 2
+      },
+      {
+        "Name": "id",
+        "Order": 1,
+        "RowNr": 3
+      },
+      {
+        "Name": "state",
+        "Order": 4,
+        "EditInfo": {
+          "EditType": "iconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": 0,
+              "CodePoint": 59411,
+              "Parameters": [ false ]
+            },
+
+            {
+              "Command": "Off",
+              "Value": 1,
+              "CodePoint": 59411,
+              "FontFamily": "Smarthome",
+              "Parameters": [ true ]
+            }
+          ]
+        },
+        "SpecialType": "right"
+      }
+    ]
+  }
+}

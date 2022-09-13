@@ -8,5 +8,6 @@ public interface IDeviceManager
     ConcurrentDictionary<long, Device> Devices { get; }
     IReadOnlyCollection<Type> DeviceTypes { get; }
 
-    void AddNewDevice(Device device);
+    bool AddNewDevice(Device device);
+    bool RemoveDevice(long id);
 }

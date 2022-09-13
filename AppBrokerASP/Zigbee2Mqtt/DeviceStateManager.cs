@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+
+using Newtonsoft.Json.Linq;
 
 
 namespace AppBrokerASP.Zigbee2Mqtt;
@@ -56,12 +58,7 @@ public class DeviceStateManager : IDeviceStateManager
             if (!changed)
                 return;
 
-            var oldVal = oldState.GetValueOrDefault(propertyName);
-            IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName);
-            IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
-            StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
-            AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
-            oldState[propertyName] = newVal;
+            SetNewState(id, propertyName, newVal, oldState);
         }
         else
         {
@@ -70,6 +67,8 @@ public class DeviceStateManager : IDeviceStateManager
             IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
             AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
             StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
+            if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev))
+                dev.ReceivedNewState(propertyName, newVal);
 
             deviceStates[id] = new Dictionary<string, JToken> { { propertyName, newVal } };
         }
@@ -77,6 +76,7 @@ public class DeviceStateManager : IDeviceStateManager
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
             device.SendDataToAllSubscribers();
     }
+
 
     public void PushNewState(long id, Dictionary<string, JToken> newState)
     {
@@ -94,12 +94,8 @@ public class DeviceStateManager : IDeviceStateManager
                 return;
             foreach (var item in changedKeys)
             {
-                var oldVal = oldState.GetValueOrDefault(item);
                 var newVal = newState[item];
-                InstanceContainer.Instance.HistoryManager.StoreNewState(id, item, oldVal, newVal);
-                AddStatesForBackwartsCompatibilityForOldApp(id, item, newVal);
-                StateChanged?.Invoke(this, new(id, item, oldVal, newVal));
-                oldState[item] = newVal;
+                SetNewState(id, item, newVal, oldState);
             }
         }
         else
@@ -118,6 +114,17 @@ public class DeviceStateManager : IDeviceStateManager
             device.SendDataToAllSubscribers();
     }
 
+    private void SetNewState(long id, string propertyName, JToken newVal, Dictionary<string, JToken> oldState)
+    {
+        var oldVal = oldState.GetValueOrDefault(propertyName);
+        IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName);
+        IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
+        StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev))
+            dev.ReceivedNewState(propertyName, newVal);
+        AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
+        oldState[propertyName] = newVal;
+    }
     public void AddStatesForBackwartsCompatibilityForOldApp(long id, string name, JToken value)
     {
         string newPropName = name switch

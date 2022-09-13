@@ -1,14 +1,13 @@
 {
   "UniqueName": "TempSensorLayout",
-  "TypeName": "lumi.weather",
-  "Ids": [ 6066005707881314 ],
+  "TypeNames": [ "XiaomiTempSensor", "lumi.weather" ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 24.0,
+          "FontSize": 20.0,
           "FontWeight": "bold"
         },
         "RowNr": 0,

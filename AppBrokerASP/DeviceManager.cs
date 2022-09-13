@@ -69,10 +69,24 @@ public class DeviceManager : IDisposable, IDeviceManager
             _ = client.Connect().ContinueWith((x) => _ = client.Subscribe());
         }
     }
-    public void AddNewDevice(Device device)
+    public bool AddNewDevice(Device device)
     {
         if (Devices.TryAdd(device.Id, device))
+        {
             NewDeviceAdded?.Invoke(this, (device.Id, device));
+            return true;
+        }
+        return false;
+    }
+
+    public bool RemoveDevice(long id)
+    {
+        if (Devices.Remove(id, out var device))
+        {
+            device.Dispose();
+            return true;
+        }
+        return false;
     }
 
     private static List<string> GetAllNamesFor(Type y)
@@ -119,7 +133,7 @@ public class DeviceManager : IDisposable, IDeviceManager
                 return;
 
             logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
-            AddNewDevice( newDevice);
+            AddNewDevice(newDevice);
             //_ = Devices.TryAdd(e.c.NodeId, newDevice);
 
             if (!DbProvider.AddDeviceToDb(newDevice))

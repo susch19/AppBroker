@@ -42,7 +42,7 @@ public class Startup
         signalRBuilder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IHubProtocol, NewtonsoftJsonSmarthomeHubProtocol>());
 
         _ = services.AddRazorPages();
-         
+
         _ = services.AddApiVersioning();
         _ = services.AddSingleton<JavaScriptEngineManager>();
         var container = InstanceContainer.Instance;
@@ -58,6 +58,7 @@ public class Startup
         _ = services.AddSingleton(container.DeviceManager);
         _ = services.AddSingleton(container.MeshManager);
         _ = services.AddSingleton(container.UpdateManager);
+        _ = services.AddSingleton(container.DeviceStateManager);
 
         var elsaSection = Configuration.GetSection("Elsa");
 

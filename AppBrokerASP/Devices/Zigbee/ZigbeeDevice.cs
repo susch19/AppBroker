@@ -86,6 +86,8 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
         {
 
             var valName = Regex.Replace(ioBrokerObject.ValueName, "_([a-z])", x => x.Value[1..].ToUpperInvariant());
+            if (valName == "msgFromZigbee")
+                return;
             var prop = propertyInfos.FirstOrDefault(x => x.Names.Any(y => valName.Equals(y, StringComparison.OrdinalIgnoreCase))).Info;
             SetState(valName, ioBrokerObject.ValueParameter.Value);
 

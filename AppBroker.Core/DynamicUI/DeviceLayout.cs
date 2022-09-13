@@ -3,4 +3,4 @@
 namespace AppBroker.Core.DynamicUI;
 
 
-public record DeviceLayout(string UniqueName, string? TypeName, List<long>? Ids, DashboardDeviceLayout? DashboardDeviceLayout, DetailDeviceLayout? DetailDeviceLayout);
+public record DeviceLayout(string UniqueName, string? TypeName, string[]? TypeNames, long[]? Ids, DashboardDeviceLayout? DashboardDeviceLayout, DetailDeviceLayout? DetailDeviceLayout, int Version = 1);

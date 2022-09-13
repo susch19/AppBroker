@@ -81,14 +81,25 @@ public static class DeviceLayoutService
 
             if (layout is null)
                 return;
-            if (layout.TypeName is not null)
+            int index = 0;
+            string? typeName = layout.TypeName;
+            do
             {
-                if (!TypeDeviceLayouts.TryGetValue(layout.TypeName, out var layoutType) || layoutType.hash != hash)
+                if(typeName is not null)
                 {
-                    TypeDeviceLayouts[layout.TypeName] = (layout, hash);
-                    updated = true;
+                    if (!TypeDeviceLayouts.TryGetValue(typeName, out var layoutType) || layoutType.hash != hash)
+                    {
+                        TypeDeviceLayouts[typeName] = (layout, hash);
+                        updated = true;
+                    }
+                }
+                typeName = null;
+                if(layout.TypeNames is not null && layout.TypeNames.Length > index)
+                {
+                    typeName = layout.TypeNames[index];
                 }
             }
+            while (typeName is not null);
 
             if (layout.Ids is not null)
             {

@@ -1,15 +1,15 @@
 {
   "UniqueName": "TempSensorLayout",
   "TypeName": "XiaomiTempSensor",
-  "Ids": [],
+  "Ids": [ 6066005707881314 ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 24.0,
-          "FontWeight": "bold"
+          "FontSize": 20.0,
+          "FontWeight": "normal"
         },
         "RowNr": 0,
         "UnitOfMeasurement": " °C"
