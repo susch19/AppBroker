@@ -71,8 +71,8 @@ public class JavaScriptEngineManager
         jsEngine
             .DefineFunction("log", new Action<object>(logger.Trace))
             .DefineFunction("logWithLevel", new Action<NLog.LogLevel, object>(logger.Log))
-            .DefineFunction("setState", new Action<long, string, JSValue>((id, name, val) => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(id, name, JToken.FromObject(val.Value))))
-            .DefineFunction("getState", new Func<long, string, object?>(IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue))
+            .DefineFunction("setState", new Action<string, string, JSValue>((id, name, val) => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(long.Parse(id), name, JToken.FromObject(val.Value))))
+            .DefineFunction("getState", new Func<string, string, object?>((id, name)=>IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(long.Parse(id), name)))
             .DefineFunction("setTimeout", (Action method, int delay) => Task.Delay(delay).ContinueWith((t) => method?.Invoke()))
             .DefineFunction("forceGC", () => GC.Collect())
             .DefineFunction("httpGet", (string s) => client.GetAsync(s).Result)

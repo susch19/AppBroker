@@ -80,6 +80,8 @@ public class JavaScriptDevice : Device
     public override bool ShowInApp { get; set; }
     public override string FriendlyName { get; set; }
 
+    [JsonIgnore]
+    public string IdStr { get; set; }
 
     private readonly HashSet<Guid> runningIntervalls = new();
     private readonly ScopedSemaphore semaphore = new ScopedSemaphore();
@@ -226,6 +228,7 @@ public class JavaScriptDevice : Device
             .GetNilJSEngineWithDefaults(logger)
             );
         engine.DefineVariable("device").Assign(JSValue.Marshal(this));
+        engine.DefineVariable("deviceId").Assign(JSValue.Marshal(Id.ToString()));
         engine.DefineFunction("interval", Interval)
             .DefineFunction("timedTrigger", TimeTrigger)
             .DefineFunction("stopInterval", StopInterval)
