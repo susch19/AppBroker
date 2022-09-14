@@ -91,8 +91,6 @@ public class JavaScriptDevice : Device
     {
         fileInfo = new JavaScriptFile() with { File = info, LastWriteTimeUtc = info.LastWriteTimeUtc, Content = File.ReadAllText(info.FullName) };
         Id = long.Parse(Path.GetFileNameWithoutExtension(info.Name));
-        //client.GetAsync("").Result.Content.ReadAsStringAsync()
-        RebuildEngine();
     }
 
     public JavaScriptDevice(long id, string? typeName, FileInfo? info) : base(id, typeName)

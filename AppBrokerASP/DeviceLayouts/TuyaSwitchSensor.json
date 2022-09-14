@@ -1,8 +1,6 @@
 {
   "UniqueName": "TuyaLayout",
-  "TypeName": "TuyaSwitchSensor",
-  "Ids": [
-  ],
+  "TypeNames": [ "TuyaSwitchSensor" ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {

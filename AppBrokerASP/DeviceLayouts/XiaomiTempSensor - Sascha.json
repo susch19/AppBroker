@@ -1,15 +1,14 @@
 {
-  "UniqueName": "TempSensorLayout",
-  "TypeName": "XiaomiTempSensor",
-  "Ids": [ 6066005707881314 ],
+  "UniqueName": "SaschaTempSensorLayout",
+  "Ids": [ 6066005697233659 ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 20.0,
-          "FontWeight": "normal"
+          "FontSize": 12.0,
+          "FontWeight": "bold"
         },
         "RowNr": 0,
         "UnitOfMeasurement": " °C"

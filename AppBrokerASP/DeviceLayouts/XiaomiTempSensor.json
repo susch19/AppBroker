@@ -1,13 +1,13 @@
 {
   "UniqueName": "TempSensorLayout",
-  "TypeNames": [ "XiaomiTempSensor", "lumi.weather" ],
+  "TypeNames": ["XiaomiTempSensor", "lumi.weather"  ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 20.0,
+          "FontSize": 21.0,
           "FontWeight": "bold"
         },
         "RowNr": 0,
@@ -39,37 +39,7 @@
         "RowNr": 2,
         "ShowOnlyInDeveloperMode": true
       },
-      {
-        "Name": "battery",
-        "Order": 2,
-        "RowNr": 4,
-        "EditInfo": {
-          "EditType": "slider",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": "None",
-              "Parameters": [ "Current" ],
-              "Value": {
-                "Min": 0.0,
-                "Max": 100.0,
-                "Divisions": 10
-
-              }
-            }
-          ],
-          "Display": "Battery",
-          "GradientColors": [
-
-            [ 255, 0, 0, 255 ],
-            [ 255, 0, 255, 0 ],
-            [ 255, 255, 0, 0 ],
-            [ 255, 66, 66, 66 ],
-
-            4294967296
-          ]
-        }
-      },
+      
       {
         "Name": "battery",
         "Order": 0,
@@ -144,7 +114,8 @@
             }
           ]
         },
-        "SpecialType": "right"
+        "SpecialType": "right",
+        "ShowOnlyInDeveloperMode": true
       }
     ]
   },
@@ -286,12 +257,6 @@
         "Id": 0,
         "IconName": "home",
         "Order": 1,
-        "LinkedDevice": null
-      },
-      {
-        "Id": 1,
-        "IconName": "off-59399",
-        "Order": 2,
         "LinkedDevice": null
       }
     ],

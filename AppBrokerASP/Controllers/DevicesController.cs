@@ -2,6 +2,7 @@
 
 using AppBrokerASP.Cloud;
 using AppBrokerASP.Configuration;
+using AppBrokerASP.Javascript;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -18,11 +19,21 @@ public class DeviceController : ControllerBase
 {
     private readonly IDeviceStateManager stateManager;
     private readonly IDeviceManager deviceManager;
+    private readonly JavaScriptEngineManager engineManager;
 
-    public DeviceController(IDeviceStateManager stateManager, IDeviceManager deviceManager)
+    public DeviceController(IDeviceStateManager stateManager, IDeviceManager deviceManager, JavaScriptEngineManager engineManager)
     {
         this.stateManager = stateManager;
         this.deviceManager = deviceManager;
+        this.engineManager = engineManager;
+    }
+
+
+    [HttpPatch]
+    public ActionResult ReloadJSDevices([FromQuery]bool onlyNew = true)
+    {
+        engineManager.ReloadJsDevices(onlyNew);
+        return GetDevices();
     }
 
     [HttpGet("states/{id}")]

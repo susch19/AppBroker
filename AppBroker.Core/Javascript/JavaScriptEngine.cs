@@ -42,11 +42,23 @@ public class JavaScriptEngineManager
     public void Initialize()
     {
         IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
+        ReloadJsDevices(false);
+    }
+
+    public void ReloadJsDevices(bool onlyLoadNew)
+    {
         var scriptFiles = jsDeviceDirectory.GetFiles("*.js", SearchOption.AllDirectories);
         foreach (var item in scriptFiles)
         {
             var dv = new JavaScriptDevice(item);
-            IInstanceContainer.Instance.DeviceManager.AddNewDevice(dv);
+            if (!onlyLoadNew)
+                IInstanceContainer.Instance.DeviceManager.RemoveDevice(dv.Id);
+
+            if (IInstanceContainer.Instance.DeviceManager.AddNewDevice(dv))
+                dv.RebuildEngine();
+            else
+                dv.Dispose();
+
         }
     }
 
