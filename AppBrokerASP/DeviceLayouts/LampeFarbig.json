@@ -1,35 +1,26 @@
 {
-  "Version":  4,
-  "UniqueName": "Ikea Lampe1",
-  "TypeNames": [ "LED1624G9", "LED1723G11" ],
+  //"Id\":-8922170722047078453,\"TypeName\":\"": null,
+  "UniqueName": "Ikea Lampe Farbig",
+  "TypeName": "TRADFRI bulb E14 CWS opal 600lm",
+  //"Ids": [ -8922170722047078453 ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
+      {
+        "Name": "colortemp",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontWeight": "bold"
+        },
+        "RowNr": 0,
+        "UnitOfMeasurement": " K"
+      },
+     
       {
         "Name": "id",
         "Order": 2,
         "RowNr": 2,
         "ShowOnlyInDeveloperMode": true
-      },
-      {
-        "Name": "state",
-        "Order": 2,
-        "RowNr": 1,
-        "EditInfo": {
-          "EditType": "toggle",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": "On",
-              "Value": "ON"
-            },
-            {
-              "Command": "Off",
-              "Value": "OFF"
-            }
-          ],
-          "Display": "Status",
-          "ActiveValue": "ON"
-        }
       }
     ]
   },
@@ -37,30 +28,48 @@
     "PropertyInfos": [
       {
         "Name": "friendlyName",
-        "RowNr": 0,
+        "Order": 0,
         "TextStyle": {
           "FontSize": 25.0,
           "FontFamily": "FontName",
           "FontWeight": "bold",
           "FontStyle": "normal"
         },
+        "TabInfoId": 0,
         "SpecialType": "none"
       },
       {
         "Name": "id",
-        "RowNr": 1,
+        "Order": 1,
         "TextStyle": {
           "FontSize": 16.0,
           "FontFamily": "FontName",
           "FontWeight": "bold",
           "FontStyle": "normal"
         },
+        "TabInfoId": 0,
         "SpecialType": "none",
         "ShowOnlyInDeveloperMode": true
       },
+
+      {
+        "Name": "colorMode",
+        "Order": 0,
+        "DisplayName": "Farbmodus: ",
+        "UnitOfMeasurement": "",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+
       {
         "Name": "state",
-        "RowNr": 2,
+        "Order": 0,
         "DisplayName": "Status: ",
         "UnitOfMeasurement": "",
         "TextStyle": {
@@ -69,11 +78,12 @@
           "FontWeight": "normal",
           "FontStyle": "normal"
         },
+        "TabInfoId": 0,
         "SpecialType": "none"
       },
       {
         "Name": "power_on_behavior",
-        "RowNr": 3,
+        "Order": 0,
         "DisplayName": "Status beim Start: ",
         "UnitOfMeasurement": "",
         "TextStyle": {
@@ -82,11 +92,26 @@
           "FontWeight": "normal",
           "FontStyle": "normal"
         },
+        "TabInfoId": 0,
         "SpecialType": "none"
       },
       {
-        "Name": "lastReceived",
-        "RowNr": 4,
+        "Name": "color_temp_startup",
+        "Order": 0,
+        "DisplayName": "Farbtemperatur beim Start: ",
+        "UnitOfMeasurement": " K",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "lastReceivedFormatted",
+        "Order": 0,
         "DisplayName": "Zuletzt empfangen: ",
         "TextStyle": {
           "FontSize": 16.0,
@@ -94,12 +119,13 @@
           "FontWeight": "normal",
           "FontStyle": "normal"
         },
+        "TabInfoId": 0,
         "SpecialType": "none",
         "Format": "dd"
       },
       {
         "Name": "linkquality",
-        "RowNr": 5,
+        "Order": 0,
         "DisplayName": "Verbindungsqualität: ",
         "TextStyle": {
           "FontSize": 16.0,
@@ -107,44 +133,21 @@
           "FontWeight": "normal",
           "FontStyle": "normal"
         },
+        "TabInfoId": 0,
         "SpecialType": "none"
-      },
-      {
-        "Name": "effect",
-        "RowNr": 6,
-        "EditInfo": {
-          "EditType": "dropdown",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": 404,
-              "Value": "",
-              "DisplayName": "---"
-            },
-            {
-              "Command": 400,
-              "Value": "blink",
-              "DisplayName": "Blinken",
-              "Parameters": [ "blink" ]
-            },
-            {
-              "Command": 400,
-              "Value": "breathe",
-              "DisplayName": "Atmen",
-              "Parameters": [ "breathe" ]
-            },
-            {
-              "Command": 400,
-              "Value": "okay",
-              "DisplayName": "okay",
-              "Parameters": [ "okay" ]
-            }
-          ],
-          "Display": "Status DropDown"
-        }
       }
     ],
-    //"HistoryProperties": [
-    //]
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "home",
+        "Order": 1,
+        "LinkedDevice": null
+      }
+     
+    ],
+    "HistoryProperties": [
+     
+    ]
   }
 }
