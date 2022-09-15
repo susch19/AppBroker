@@ -2,6 +2,7 @@
 
 using AppBrokerASP.Cloud;
 using AppBrokerASP.Configuration;
+using AppBrokerASP.Devices;
 using AppBrokerASP.Javascript;
 
 using Microsoft.AspNetCore.Mvc;
@@ -28,6 +29,16 @@ public class DeviceController : ControllerBase
         this.engineManager = engineManager;
     }
 
+    [HttpPatch("rebuild/{id}")]
+    public ActionResult ReloadJSDevices(long id)
+    {
+        if (deviceManager.Devices.TryGetValue(id, out var device) && device is JavaScriptDevice jsd)
+        {
+            jsd.RebuildEngine();
+            return Content($"Successfully rebuild {id}");
+        }
+        return Content("Device not found");
+    }
 
     [HttpPatch]
     public ActionResult ReloadJSDevices([FromQuery]bool onlyNew = true)
