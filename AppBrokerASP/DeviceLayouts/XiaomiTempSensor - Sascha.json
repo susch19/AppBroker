@@ -1,6 +1,7 @@
 {
   "UniqueName": "SaschaTempSensorLayout",
   "Ids": [ 6066005697233659 ],
+"ShowOnlyInDeveloperMode":false,
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
