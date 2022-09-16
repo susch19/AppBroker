@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AppBroker.Core;
+
+using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json.Linq;
 
@@ -7,6 +9,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 
 namespace AppBrokerASP.Zigbee2Mqtt;
+
 
 public class HistoryManager : IHistoryManager
 {
@@ -61,7 +64,6 @@ public class HistoryManager : IHistoryManager
 
     public void EnableHistory(long id, string name)
     {
-        return;
         using var ctx = new HistoryContext();
         var histProp = ctx.Properties
             .FirstOrDefault(x => x.PropertyName == name && x.Device.DeviceId == id);
@@ -91,6 +93,12 @@ public class HistoryManager : IHistoryManager
             return;
         histProp.Enabled = false;
         ctx.SaveChanges();
+    }
+
+    public List<HistoryPropertyState> GetHistoryProperties()
+    {
+        using var ctx = new HistoryContext();
+        return ctx.Properties.Include(x => x.Device).Select(x => new HistoryPropertyState(x.Device.DeviceId, x.PropertyName, x.Enabled)).ToList();
     }
 
     public class HistoryDevice

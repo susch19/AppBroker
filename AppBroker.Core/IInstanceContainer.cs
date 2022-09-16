@@ -2,7 +2,6 @@
 
 using AppBrokerASP.Devices.Elsa;
 using AppBrokerASP.Javascript;
-using AppBrokerASP.Zigbee2Mqtt;
 
 namespace AppBrokerASP;
 

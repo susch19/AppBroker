@@ -63,7 +63,6 @@ public class DeviceStateManager : IDeviceStateManager
         else
         {
 
-            IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName); //TODO Don't enable all by default, rather provide a gui for setting it
             IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
             AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
             StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
@@ -103,7 +102,6 @@ public class DeviceStateManager : IDeviceStateManager
 
             foreach (var item in newState)
             {
-                InstanceContainer.Instance.HistoryManager.EnableHistory(id, item.Key); //TODO Don't enable all by default, rather provide a gui for setting it
                 InstanceContainer.Instance.HistoryManager.StoreNewState(id, item.Key, null, item.Value);
                 AddStatesForBackwartsCompatibilityForOldApp(id, item.Key, item.Value);
             }
@@ -117,7 +115,6 @@ public class DeviceStateManager : IDeviceStateManager
     private void SetNewState(long id, string propertyName, JToken newVal, Dictionary<string, JToken> oldState)
     {
         var oldVal = oldState.GetValueOrDefault(propertyName);
-        IInstanceContainer.Instance.HistoryManager.EnableHistory(id, propertyName);
         IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
         StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev))

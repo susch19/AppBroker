@@ -59,7 +59,7 @@ public class SmartHome : Hub<ISmartHomeClient>
             _ = DbProvider.UpdateDeviceInDb(stored);
             stored.SendDataToAllSubscribers();
         }
-        
+
     }
 
     public dynamic? GetConfig(uint deviceId) => IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device) ? device.GetConfig() : null;
@@ -70,8 +70,30 @@ public class SmartHome : Hub<ISmartHomeClient>
     {
         var devices = IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
         var dev = JsonConvert.SerializeObject(devices);
-    
-        return devices; 
+
+        return devices;
+    }
+
+    public List<HistoryPropertyState> GetHistoryPropertySettings() => IInstanceContainer.Instance.HistoryManager.GetHistoryProperties();
+    public void SetHistory(bool enable, long id, string name)
+    {
+        if (enable)
+            IInstanceContainer.Instance.HistoryManager.EnableHistory(id, name);
+        else
+            IInstanceContainer.Instance.HistoryManager.DisableHistory(id, name);
+    }
+    public void SetHistories(bool enable, List<long> ids, string name)
+    {
+        if (enable)
+        {
+            foreach (var id in ids)
+                IInstanceContainer.Instance.HistoryManager.EnableHistory(id, name);
+        }
+        else
+        {
+            foreach (var id in ids)
+                IInstanceContainer.Instance.HistoryManager.DisableHistory(id, name);
+        }
     }
 
     public record struct DeviceOverview(long Id, string TypeName, IReadOnlyCollection<string> TypeNames, string FriendlyName);

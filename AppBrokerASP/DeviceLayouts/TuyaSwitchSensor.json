@@ -54,15 +54,15 @@
           "EditParameter": [
             {
               "Command": "On",
-              "Value": true
+              "Value" :  true
             },
             {
               "Command": "Off",
               "Value": false
             }
           ],
+          "ActiveValue": true,
           "Display": "Status",
-          "ActiveValue": true
         }
       },
     ]
@@ -220,13 +220,11 @@
           "EditParameter": [
             {
               "Command": "Off",
-              "Value": false,
-              "Parameters": []
+              "Value": false
             },
             {
               "Command": "On",
-              "Value": true,
-              "Parameters": []
+              "Value": true
             }
           ],
           "ActiveValue": true
