@@ -5,6 +5,7 @@ using SocketIOClient;
 using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using AppBrokerASP.IOBroker;
+using AppBroker.Core.Models;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
@@ -17,14 +18,14 @@ public partial class TuyaSwitchSensor : ZigbeeSwitch
         ShowInApp = true;
     }
 
-    public override async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
+    public override async Task<List<History>> GetHistory(DateTimeOffset start, DateTimeOffset end)
     {
         var load_power = GetHistory(start, end, "load_power");
         var current = GetHistory(start, end, "current");
         var energy = GetHistory(start, end, "energy");
         var voltage = GetHistory(start, end, "voltage");
 
-        var result = new List<IoBrokerHistory>
+        var result = new List<History>
             {
                 await load_power,
                 await current,

@@ -8,6 +8,7 @@ public class ConfigManager
     public PainlessMeshSettings PainlessMeshConfig { get; }
     public MqttConfig MqttConfig { get; }
     public ServerConfig ServerConfig { get; }
+    public HistoryConfig HistoryConfig { get; }
     public CloudConfig CloudConfig { get; }
 
     private static readonly string ConfigFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "appbroker");
@@ -55,5 +56,8 @@ public class ConfigManager
 
         CloudConfig = new CloudConfig();
         configuration.GetSection(CloudConfig.ConfigName).Bind(CloudConfig);
+
+        HistoryConfig = new HistoryConfig();
+        configuration.GetSection(HistoryConfig.ConfigName).Bind(HistoryConfig);
     }
 }

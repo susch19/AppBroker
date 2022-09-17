@@ -1,4 +1,5 @@
 using AppBroker.Core.Devices;
+using AppBroker.Core.Models;
 using AppBroker.Elsa.Signaler;
 
 using AppBrokerASP.Extension;
@@ -15,7 +16,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-using static AppBrokerASP.IOBroker.IoBrokerHistory;
+using static AppBroker.Core.Models.History;
 
 namespace AppBrokerASP.Devices.Zigbee;
 
@@ -202,13 +203,13 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
         prop.SetValue(this, res);
     }
 
-    public virtual async Task<List<IoBrokerHistory>> GetHistory(DateTimeOffset start, DateTimeOffset end)
+    public virtual async Task<List<History>> GetHistory(DateTimeOffset start, DateTimeOffset end)
     {
         var temp = GetHistory(start, end, HistoryType.Temperature.ToString());
         var humidity = GetHistory(start, end, HistoryType.Humidity.ToString());
         var pressure = GetHistory(start, end, HistoryType.Pressure.ToString());
 
-        var result = new List<IoBrokerHistory>
+        var result = new List<History>
             {
                 await temp,
                 await humidity,
@@ -217,19 +218,30 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
         return result;
     }
 
-    public virtual async Task<IoBrokerHistory> GetHistory(DateTimeOffset start, DateTimeOffset end, string type)
+    public virtual async Task<History> GetHistory(DateTimeOffset start, DateTimeOffset end, string type)
     {
-        var history = new IoBrokerHistory(type.ToLower());
 
-        var readFromFile = ReadHistoryJSON(start.Date, history);
-        if (readFromFile is not null)
-            return readFromFile;
+        if (InstanceContainer.Instance.ConfigManager.HistoryConfig.UseOwnHistoryManager)
+        {
+            var history = new History(type);
+            history.HistoryRecords = IInstanceContainer.Instance.HistoryManager.GetHistoryFor(Id,type, start, end);
 
-        history.HistoryRecords = await GetHistoryRecords(start, end, type);
-        return history;
+            return history;
+        }
+        else
+        {
+
+            var history = new History(type.ToLower());
+            var readFromFile = ReadHistoryJSON(start.Date, history);
+            if (readFromFile is not null)
+                return readFromFile;
+
+            history.HistoryRecords = await GetHistoryRecords(start, end, type);
+            return history;
+        }
     }
 
-    public virtual IoBrokerHistory? ReadHistoryJSON(DateTime date, IoBrokerHistory history)
+    public virtual History? ReadHistoryJSON(DateTime date, History history)
     {
         var filePath = Path.Combine(InstanceContainer.Instance.ConfigManager.ZigbeeConfig.HistoryPath, $"{date:yyyyMMdd}", $"history.{AdapterWithId}.{history.PropertyName}.json");
         if (File.Exists(filePath))
@@ -258,7 +270,7 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
                 count = 2000
             });
 
-        return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.ts < endMs).ToArray();
+        return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.Ts < endMs).ToArray();
     }
 }
 

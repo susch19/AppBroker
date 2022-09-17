@@ -4,13 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AppBroker.Core;
+namespace AppBroker.Core.Models;
 
 public class Colors
 {
-    public static uint GetWithAlpha(byte alpha, Primary primary) => (((uint)alpha) << 24) | (uint)primary;
-    public static uint GetWithAlpha(byte alpha, Accent accent) => (((uint)alpha) << 24) | (uint)accent;
- 
+    public static uint GetWithAlpha(byte alpha, Primary primary) => (uint)alpha << 24 | (uint)primary;
+    public static uint GetWithAlpha(byte alpha, Accent accent) => (uint)alpha << 24 | (uint)accent;
+
     //Color constantes
     public enum TextShade
     {

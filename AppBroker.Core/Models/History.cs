@@ -1,18 +1,16 @@
-﻿
-
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace AppBrokerASP.IOBroker;
+namespace AppBroker.Core.Models;
 
-public class IoBrokerHistory
+public class History
 {
-    public IoBrokerHistory(HistoryRecord[] historyRecords, string propertyName)
+    public History(HistoryRecord[] historyRecords, string propertyName)
     {
         HistoryRecords = historyRecords;
         PropertyName = propertyName;
     }
-    public IoBrokerHistory()
+    public History()
     {
         HistoryRecords = Array.Empty<HistoryRecord>();
         PropertyName = "";
@@ -22,7 +20,7 @@ public class IoBrokerHistory
 
     public string PropertyName { get; set; }
 
-    public IoBrokerHistory(string propertyName) : this()
+    public History(string propertyName) : this()
     {
         PropertyName = propertyName;
     }
@@ -30,12 +28,17 @@ public class IoBrokerHistory
     public class HistoryRecord
     {
         [JsonConverter(typeof(DoubleEverythingConverter))]
-        public double? val { get; set; }
-        public long ts { get; set; }
+        public double? Val { get; set; }
+        public long Ts { get; set; }
 
         public HistoryRecord()
         {
 
+        }
+        public HistoryRecord(double? value, long timestamp)
+        {
+            Val = value;
+            Ts = timestamp;
         }
 
         private class DoubleEverythingConverter : JsonConverter<double?>

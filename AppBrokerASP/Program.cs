@@ -29,6 +29,7 @@ using NLog.Fluent;
 using MQTTnet.Server;
 using Microsoft.AspNetCore.Connections;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace AppBrokerASP;
 

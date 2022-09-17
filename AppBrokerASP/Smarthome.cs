@@ -1,6 +1,7 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
+using AppBroker.Core.Models;
 
 using AppBrokerASP.Database;
 using AppBrokerASP.Devices;
@@ -100,48 +101,48 @@ public class SmartHome : Hub<ISmartHomeClient>
     public List<DeviceOverview> GetDeviceOverview() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).Select(x => new DeviceOverview(x.Id, x.TypeName, x.TypeNames, x.FriendlyName)).ToList();
 
 
-    public Task<List<IoBrokerHistory>> GetIoBrokerHistories(long id, string dt)
+    public Task<List<History>> GetIoBrokerHistories(long id, string dt)
     {
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
         {
             DateTime date = DateTime.Parse(dt).Date;
             return d.GetHistory(date, date.AddDays(1).AddSeconds(-1));
         }
-        return Task.FromResult(new List<IoBrokerHistory>());
+        return Task.FromResult(new List<History>());
     }
 
-    public virtual Task<IoBrokerHistory> GetIoBrokerHistory(long id, string dt, string propertyName)
+    public virtual Task<History> GetIoBrokerHistory(long id, string dt, string propertyName)
     {
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
         {
             DateTime date = DateTime.Parse(dt).Date;
             return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
         }
-        return Task.FromResult(new IoBrokerHistory());
+        return Task.FromResult(new History());
     }
 
-    public Task<List<IoBrokerHistory>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
+    public Task<List<History>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
     {
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
         {
             return d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
         }
 
-        return Task.FromResult(new List<IoBrokerHistory>());
+        return Task.FromResult(new List<History>());
     }
 
     // TODO: remove list, just return one item
-    public virtual async Task<List<IoBrokerHistory>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
+    public virtual async Task<List<History>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
     {
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
         {
-            return new List<IoBrokerHistory>()
+            return new List<History>()
                 {
                     await d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), propertyName)
                 };
         }
 
-        return new List<IoBrokerHistory>();
+        return new List<History>();
     }
 
 

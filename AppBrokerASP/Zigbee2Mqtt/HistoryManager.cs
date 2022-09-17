@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Models;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -70,10 +71,7 @@ public class HistoryManager : IHistoryManager
         if (histProp is null)
         {
             var device = ctx.Devices.FirstOrDefault(x => x.DeviceId == id);
-            if (device is null)
-            {
-                device = ctx.Devices.Add(new HistoryDevice() { DeviceId = id }).Entity;
-            }
+            device ??= ctx.Devices.Add(new HistoryDevice() { DeviceId = id }).Entity;
             histProp = ctx.Properties
                 .Add(new HistoryProperty { Enabled = true, PropertyName = name, Device = device })
                 .Entity;
@@ -99,6 +97,27 @@ public class HistoryManager : IHistoryManager
     {
         using var ctx = new HistoryContext();
         return ctx.Properties.Include(x => x.Device).Select(x => new HistoryPropertyState(x.Device.DeviceId, x.PropertyName, x.Enabled)).ToList();
+    }
+
+
+    public History.HistoryRecord[] GetHistoryFor(long deviceId, string propertyName, DateTimeOffset start, DateTimeOffset end)
+    {
+        using var ctx = new HistoryContext();
+
+        var histProp = ctx.Properties.FirstOrDefault(x => x.PropertyName == propertyName && x.Device.DeviceId == deviceId);
+        if (histProp == default)
+            return Array.Empty<History.HistoryRecord>();
+
+        var values = histProp.Values
+            .Where(x => x.Timestamp > start && x.Timestamp < end)
+            .ToArray();
+        return values
+            .OfType<HistoryValueDouble>()
+            .Select(x => new History.HistoryRecord(x.Value, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds)))
+            .Concat(values.OfType<HistoryValueBool>().Select(x => new History.HistoryRecord(x.Value ? 1d : 0d, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
+            .Concat(values.OfType<HistoryValueLong>().Select(x => new History.HistoryRecord(x.Value, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
+            .OrderBy(x => x.Ts)
+            .ToArray();
     }
 
     public class HistoryDevice
@@ -135,6 +154,9 @@ public class HistoryManager : IHistoryManager
         [Key]
         public long Id { get; set; }
         public DateTime Timestamp { get; set; }
+
+        //TODO Add retentionpolicy
+        //TODO Add past concation? (Example after 1 Month group values for each 10 Minutes into one, for devices which have a lot of state changes)
 
         public virtual HistoryProperty HistoryValue { get; set; }
     }
