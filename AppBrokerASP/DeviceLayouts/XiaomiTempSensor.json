@@ -1,6 +1,7 @@
 {
+  "Version":  3,
   "UniqueName": "TempSensorLayout",
-  "TypeNames": ["XiaomiTempSensor", "lumi.weather"  ],
+  "TypeNames": [ "XiaomiTempSensor", "lumi.weather", "WSDCGQ11LM" ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
@@ -39,7 +40,7 @@
         "RowNr": 2,
         "ShowOnlyInDeveloperMode": true
       },
-      
+
       {
         "Name": "battery",
         "Order": 0,

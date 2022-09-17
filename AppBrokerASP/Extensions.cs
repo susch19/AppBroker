@@ -64,6 +64,25 @@ public static class Extensions
 
     public static T ToDeObject<T>(this JToken element) => JsonConvert.DeserializeObject<T>(element.ToString())!;
     public static T ToDeObject<T>(this string element) => JsonConvert.DeserializeObject<T>(element)!;
+    public static object? ToOObject(this JToken token)
+    {
+        return token.Type switch
+        {
+            JTokenType.Integer => token.Value<long>(),
+            JTokenType.Float => token.Value<double>(),
+            JTokenType.String or JTokenType.Guid or JTokenType.Uri => token.Value<string>(),
+            JTokenType.Boolean => token.Value<bool>(),
+            JTokenType.Date => token.Value<DateTime>(),
+            JTokenType.TimeSpan => token.Value<TimeSpan>(),
+            JTokenType.Object => token.Value<object>(),
+            JTokenType.None => null,
+            JTokenType.Null => null,
+            JTokenType.Bytes => token.ToString(),
+            JTokenType.Undefined => token.ToString(),
+            JTokenType.Raw => token.ToString(),
+            _ => token.ToString(),
+        };
+    }
 
     public static List<JToken> ToJTokenList<T>(this IEnumerable<T> obj) => obj.Select(x => JToken.FromObject(x!)).ToList();  //JsonConvert.DeserializeObject<List<JToken>>(obj.ToJson());
     public static JToken ToJToken<T>(this T obj) => JToken.FromObject(obj!);// JsonConvert.DeserializeObject<JToken>(obj.ToJson());

@@ -1,5 +1,5 @@
 {
-  "Version":  4,
+  "Version": 9,
   "UniqueName": "Ikea Lampe1",
   "TypeNames": [ "LED1624G9", "LED1723G11" ],
   "DashboardDeviceLayout": {
@@ -19,16 +19,18 @@
           "EditCommand": "Update",
           "EditParameter": [
             {
-              "Command": "On",
-              "Value": "ON"
+              "Command": "zigbee",
+              "Value": true,
+              "Parameters": [ "Light.state", "ON" ]
             },
             {
-              "Command": "Off",
-              "Value": "OFF"
+              "Command": "zigbee",
+              "Value": false,
+              "Parameters": [ "Light.state", "OFF" ]
             }
           ],
           "Display": "Status",
-          "ActiveValue": "ON"
+          "ActiveValue": true
         }
       }
     ]
@@ -72,7 +74,7 @@
         "SpecialType": "none"
       },
       {
-        "Name": "power_on_behavior",
+        "Name": "powerOnBehavior",
         "RowNr": 3,
         "DisplayName": "Status beim Start: ",
         "UnitOfMeasurement": "",
@@ -98,7 +100,7 @@
         "Format": "dd"
       },
       {
-        "Name": "linkquality",
+        "Name": "linkQuality",
         "RowNr": 5,
         "DisplayName": "Verbindungsqualität: ",
         "TextStyle": {
@@ -144,7 +146,23 @@
         }
       }
     ],
-    //"HistoryProperties": [
-    //]
+    "HistoryProperties": [
+      {
+        "PropertyName": "state",
+        "XAxisName": "Status",
+        "UnitOfMeasurement": " ",
+        "IconName": "flash-59419",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      },
+      {
+        "PropertyName": "brightness",
+        "XAxisName": "Helligkeit",
+        "UnitOfMeasurement": "hell",
+        "IconName": "sun-59423",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      }
+    ]
   }
 }

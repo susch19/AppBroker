@@ -113,10 +113,10 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public virtual Task<History> GetIoBrokerHistory(long id, string dt, string propertyName)
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
         {
             DateTime date = DateTime.Parse(dt).Date;
-            return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
+            return device.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
         }
         return Task.FromResult(new History());
     }

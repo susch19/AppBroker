@@ -29,6 +29,7 @@ public enum Command : int
     DeviceMapping,
     Calibration,
     Ota,
-    OtaPart
+    OtaPart,
+    Zigbee = 100
 
 };

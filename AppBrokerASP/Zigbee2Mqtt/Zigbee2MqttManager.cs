@@ -146,7 +146,41 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 InstanceContainer
                     .Instance
                     .DeviceStateManager
-                    .PushNewState(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!);
+                    .PushNewState(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
+            }
+        }
+    }
+
+    private Dictionary<string, JToken> ReplaceCustomStates(long id, Dictionary<string, JToken> customStates)
+    {
+        if (!IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev) || dev is not Zigbee2MqttDevice zdev)
+            return customStates;
+
+        foreach (var item in GetFeatures<BinaryFeature>(zdev.device.Definition.Exposes))
+        {
+            if(customStates.TryGetValue(item.Name, out var token))
+                customStates[item.Name] = item.ConvertToBool(token.ToOObject());
+            
+        }
+        return customStates;
+    }
+
+    private IEnumerable<T> GetFeatures<T>(GenericExposedFeature[] feature) where T : GenericExposedFeature
+    {
+        foreach (var item in feature)
+        {
+            if (item is T t)
+            {
+                yield return t;
+                continue;
+            }
+
+            if (item.Features is null)
+                continue;
+
+            foreach (var item2 in GetFeatures<T>(item.Features))
+            {
+                yield return item2;
             }
         }
     }

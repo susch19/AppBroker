@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core.DynamicUI;
+using AppBroker.Core.Models;
 
 using AppBrokerASP;
 
@@ -138,6 +139,17 @@ public abstract class Device : IDisposable
     }
     public virtual void SetState(string name, JToken newValue)
         => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, name, newValue);
+
+
+    public virtual async Task<History> GetHistory(DateTimeOffset start, DateTimeOffset end, string type)
+    {
+
+        var history = new History(type);
+        history.HistoryRecords = IInstanceContainer.Instance.HistoryManager.GetHistoryFor(Id, type, start, end);
+
+        return history;
+
+    }
 
     public void Dispose()
     {

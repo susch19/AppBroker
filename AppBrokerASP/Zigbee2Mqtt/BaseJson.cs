@@ -495,6 +495,12 @@ internal class BinaryFeature : GenericExposedFeature
     {
         Type = GenericFeatureType.Binary;
     }
+
+    internal JToken ConvertToBool(object v)
+    {
+        
+        return string.Equals(v.ToString(), ValueOn.ToString(), StringComparison.OrdinalIgnoreCase);
+    }
 }
 
 internal class ListFeature : GenericExposedFeature

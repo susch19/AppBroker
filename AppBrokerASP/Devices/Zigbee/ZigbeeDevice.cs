@@ -223,10 +223,7 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
 
         if (InstanceContainer.Instance.ConfigManager.HistoryConfig.UseOwnHistoryManager)
         {
-            var history = new History(type);
-            history.HistoryRecords = IInstanceContainer.Instance.HistoryManager.GetHistoryFor(Id,type, start, end);
-
-            return history;
+            return await base.GetHistory(start, end, type);
         }
         else
         {
