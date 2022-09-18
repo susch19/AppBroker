@@ -8,12 +8,14 @@ using Newtonsoft.Json.Linq;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
+using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 
 namespace AppBrokerASP.Zigbee2Mqtt;
 
 
 public class HistoryManager : IHistoryManager
 {
+    static HeaterConfig emptyHeaderConfig = new();
     static HistoryManager()
     {
         using var ctx = new HistoryContext();
@@ -53,6 +55,17 @@ public class HistoryManager : IHistoryManager
                 break;
             case JTokenType.TimeSpan:
                 value = new HistoryValueTimeSpan(newValue.Value<TimeSpan>());
+                break;
+            case JTokenType.Object:
+                var hc = newValue.ToObject<HeaterConfig>();
+                if (hc is not null && hc != emptyHeaderConfig)
+                {
+                    value = new HistoryValueHeaterConfig(hc);
+                }
+                else
+                {
+                    return;
+                }
                 break;
             default:
                 return;
@@ -116,6 +129,7 @@ public class HistoryManager : IHistoryManager
             .Select(x => new History.HistoryRecord(x.Value, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds)))
             .Concat(values.OfType<HistoryValueBool>().Select(x => new History.HistoryRecord(x.Value ? 1d : 0d, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
             .Concat(values.OfType<HistoryValueLong>().Select(x => new History.HistoryRecord(x.Value, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
+            .Concat(values.OfType<HistoryValueHeaterConfig>().Select(x => new History.HistoryRecord(x.Temperature, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
             .OrderBy(x => x.Ts)
             .ToArray();
     }
@@ -242,6 +256,29 @@ public class HistoryManager : IHistoryManager
             Value = value;
         }
     }
+    [Table("HistoryValueHeaterConfig")]
+    public class HistoryValueHeaterConfig : HistoryValueBase, IHeaterConfigModel
+    {
+        public DayOfWeek DayOfWeek { get; set; }
+        public DateTime TimeOfDay { get; set; }
+        public double Temperature { get; set; }
+
+        public HistoryValueHeaterConfig()
+        {
+        }
+        public HistoryValueHeaterConfig(DayOfWeek dayOfWeek, DateTime timeOfDay, double temperature)
+        {
+            DayOfWeek = dayOfWeek;
+            TimeOfDay = timeOfDay;
+            Temperature = temperature;
+        }
+        public HistoryValueHeaterConfig(IHeaterConfigModel configModel)
+        {
+            DayOfWeek = configModel.DayOfWeek;
+            TimeOfDay = configModel.TimeOfDay;
+            Temperature = configModel.Temperature;
+        }
+    }
     internal class HistoryContext : DbContext
     {
         public DbSet<HistoryDevice> Devices { get; set; }
@@ -254,6 +291,7 @@ public class HistoryManager : IHistoryManager
         public DbSet<HistoryValueLong> HistoryLongs { get; set; }
         public DbSet<HistoryValueDateTime> HistoryDates { get; set; }
         public DbSet<HistoryValueTimeSpan> HistoryTimespans { get; set; }
+        public DbSet<HistoryValueHeaterConfig> HistoryHeaterConfigs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

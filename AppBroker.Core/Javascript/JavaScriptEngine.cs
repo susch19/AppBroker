@@ -1,6 +1,5 @@
 ﻿using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
-using AppBroker.Core.Javascript;
 
 using AppBrokerASP.Devices;
 
@@ -19,7 +18,7 @@ using System.Collections.Concurrent;
 
 using ILogger = NLog.ILogger;
 
-namespace AppBrokerASP.Javascript;
+namespace AppBroker.Core.Javascript;
 public class JavaScriptEngineManager
 {
     private readonly HttpClient client;
@@ -70,9 +69,9 @@ public class JavaScriptEngineManager
         jsEngine.DefineConstructor(typeof(LogLevel));
         jsEngine
             .DefineFunction("log", new Action<object>(logger.Trace))
-            .DefineFunction("logWithLevel", new Action<NLog.LogLevel, object>(logger.Log))
+            .DefineFunction("logWithLevel", new Action<LogLevel, object>(logger.Log))
             .DefineFunction("setState", new Action<string, string, JSValue>((id, name, val) => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(long.Parse(id), name, JToken.FromObject(val.Value))))
-            .DefineFunction("getState", new Func<string, string, object?>((id, name)=>IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(long.Parse(id), name)))
+            .DefineFunction("getState", new Func<string, string, object?>((id, name) => IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(long.Parse(id), name)))
             .DefineFunction("setTimeout", (Action method, int delay) => Task.Delay(delay).ContinueWith((t) => method?.Invoke()))
             .DefineFunction("forceGC", () => GC.Collect())
             .DefineFunction("httpGet", (string s) => client.GetAsync(s).Result)
@@ -89,9 +88,9 @@ public class JavaScriptEngineManager
         return new Engine(cfg => cfg.AllowClr(
             typeof(JavaScriptEngineManager).Assembly,
             typeof(Device).Assembly,
-            typeof(NLog.LogLevel).Assembly).AllowClrWrite()) //TODO add more assemblies, so we can call methods on them?
+            typeof(LogLevel).Assembly).AllowClrWrite()) //TODO add more assemblies, so we can call methods on them?
         .SetValue("log", new Action<object>(logger.Trace))
-        .SetValue("logWithLevel", new Action<NLog.LogLevel, object>(logger.Log))
+        .SetValue("logWithLevel", new Action<LogLevel, object>(logger.Log))
         .SetValue("setState", new Action<long, string, JToken>(IInstanceContainer.Instance.DeviceStateManager.SetSingleState))
         .SetValue("getState", new Func<long, string, object?>(IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue))
 

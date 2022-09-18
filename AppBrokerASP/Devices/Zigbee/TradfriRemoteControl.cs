@@ -1,4 +1,6 @@
-﻿using SocketIOClient;
+﻿using AppBroker.Core.Devices;
+
+using SocketIOClient;
 
 namespace AppBrokerASP.Devices.Zigbee;
 

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace AppBrokerASP.Devices.Elsa;
+namespace AppBroker.Core.Managers;
 
 public interface IDeviceTypeMetaDataManager
 {

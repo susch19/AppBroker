@@ -10,7 +10,8 @@ using Elsa.Persistence.EntityFramework.Sqlite;
 using MQTTnet.AspNetCore;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using AppBrokerASP.Javascript;
+using AppBroker.Core.Javascript;
+using AppBroker.Core;
 
 namespace AppBrokerASP;
 

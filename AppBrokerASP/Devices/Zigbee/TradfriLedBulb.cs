@@ -1,5 +1,6 @@
 ﻿
 using AppBroker.Core;
+using AppBroker.Core.Devices;
 
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 

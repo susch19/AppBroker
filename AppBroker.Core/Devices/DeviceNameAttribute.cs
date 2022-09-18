@@ -1,4 +1,4 @@
-﻿namespace AppBrokerASP.Devices;
+﻿namespace AppBroker.Core.Devices;
 
 [AttributeUsage(AttributeTargets.Class)]
 public class DeviceNameAttribute : Attribute

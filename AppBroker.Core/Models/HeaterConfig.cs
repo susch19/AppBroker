@@ -1,11 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿using AppBroker.Core.Models;
+
+using Newtonsoft.Json;
 
 using System.Runtime.CompilerServices;
 
-namespace AppBrokerASP.Devices.Painless.Heater;
+using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
+
+namespace AppBroker.Core.Models;
+
+public interface IHeaterConfigModel
+{
+    DayOfWeek DayOfWeek { get; set; }
+    DateTime TimeOfDay { get; set; }
+    double Temperature { get; set; }
+}
 
 [AppBroker.ClassPropertyChangedAppbroker]
-public partial class HeaterConfig
+public partial class HeaterConfig : IHeaterConfigModel, IEquatable<HeaterConfig?>
 {
     [property: JsonProperty("dayOfWeek"), JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
     private DayOfWeek dayOfWeek;
@@ -35,7 +46,13 @@ public partial class HeaterConfig
         return new HeaterConfig(ttm.DayOfWeek, dt, ttm.Temp);
     }
 
+    public static bool operator ==(HeaterConfig? left, HeaterConfig? right) => EqualityComparer<HeaterConfig>.Default.Equals(left, right);
+    public static bool operator !=(HeaterConfig? left, HeaterConfig? right) => !(left == right);
+
     protected virtual void OnPropertyChanging<T>(ref T field, T value, [CallerMemberName] string? propertyName = "") =>
         //WorkflowPropertySignaler.PropertyChanged(value, field, propertyName!);
         field = value;
+    public override bool Equals(object? obj) => Equals(obj as HeaterConfig);
+    public bool Equals(HeaterConfig? other) => other is not null && DayOfWeek == other.DayOfWeek && TimeOfDay == other.TimeOfDay && Temperature == other.Temperature;
+    public override int GetHashCode() => HashCode.Combine(DayOfWeek, TimeOfDay, Temperature);
 }

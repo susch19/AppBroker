@@ -1,9 +1,7 @@
-﻿using AppBroker.Core;
+﻿using AppBroker.Core.Javascript;
+using AppBroker.Core.Managers;
 
-using AppBrokerASP.Devices.Elsa;
-using AppBrokerASP.Javascript;
-
-namespace AppBrokerASP;
+namespace AppBroker.Core;
 
 public interface IInstanceContainer
 {

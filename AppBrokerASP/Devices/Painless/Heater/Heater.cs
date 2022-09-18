@@ -1,4 +1,6 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Devices;
+using AppBroker.Core.Models;
 
 using AppBrokerASP.Database;
 using AppBrokerASP.Database.Model;
@@ -13,6 +15,8 @@ using PainlessMesh;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
+
+using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 
 namespace AppBrokerASP.Devices.Painless.Heater;
 

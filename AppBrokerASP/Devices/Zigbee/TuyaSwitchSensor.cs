@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using Newtonsoft.Json;
 using AppBrokerASP.IOBroker;
 using AppBroker.Core.Models;
+using AppBroker.Core.Devices;
 
 namespace AppBrokerASP.Devices.Zigbee;
 

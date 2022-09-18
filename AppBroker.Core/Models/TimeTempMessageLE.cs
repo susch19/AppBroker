@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace AppBrokerASP.Devices.Painless.Heater;
+namespace AppBroker.Core.Models;
 
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public unsafe struct TimeTempMessageLE
@@ -24,12 +24,12 @@ public unsafe struct TimeTempMessageLE
 
     public DayOfWeek DayOfWeek
     {
-        get => (DayOfWeek)(data[0] & 0x7); set => data[0] = (byte)(((int)value & 0x7) | (data[0] & 0xF8));
+        get => (DayOfWeek)(data[0] & 0x7); set => data[0] = (byte)((int)value & 0x7 | data[0] & 0xF8);
     }
 
     public TimeSpan Time
     {
-        get => TimeSpan.FromMinutes((ushort)(((data[0] & 0xF8) >> 3) | ((data[1] & 0x3F) << 5)));
+        get => TimeSpan.FromMinutes((ushort)((data[0] & 0xF8) >> 3 | (data[1] & 0x3F) << 5));
         set
         {
             var s = (ushort)value.TotalMinutes;
@@ -41,21 +41,21 @@ public unsafe struct TimeTempMessageLE
 
             //data[1] = (byte)(((s >> 2) & 0xF8) | (data[0] & 0x7));
             //data[0] = (byte)((s & 0x3F) | (data[1] & 0xC0));
-            data[0] = (byte)(((s << 3) & 0xF8) | (data[0] & 0x7));
-            data[1] = (byte)(((s >> 5) & 0x3F) | (data[1] & 0xC0));
+            data[0] = (byte)(s << 3 & 0xF8 | data[0] & 0x7);
+            data[1] = (byte)(s >> 5 & 0x3F | data[1] & 0xC0);
         }
     }
     public float Temp
     {
-        get => UShortToFloat((ushort)(((data[1] >> 6) & 0x3) | (data[2] << 2)));
+        get => UShortToFloat((ushort)(data[1] >> 6 & 0x3 | data[2] << 2));
         set
         {
             var u = FloatToUShort(value);
             //if (u > 766)
             //    throw new NotSupportedException("This Value is to damn high");
 
-            data[1] = (byte)(((u & 0x3) << 6) | (data[1] & 0x3F));
-            data[2] = (byte)((u >> 2) & 0xFF);
+            data[1] = (byte)((u & 0x3) << 6 | data[1] & 0x3F);
+            data[2] = (byte)(u >> 2 & 0xFF);
         }
     }
     ushort FloatToUShort(float temp) => (ushort)((temp + 0.05f) * 10);
@@ -126,7 +126,7 @@ public unsafe struct TimeTempMessageLE
                         var ttm = new TimeTempMessageLE((DayOfWeek)e, TimeSpan.FromMinutes(i), o / 10f);
                         if (!(ttm.Time.TotalMinutes == i
                             && ttm.DayOfWeek == (DayOfWeek)e
-                            && Math.Abs(ttm.Temp - (o / 10f)) < 0.001f))
+                            && Math.Abs(ttm.Temp - o / 10f) < 0.001f))
                         {
                             Console.WriteLine($"Wrong input output I:{i} = M:{ttm.Time.TotalMinutes}  O:{o / 10f} = T:{ttm.Temp}  E:{e} = {(byte)ttm.DayOfWeek}");
                         }

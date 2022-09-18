@@ -1,9 +1,11 @@
-﻿using AppBroker.Core.Devices;
+﻿using AppBroker.Core;
+using AppBroker.Core.Devices;
+using AppBroker.Core.Javascript;
+using AppBroker.Core.Managers;
 
 using AppBrokerASP.Cloud;
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices;
-using AppBrokerASP.Javascript;
 
 using Microsoft.AspNetCore.Mvc;
 

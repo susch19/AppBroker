@@ -1,7 +1,5 @@
-﻿
+﻿using NiL.JS.Core;
 
-using NiL.JS.Core;
-
-namespace AppBrokerASP.Javascript;
+namespace AppBroker.Core.Javascript;
 
 public record struct JavaScriptFile(DateTime LastWriteTimeUtc, FileInfo File, string Content, Context Engine);

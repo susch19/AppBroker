@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using AppBroker.Core.Devices;
+
+using Newtonsoft.Json;
 using SocketIOClient;
 
 namespace AppBrokerASP.Devices.Zigbee;

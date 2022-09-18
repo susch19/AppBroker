@@ -2,8 +2,6 @@
 using AppBroker.Core.Devices;
 using AppBroker.Core.Javascript;
 
-using AppBrokerASP.Javascript;
-
 using Jint;
 
 

@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Text;
 
 using AppBrokerASP.Database;
-using AppBrokerASP.Devices;
 using AppBrokerASP.IOBroker;
 
 using PainlessMesh;
@@ -15,6 +14,7 @@ using MQTTnet.Extensions.ManagedClient;
 using AppBrokerASP.Zigbee2Mqtt;
 
 using Device = AppBroker.Core.Devices.Device;
+using AppBroker.Core.Managers;
 
 namespace AppBrokerASP;
 

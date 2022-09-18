@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 
-namespace AppBrokerASP;
+namespace AppBroker.Core;
 public record struct StateChangeArgs(long Id, string PropertyName, JToken? OldValue, JToken NewValue);
 
 public interface IDeviceStateManager

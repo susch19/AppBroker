@@ -1,4 +1,4 @@
-﻿namespace AppBrokerASP.Devices.Painless.Heater;
+﻿namespace AppBroker.Core.Models;
 
 public enum DayOfWeek : byte
 {

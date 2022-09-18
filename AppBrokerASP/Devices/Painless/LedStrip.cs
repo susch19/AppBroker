@@ -1,5 +1,6 @@
 ﻿
 using AppBroker.Core;
+using AppBroker.Core.Devices;
 
 using Newtonsoft.Json.Linq;
 

@@ -1,7 +1,8 @@
 ﻿using AppBroker.Core.Devices;
+
 using System.Collections.Concurrent;
 
-namespace AppBrokerASP;
+namespace AppBroker.Core.Managers;
 
 public interface IDeviceManager
 {

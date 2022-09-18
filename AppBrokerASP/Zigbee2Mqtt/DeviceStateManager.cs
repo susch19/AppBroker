@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
+﻿using AppBroker.Core;
+
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 using Newtonsoft.Json.Linq;
 
