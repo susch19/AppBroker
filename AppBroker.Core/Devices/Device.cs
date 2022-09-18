@@ -143,7 +143,7 @@ public abstract class Device : IDisposable
     {
 
         var history = new History(type);
-        history.HistoryRecords = IInstanceContainer.Instance.HistoryManager.GetHistoryFor(Id, type, start, end);
+        history.HistoryRecords = IInstanceContainer.Instance.HistoryManager.GetHistoryFor(Id, type, start.DateTime, end.DateTime);
 
         return history;
 

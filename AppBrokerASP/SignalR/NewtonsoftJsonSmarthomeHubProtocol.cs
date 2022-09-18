@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Internal;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Internal;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Options;
 

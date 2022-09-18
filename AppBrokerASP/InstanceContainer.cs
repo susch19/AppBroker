@@ -4,6 +4,8 @@ using AppBroker.Core.Managers;
 
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices.Elsa;
+using AppBrokerASP.Histories;
+using AppBrokerASP.State;
 using AppBrokerASP.Zigbee2Mqtt;
 
 using PainlessMesh.Ota;

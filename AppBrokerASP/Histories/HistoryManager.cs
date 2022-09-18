@@ -10,7 +10,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 
-namespace AppBrokerASP.Zigbee2Mqtt;
+namespace AppBrokerASP.Histories;
 
 
 public class HistoryManager : IHistoryManager
@@ -59,9 +59,7 @@ public class HistoryManager : IHistoryManager
             case JTokenType.Object:
                 var hc = newValue.ToObject<HeaterConfig>();
                 if (hc is not null && hc != emptyHeaderConfig)
-                {
                     value = new HistoryValueHeaterConfig(hc);
-                }
                 else
                 {
                     return;
@@ -71,7 +69,8 @@ public class HistoryManager : IHistoryManager
                 return;
         }
         value.Timestamp = DateTime.UtcNow;
-        histProp.Values.Add(value);
+        value.HistoryValue = histProp;
+        ctx.Add(value);
 
         ctx.SaveChanges();
     }
@@ -103,6 +102,8 @@ public class HistoryManager : IHistoryManager
         if (histProp is null || !histProp.Enabled)
             return;
         histProp.Enabled = false;
+
+
         ctx.SaveChanges();
     }
 
@@ -113,23 +114,25 @@ public class HistoryManager : IHistoryManager
     }
 
 
-    public History.HistoryRecord[] GetHistoryFor(long deviceId, string propertyName, DateTimeOffset start, DateTimeOffset end)
+    public HistoryRecord[] GetHistoryFor(long deviceId, string propertyName, DateTime start, DateTime end)
     {
         using var ctx = new HistoryContext();
 
         var histProp = ctx.Properties.FirstOrDefault(x => x.PropertyName == propertyName && x.Device.DeviceId == deviceId);
         if (histProp == default)
-            return Array.Empty<History.HistoryRecord>();
-
-        var values = histProp.Values
-            .Where(x => x.Timestamp > start && x.Timestamp < end)
+            return Array.Empty<HistoryRecord>();
+        var first = ctx.ValueBases.FirstOrDefault();
+        var values = ctx.ValueBases
+            .Where(x=>x.HistoryValueId == histProp.Id 
+                && x.Timestamp > start 
+                && x.Timestamp < end)
             .ToArray();
         return values
             .OfType<HistoryValueDouble>()
-            .Select(x => new History.HistoryRecord(x.Value, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds)))
-            .Concat(values.OfType<HistoryValueBool>().Select(x => new History.HistoryRecord(x.Value ? 1d : 0d, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
-            .Concat(values.OfType<HistoryValueLong>().Select(x => new History.HistoryRecord(x.Value, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
-            .Concat(values.OfType<HistoryValueHeaterConfig>().Select(x => new History.HistoryRecord(x.Temperature, (long)(new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))))
+            .Select(x => new HistoryRecord(x.Value, (long)new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))
+            .Concat(values.OfType<HistoryValueBool>().Select(x => new HistoryRecord(x.Value ? 1d : 0d, (long)new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds)))
+            .Concat(values.OfType<HistoryValueLong>().Select(x => new HistoryRecord(x.Value, (long)new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds)))
+            .Concat(values.OfType<HistoryValueHeaterConfig>().Select(x => new HistoryRecord(x.Temperature, (long)new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds)))
             .OrderBy(x => x.Ts)
             .ToArray();
     }
@@ -168,10 +171,12 @@ public class HistoryManager : IHistoryManager
         [Key]
         public long Id { get; set; }
         public DateTime Timestamp { get; set; }
+        public long HistoryValueId { get; set; }
 
         //TODO Add retentionpolicy
         //TODO Add past concation? (Example after 1 Month group values for each 10 Minutes into one, for devices which have a lot of state changes)
 
+        [ForeignKey(nameof(HistoryValueId))]
         public virtual HistoryProperty HistoryValue { get; set; }
     }
 
@@ -292,6 +297,16 @@ public class HistoryManager : IHistoryManager
         public DbSet<HistoryValueDateTime> HistoryDates { get; set; }
         public DbSet<HistoryValueTimeSpan> HistoryTimespans { get; set; }
         public DbSet<HistoryValueHeaterConfig> HistoryHeaterConfigs { get; set; }
+
+        protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+        {
+            configurationBuilder
+                .Properties<DateTime>()
+                .HaveConversion<DateTimeLongConverter>();
+            configurationBuilder
+                .Properties<TimeSpan>()
+                .HaveConversion<TimeSpanLongConverter>();
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

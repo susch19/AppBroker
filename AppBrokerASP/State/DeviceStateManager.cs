@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json.Linq;
 
 
-namespace AppBrokerASP.Zigbee2Mqtt;
+namespace AppBrokerASP.State;
 
 public class DeviceStateManager : IDeviceStateManager
 {

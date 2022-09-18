@@ -24,40 +24,40 @@ public class History
     {
         PropertyName = propertyName;
     }
+}
 
-    public class HistoryRecord
+public class HistoryRecord
+{
+    [JsonConverter(typeof(DoubleEverythingConverter))]
+    public double? Val { get; set; }
+    public long Ts { get; set; }
+
+    public HistoryRecord()
     {
-        [JsonConverter(typeof(DoubleEverythingConverter))]
-        public double? Val { get; set; }
-        public long Ts { get; set; }
 
-        public HistoryRecord()
-        {
+    }
+    public HistoryRecord(double? value, long timestamp)
+    {
+        Val = value;
+        Ts = timestamp;
+    }
 
-        }
-        public HistoryRecord(double? value, long timestamp)
+    private class DoubleEverythingConverter : JsonConverter<double?>
+    {
+        public override double? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            Val = value;
-            Ts = timestamp;
-        }
-
-        private class DoubleEverythingConverter : JsonConverter<double?>
-        {
-            public override double? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+            return reader.TokenType switch
             {
-                return reader.TokenType switch
-                {
-                    JsonTokenType.Number => reader.GetDouble(),
-                    JsonTokenType.True => 1d,
-                    JsonTokenType.False => 0d,
-                    _ => null,
-                };
-            }
+                JsonTokenType.Number => reader.GetDouble(),
+                JsonTokenType.True => 1d,
+                JsonTokenType.False => 0d,
+                _ => null,
+            };
+        }
 
-            public override void Write(Utf8JsonWriter writer, double? value, JsonSerializerOptions options)
-            {
-                throw new NotImplementedException();
-            }
+        public override void Write(Utf8JsonWriter writer, double? value, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException();
         }
     }
 }
