@@ -48,7 +48,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpGet("states/{id}")]
-    public ActionResult GetDeviceState(long id)
+    public ActionResult GetDeviceStates(long id)
     {
         var curState = stateManager.GetCurrentState(id);
         if (curState == null)
@@ -57,9 +57,16 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPost("states/{id}")]
-    public ActionResult SetDeviceState(long id, [FromBody] Dictionary<string, JsonElement> newState)
+    public async Task<ActionResult> SetDeviceStates(long id)
     {
-        stateManager.PushNewState(id, newState.ToDictionary(x => x.Key, x => JToken.Parse(x.Value.GetRawText())));
+
+        Dictionary<string, JToken> newStates;
+        using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+        {
+            newStates = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, JToken>>(await reader.ReadToEndAsync())!;
+        }
+
+        stateManager.PushNewState(id, newStates);
 
         var curState = stateManager.GetCurrentState(id);
         if (curState == null)
@@ -77,9 +84,17 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPost("state/{id}")]
-    public ActionResult SetDeviceState(long id, [FromBody] NewStateRecord newState)
+    public async Task<ActionResult> SetDeviceState(long id)
     {
-        stateManager.SetSingleState(id, newState.Name, JToken.Parse(newState.Value.GetRawText()));
+
+        NewStateRecord newState;
+        using (StreamReader reader = new StreamReader(Request.Body, Encoding.UTF8))
+        {
+            newState = Newtonsoft.Json.JsonConvert.DeserializeObject<NewStateRecord>(await reader.ReadToEndAsync());
+        }
+        
+        
+        stateManager.SetSingleState(id, newState.Name, newState.Value);
 
         var curState = stateManager.GetSingleState(id, newState.Name);
         if (curState == null)
@@ -114,7 +129,7 @@ public class DeviceController : ControllerBase
     }
 
 
-    public record struct NewStateRecord(string Name, JsonElement Value);
+    public record struct NewStateRecord(string Name, JToken Value);
     public record struct DeviceResponse(long Id, string TypeName, string FriendlyName);
     public record struct DeviceCreate(long Id, string TypeName, string FriendlyName, bool ShowInApp);
 

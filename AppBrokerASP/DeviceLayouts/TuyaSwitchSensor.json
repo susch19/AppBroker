@@ -233,7 +233,7 @@
     ],
     "HistoryProperties": [
       {
-        "PropertyName": "load_power",
+        "PropertyName": "loadPower",
         "XAxisName": "Verbrauch",
         "UnitOfMeasurement": " W",
         "IconName": "XiaomiTempSensor",

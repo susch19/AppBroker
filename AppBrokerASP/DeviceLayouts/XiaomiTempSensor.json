@@ -1,5 +1,5 @@
 {
-  "Version":  3,
+  "Version":  1,
   "UniqueName": "TempSensorLayout",
   "TypeNames": [ "XiaomiTempSensor", "lumi.weather", "WSDCGQ11LM" ],
   "DashboardDeviceLayout": {
@@ -239,7 +239,7 @@
         "Format": "dd"
       },
       {
-        "Name": "linkquality",
+        "Name": "linkQuality",
         "Order": 0,
         "RowNr": 7,
         "DisplayName": "Verbindungsqualität: ",
