@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace AppBrokerASP.Migrations
+namespace AppBroker.Core.Database.Migrations
 {
     public partial class InitialCreate : Migration
     {

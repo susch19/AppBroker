@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace AppBrokerASP.Database.Model;
+namespace AppBroker.Core.Database.Model;
 
 public class DeviceMappingModel
 {

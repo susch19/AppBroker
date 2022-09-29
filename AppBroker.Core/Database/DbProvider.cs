@@ -1,18 +1,27 @@
-﻿using AppBroker.Core.Devices;
+﻿using AppBroker.Core.Database.History;
+using AppBroker.Core.Devices;
 
 using AppBrokerASP.Devices;
 
 using Microsoft.EntityFrameworkCore;
 
-namespace AppBrokerASP.Database;
+
+namespace AppBroker.Core.Database;
 
 public static class DbProvider
 {
     public static BrokerDbContext BrokerDbContext => new();
+
+    public static HistoryContext HistoryContext => new();
     static DbProvider()
     {
+
         using var ctx = BrokerDbContext;
-        _ = ctx.Database.EnsureCreated();
+        using var ctx2 = HistoryContext;
+
+        ctx.Database.Migrate();
+        ctx2.Database.Migrate();
+
     }
 
     public static bool AddDeviceToDb(Device d)

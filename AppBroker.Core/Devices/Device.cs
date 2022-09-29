@@ -1,4 +1,6 @@
-﻿using AppBroker.Core.DynamicUI;
+﻿using AppBroker.Core.Database.Model;
+using AppBroker.Core.Database;
+using AppBroker.Core.DynamicUI;
 using AppBroker.Core.Models;
 
 using Newtonsoft.Json;
@@ -8,6 +10,8 @@ using Newtonsoft.Json.Linq;
 using NonSucking.Framework.Extension.Threading;
 
 using System.Collections.Concurrent;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace AppBroker.Core.Devices;
 
@@ -34,14 +38,14 @@ public abstract class Device : IDisposable
     [JsonIgnore]
     public HashSet<Subscriber> Subscribers { get; } = new HashSet<Subscriber>();
 
-    public abstract long Id { get; set; }
+    public virtual long Id { get; set; }
 
-    public abstract string TypeName { get; set; }
+    public virtual string TypeName { get; set; }
 
     [JsonIgnore]
-    public abstract bool ShowInApp { get; set; }
+    public virtual bool ShowInApp { get; set; }
 
-    public abstract string FriendlyName { get; set; }
+    public virtual string FriendlyName { get; set; }
 
     [JsonIgnore]
     public bool Initialized { get; set; }
@@ -49,18 +53,22 @@ public abstract class Device : IDisposable
     [JsonIgnore]
     protected NLog.Logger Logger { get; set; }
 
+    public bool StartAutomatically { get; set; } = false;
+
 
     [JsonExtensionData]
     public Dictionary<string, JToken>? DynamicStateData => IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id);
     private readonly Timer sendLastDataTimer;
     private readonly List<Subscriber> toRemove = new();
 
+
     public Device(long nodeId, string? typeName) : this(nodeId)
     {
         if (!string.IsNullOrWhiteSpace(typeName))
         {
             TypeName = typeName;
-            TypeNames.Insert(0, typeName);
+            if (TypeNames.FirstOrDefault() != typeName)
+                TypeNames.Insert(0, typeName);
         }
     }
 
@@ -97,9 +105,55 @@ public abstract class Device : IDisposable
     }
 
     public virtual Task UpdateFromApp(Command command, List<JToken> parameters) => Task.CompletedTask;
-    public virtual void OptionsFromApp(Command command, List<JToken> parameters) { }
 
-    public virtual dynamic? GetConfig() => null;
+    public virtual void OptionsFromApp(Command command, List<JToken> parameters)
+    {
+        if (parameters.Count > 2 && parameters[0].ToObject<string>() == "store")
+        {
+            IOrderedEnumerable<HeaterConfig> hc = parameters.Skip(1).Select(x => x.ToDeObject<HeaterConfig>()).OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay);
+
+            var models = hc.Select(x => (HeaterConfigModel)x).ToList();
+            using BrokerDbContext? cont = DbProvider.BrokerDbContext;
+            DeviceModel? d = cont.Devices.FirstOrDefault(x => x.Id == Id);
+            if (d is not null)
+            {
+                foreach (HeaterConfigModel? item in models)
+                    item.Device = d;
+            }
+
+            var oldConfs
+                = cont
+                    .HeaterConfigs
+                    .Include(x => x.Device)
+                    .Where(x => x.Device == null || x.Device.Id == Id)
+                    .ToList();
+
+            if (oldConfs.Count > 0)
+            {
+                cont.RemoveRange(oldConfs);
+                _ = cont.SaveChanges();
+            }
+            cont.AddRange(models);
+            _ = cont.SaveChanges();
+
+        }
+
+    }
+
+    public virtual dynamic? GetConfig()
+    {
+        using BrokerDbContext? cont = DbProvider.BrokerDbContext;
+        var configs = cont
+            .HeaterConfigs
+            .Where(x => x.DeviceId == Id)
+            .ToList()
+            .Select<HeaterConfigModel, HeaterConfig>(x => x)
+            .ToList();
+        if (configs.Count > 0)
+            return configs.ToJson();
+
+        return null;
+    }
 
     public virtual async Task<bool> SendLastData(Subscriber client)
     {
@@ -149,6 +203,30 @@ public abstract class Device : IDisposable
 
     }
 
+    public void StorePersistent()
+    {
+        using var ctx = DbProvider.BrokerDbContext;
+        var existing = ctx.Devices.FirstOrDefault(x => x.Id == Id);
+        if (existing is null)
+        {
+            existing = this.GetModel();
+            ctx.Devices.Add(existing);
+        }
+        else
+        {
+            existing.StartAutomatically = StartAutomatically;
+            existing.TypeName = TypeName;
+            existing.FriendlyName = FriendlyName;
+
+        }
+
+        if (existing.StartAutomatically)
+        {
+            existing.DeserializationData = this.ToJsonTyped();
+        }
+
+        ctx.SaveChanges();
+    }
     public void Dispose()
     {
         sendLastDataTimer?.Dispose();

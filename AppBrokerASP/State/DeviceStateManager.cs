@@ -1,7 +1,10 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Database;
+using AppBroker.Core.Devices;
 
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 
@@ -14,6 +17,16 @@ public class DeviceStateManager : IDeviceStateManager
     private readonly ConcurrentDictionary<long, Dictionary<string, JToken>> deviceStates = new();
 
     public bool ManagesDevice(long id) => deviceStates.ContainsKey(id);
+
+    public DeviceStateManager()
+    {
+        using var ctx = DbProvider.BrokerDbContext;
+        foreach (var item in ctx.Devices.Where(x=> !string.IsNullOrWhiteSpace(x.LastState)))
+        {
+            deviceStates[item.Id] = JsonConvert.DeserializeObject<Dictionary<string, JToken>>(item.LastState!)!;
+        }
+        
+    }
 
     //TODO Router or Mainspower get from Zigbee2Mqtt
     public Dictionary<string, JToken>? GetCurrentState(long id)
@@ -112,18 +125,41 @@ public class DeviceStateManager : IDeviceStateManager
 
         if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
             device.SendDataToAllSubscribers();
+        
+        StoreLastState(id, deviceStates[id], device);
     }
 
-    private void SetNewState(long id, string propertyName, JToken newVal, Dictionary<string, JToken> oldState)
+    private void SetNewState(long id, string propertyName, JToken newVal, Dictionary<string, JToken> state)
     {
-        var oldVal = oldState.GetValueOrDefault(propertyName);
+        var oldVal = state.GetValueOrDefault(propertyName);
         IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
         StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
         if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev))
             dev.ReceivedNewState(propertyName, newVal);
         AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
-        oldState[propertyName] = newVal;
+        state[propertyName] = newVal;
+
+        StoreLastState(id, state, dev);
     }
+
+    private static void StoreLastState(long id, Dictionary<string, JToken> state, Device? dev)
+    {
+        if (dev is not null)
+        {
+            using var ctx = DbProvider.BrokerDbContext;
+
+            var dbDev = ctx.Devices.FirstOrDefault(x => x.Id == id);
+            if (dbDev is null)
+            {
+                dbDev = dev.GetModel();
+                ctx.Devices.Add(dbDev);
+            }
+            dbDev.LastState = JsonConvert.SerializeObject(state);
+            dbDev.LastStateChange = DateTime.UtcNow;
+            ctx.SaveChanges();
+        }
+    }
+
     public void AddStatesForBackwartsCompatibilityForOldApp(long id, string name, JToken value)
     {
         string newPropName = name switch

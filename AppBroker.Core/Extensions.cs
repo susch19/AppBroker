@@ -1,6 +1,6 @@
-﻿using AppBroker.Core.Devices;
+﻿using AppBroker.Core.Database.Model;
+using AppBroker.Core.Devices;
 
-using AppBrokerASP.Database.Model;
 using AppBrokerASP.Devices;
 
 using Newtonsoft.Json;
@@ -8,10 +8,23 @@ using Newtonsoft.Json.Linq;
 
 using System.Diagnostics;
 
-namespace AppBrokerASP;
+namespace AppBroker.Core;
 
 public static class Extensions
 {
+    public static readonly JsonSerializerSettings TypeSerializeSetting;
+
+    static Extensions()
+    {
+
+        TypeSerializeSetting = new JsonSerializerSettings
+        {
+            TypeNameHandling = TypeNameHandling.All,
+            TypeNameAssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple,
+            
+        };
+    }
+
     //private static JsonSerializerOptions opt;
     //static Extensions()
     //{
@@ -34,9 +47,7 @@ public static class Extensions
             if (read == 0)
             {
                 if (throwOnEndOfStream)
-                {
                     throw new EndOfStreamException();
-                }
 
                 return totalRead;
             }
@@ -61,6 +72,10 @@ public static class Extensions
         _ = stream.ReadAtLeastCore(buffer, buffer.Length, throwOnEndOfStream: true);
 
     public static string ToJson<T>(this T t) => JsonConvert.SerializeObject(t);
+    public static string ToJsonTyped<T>(this T t) => JsonConvert.SerializeObject(t, TypeSerializeSetting);
+
+    public static T FromJsonTyped<T>(this string s) => JsonConvert.DeserializeObject<T>(s, TypeSerializeSetting)!;
+    public static object? FromJsonTyped(this string s) => JsonConvert.DeserializeObject(s, TypeSerializeSetting)!;
 
     public static T ToDeObject<T>(this JToken element) => JsonConvert.DeserializeObject<T>(element.ToString())!;
     public static T ToDeObject<T>(this string element) => JsonConvert.DeserializeObject<T>(element)!;
@@ -90,8 +105,8 @@ public static class Extensions
     public static string[] ToStringArray(this ICollection<JToken> elements) => elements.Select(x => x.ToString()).ToArray();
     public static string[] ToRawStringArray(this ICollection<JToken> elements) => elements.Select(x => x.ToString()).ToArray();
 
-    public static DeviceModel GetModel<T>(this T t) where T : Device => new() { Id = t.Id, TypeName = t.TypeName, FriendlyName = t.FriendlyName };
+    public static DeviceModel GetModel<T>(this T t) where T : Device => new() { Id = t.Id, TypeName = t.TypeName, FriendlyName = t.FriendlyName, StartAutomatically = t.StartAutomatically };
 
-    public static T GetDevice<T>(this DeviceModel model) where T : Device, new() => new() { Id = model.Id, TypeName = model.TypeName, FriendlyName = model.FriendlyName };
+    public static T GetDevice<T>(this DeviceModel model) where T : Device, new() => new() { Id = model.Id, TypeName = model.TypeName, FriendlyName = model.FriendlyName ?? "" };
 
 }

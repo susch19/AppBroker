@@ -1,7 +1,5 @@
 using System.Reflection;
 using System.Text;
-
-using AppBrokerASP.Database;
 using AppBrokerASP.IOBroker;
 
 using PainlessMesh;
@@ -15,6 +13,8 @@ using AppBrokerASP.Zigbee2Mqtt;
 
 using Device = AppBroker.Core.Devices.Device;
 using AppBroker.Core.Managers;
+using AppBroker.Core.Database;
+using Newtonsoft.Json;
 
 namespace AppBrokerASP;
 
@@ -68,12 +68,25 @@ public class DeviceManager : IDisposable, IDeviceManager
             var client = new Zigbee2MqttManager(InstanceContainer.Instance.ConfigManager.Zigbee2MqttConfig);
             _ = client.Connect().ContinueWith((x) => _ = client.Subscribe());
         }
+
+        using var ctx = DbProvider.BrokerDbContext;
+        foreach (var item in ctx.Devices.Where(x => x.StartAutomatically && x.DeserializationData != null))
+        {
+            var device = (Device)item.DeserializationData!.FromJsonTyped()!;
+            var distinctNames = device.TypeNames.Distinct().ToArray();
+            device.TypeNames.Clear();
+            device.TypeNames.AddRange(distinctNames);
+
+            AddNewDevice(device);
+        }
+
     }
     public bool AddNewDevice(Device device)
     {
         if (Devices.TryAdd(device.Id, device))
         {
             NewDeviceAdded?.Invoke(this, (device.Id, device));
+            device.StorePersistent();
             return true;
         }
         return false;

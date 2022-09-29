@@ -73,10 +73,6 @@ public class JavaScriptDevice : Device
     private event EventHandler<CommandParameters>? OnUpdateFromApp;
     private event EventHandler<CommandParameters>? OnOptionsFromApp;
 
-    public override long Id { get; set; }
-    public override string TypeName { get; set; }
-    public override bool ShowInApp { get; set; }
-    public override string FriendlyName { get; set; }
 
     [JsonIgnore]
     public string IdStr { get; set; }
@@ -237,6 +233,7 @@ public class JavaScriptDevice : Device
             .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
             .DefineFunction("checkForChanges", HasChanges)
             .DefineFunction("rebuild", RebuildEngine)
+            .DefineFunction("save", StorePersistent)
             ;
 
         //engine.Debugging = true;

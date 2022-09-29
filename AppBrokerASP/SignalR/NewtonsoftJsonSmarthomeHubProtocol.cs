@@ -17,6 +17,7 @@ using System.Linq;
 using System;
 using Elsa.Activities.Signaling.Models;
 using System.IO.Compression;
+using AppBroker.Core;
 
 namespace AppBrokerASP.SignalR;
 

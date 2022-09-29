@@ -1,0 +1,22 @@
+{
+  "UniqueName": "TestDevice",
+  "TypeName": "TestDevice",
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "id",
+        "Order": 1,
+        "RowNr": 3
+      },
+      {
+        "Name": "speaking",
+        "Order": 4,
+        "EditInfo": {
+          "EditType": "button",
+          "Dialog": "HeaterConfig",
+          "Display": "Heizplan einstellen"
+        }
+      }
+    ]
+  }
+}

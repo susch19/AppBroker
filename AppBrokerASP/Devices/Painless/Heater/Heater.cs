@@ -1,9 +1,9 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Database;
+using AppBroker.Core.Database.Model;
 using AppBroker.Core.Devices;
 using AppBroker.Core.Models;
 
-using AppBrokerASP.Database;
-using AppBrokerASP.Database.Model;
 using AppBrokerASP.Devices.Zigbee;
 
 using Microsoft.EntityFrameworkCore;
@@ -72,14 +72,7 @@ public partial class Heater : PainlessDevice, IDisposable
         if (parameters is null)
             return;
         base.InterpretParameters(parameters);
-        //if (parameters.Count > 2)
-        //{
-        //var s2 = "";
-        //timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).ToList().ForEach(x => s2 += ((TimeTempMessageLE)x).ToString());
-        //var msg = new GeneralSmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2.ToJToken());
-        //IInstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
 
-        //}
         if (parameters.Count > 3)
         {
             try
@@ -197,7 +190,7 @@ public partial class Heater : PainlessDevice, IDisposable
     private void HandleTimeTempMessageUpdate(byte[] messages)
     {
         Span<byte> message = messages.AsSpan();
-        var ttm = TimeTempMessageLE.LoadFromBinary(message[0..3]);
+        var ttm = TimeTempMessageLE.LoadFromBinary(message[..3]);
         Temperature = ttm;
         ttm = TimeTempMessageLE.LoadFromBinary(message[3..6]);
         CurrentConfig = ttm;
@@ -223,7 +216,7 @@ public partial class Heater : PainlessDevice, IDisposable
             case Command.Temp:
                 float temp = (float)parameters[0];
                 var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
-                //logger.Debug("Send new ttm: " + )
+
                 msg = new((uint)Id, MessageType.Update, command, ttm.ToBinary());
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
@@ -299,8 +292,7 @@ public partial class Heater : PainlessDevice, IDisposable
         var oldConfs
             = cont
             .HeaterConfigs
-            .Include(x => x.Device)
-            .Where(x => x.Device == null || x.Device.Id == Id)
+            .Where(x => x.DeviceId == Id)
             .ToList();
 
         if (oldConfs.Count > 0)
@@ -325,7 +317,6 @@ public partial class Heater : PainlessDevice, IDisposable
         IEnumerable<DeviceMappingModel>? oldMappings = ((IEnumerable<DeviceMappingModel>)cont.DeviceToDeviceMappings).Where(x => x.Parent!.Id == Id);
         foreach (DeviceMappingModel? oldMapping in oldMappings)
         {
-            AppBroker.Core.Devices.Device? oldsensor = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Key == oldId).Value;
             _ = cont.Remove(oldMapping);
         }
         _ = cont.SaveChanges();

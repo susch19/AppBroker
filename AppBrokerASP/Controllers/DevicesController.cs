@@ -105,7 +105,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPut]
-    public ActionResult CreateDevice([FromBody] LogicFreeDevice deviceCreate)
+    public ActionResult CreateDevice([FromBody] RestCreatedDevice deviceCreate)
     {
         if (deviceManager.Devices.TryGetValue(deviceCreate.Id, out var existing))
         {
@@ -133,21 +133,17 @@ public class DeviceController : ControllerBase
 
     public record struct NewStateRecord(string Name, JToken Value);
     public record struct DeviceResponse(long Id, string TypeName, string FriendlyName);
-    public record struct DeviceCreate(long Id, string TypeName, string FriendlyName, bool ShowInApp);
 
-    public class LogicFreeDevice : Device
+
+    public class RestCreatedDevice : JavaScriptDevice
     {
 
-        public override long Id { get; set; }
-        public override string TypeName { get; set; }
-        public override bool ShowInApp { get; set; }
-        public override string FriendlyName { get; set; }
-
-        public LogicFreeDevice(long id, string typeName, bool showInApp, string friendlyName) : base(id, typeName)
+        [JsonConstructor]
+        public RestCreatedDevice(long id, string typeName, bool showInApp, string friendlyName, bool autoStart = false) : base(id, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
         {
-            TypeName = typeName;
             ShowInApp = showInApp;
             FriendlyName = friendlyName;
+            StartAutomatically = autoStart;
         }
 
     }
