@@ -221,6 +221,7 @@ public class SmartHome : Hub<ISmartHomeClient>
     public void ReloadDeviceLayouts() => DeviceLayoutService.ReloadLayouts();
     public DeviceLayout? GetDeviceLayoutByName(string typename) => DeviceLayoutService.GetDeviceLayout(typename)?.layout;
     public DeviceLayout? GetDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDeviceLayout(id)?.layout;
+    public List<DeviceLayout> GetAllDeviceLayouts() => DeviceLayoutService.GetAllLayouts();
 
 
     public record LayoutNameWithHash(string Name, string Hash);

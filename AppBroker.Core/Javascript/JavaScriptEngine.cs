@@ -77,6 +77,8 @@ public class JavaScriptEngineManager
             .DefineFunction("httpGet", (string s) => client.GetAsync(s).Result)
             .DefineFunction("httpPost", (string s, HttpContent? content) => client.PostAsync(s, content).Result)
             .DefineFunction("reloadDynamicLayouts", DeviceLayoutService.ReloadLayouts)
+            .DefineFunction("padLeft", (string s, string paddingChar, int count) => s.PadLeft(count, paddingChar[0]))
+            .DefineFunction("padRight", (string s, string paddingChar, int count) => s.PadRight(count, paddingChar[0]))
         ;
         return jsEngine;
     }

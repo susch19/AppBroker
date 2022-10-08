@@ -34,11 +34,11 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.Enabled, ConfigManager.PainlessMeshConfig.ListenPort);
         DeviceStateManager = new DeviceStateManager();
 
+        JavaScriptEngineManager = new JavaScriptEngineManager();
         HistoryManager = new HistoryManager();
         var localDeviceManager = new DeviceManager();
         DeviceManager = localDeviceManager;
         DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);
-        JavaScriptEngineManager = new JavaScriptEngineManager();
     }
 
     public void Dispose()

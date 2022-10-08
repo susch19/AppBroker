@@ -10,13 +10,29 @@
       },
       {
         "Name": "speaking",
-        "Order": 4,
+        "EditParameter": [],
         "EditInfo": {
           "EditType": "button",
           "Dialog": "HeaterConfig",
           "Display": "Heizplan einstellen"
         }
+      },
+      {
+
+        "Name": "targetTemp",
+        "RowNr": 3
+      },
+      {
+
+        "Name": "dayOfWeek",
+        "RowNr": 4
+      },
+      {
+
+        "Name": "timeOfDay",
+        "RowNr": 5
       }
+
     ]
   }
 }

@@ -864,11 +864,6 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         return message;
     }
 
-    internal static JsonSerializerSettings CreateDefaultSerializerSettings()
-    {
-        return new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-    }
-
     int EncryptStringToBytes_Aes(ReadOnlySpan<byte> input, byte[] output)
     {
         if (key == null || key.Length <= 0)
@@ -888,16 +883,15 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
             ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
             // Create the streams used for encryption.
-            int length = 0;
+            int length;
             int lenOfArray = 0;
             int offset = sizeof(int) + aesAlg.IV.Length;
-            using (MemoryStream msEncrypt = new MemoryStream())
+            using (var msEncrypt = new MemoryStream())
             {
                 msEncrypt.Position = offset;
-                using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write, true))
+                using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write, true))
                 using (var zip = new GZipStream(csEncrypt, CompressionMode.Compress, true))
                 using (var buffered = new BufferedStream(zip))
-
                 {
                     buffered.WriteSpan(input, input.Length, false);
 
@@ -933,15 +927,6 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         s.WriteByte((byte)((length >> 8) & 0xFF));
         s.WriteByte((byte)((length >> 0) & 0xFF));
     }
-    private static byte[] GetBytesOfInt(int l)
-    {
-        byte a = (byte)((l >> 24) & 0xFF);
-        byte b = (byte)((l >> 16) & 0xFF);
-        byte c = (byte)((l >> 8) & 0xFF);
-        byte d = (byte)((l >> 0) & 0xFF);
-        return new byte[] { a, b, c, d };
-    }
-
     ReadOnlySequence<byte> DecryptStringFromBytes_Aes(Stream cipherText, byte[] iv, int len)
     {
         // Check arguments.
@@ -984,8 +969,4 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
 
     }
 
-    class TestSegment : ReadOnlySequenceSegment<byte>
-    {
-
-    }
 }

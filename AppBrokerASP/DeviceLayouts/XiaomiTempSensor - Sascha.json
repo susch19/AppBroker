@@ -8,7 +8,7 @@
         "Name": "temperature",
         "Order": 0,
         "TextStyle": {
-          "FontSize": 12.0,
+          "FontSize": 22.0,
           "FontWeight": "bold"
         },
         "RowNr": 0,

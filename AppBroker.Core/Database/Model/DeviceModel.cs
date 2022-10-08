@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppBroker.Core.Database.Model;
 
@@ -13,5 +14,6 @@ public class DeviceModel
     public bool StartAutomatically { get; set; }
     public string? DeserializationData { get; set; }
 
+    [InverseProperty(nameof(HeaterConfigModel.Device))]
     public virtual ICollection<HeaterConfigModel>? HeaterConfigs { get; set; }
 }

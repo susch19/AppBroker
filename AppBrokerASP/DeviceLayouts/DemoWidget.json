@@ -1,7 +1,6 @@
 {
   "UniqueName": "WeatherDevice",
   "TypeName": "WeatherDevice",
-  "Ids": [],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
@@ -23,6 +22,31 @@
         "Name": "id",
         "Order": 1,
         "RowNr": 3
+      },
+      {
+        "Name": "sp",
+        "Order": 4,
+        "EditInfo": {
+          "EditType": "iconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": 0,
+              "CodePoint": 59411,
+              "Parameters": [ false ]
+            },
+
+            {
+              "Command": "Off",
+              "Value": 1,
+              "CodePoint": 59411,
+              "FontFamily": "Smarthome",
+              "Parameters": [ true ]
+            }
+          ]
+        },
+        "SpecialType": "right"
       },
       {
         "Name": "state",

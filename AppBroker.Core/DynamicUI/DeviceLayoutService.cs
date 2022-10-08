@@ -175,7 +175,7 @@ public static class DeviceLayoutService
                 {
                     foreach (var item in layout.TypeNames)
                     {
-                        if(!TypeDeviceLayouts.ContainsKey(item))
+                        if (!TypeDeviceLayouts.ContainsKey(item))
                             TypeDeviceLayouts.Add(item, (layout, hash));
                     }
                 }
@@ -226,6 +226,18 @@ public static class DeviceLayoutService
         }
         return null;
 
+    }
+
+    public static List<DeviceLayout> GetAllLayouts()
+    {
+        return InstanceDeviceLayouts
+            .Values
+            .Select(x => x.layout)
+            .Concat(TypeDeviceLayouts
+                .Values
+                .Select(x => x.layout))
+            .Distinct()
+            .ToList();
     }
 
 }

@@ -1,4 +1,6 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Database.Model;
+using AppBroker.Core.Database;
 using AppBroker.Core.Devices;
 using AppBroker.Core.Javascript;
 
@@ -18,6 +20,9 @@ using NonSucking.Framework.Extension.Threading;
 using Quartz;
 
 using System.Runtime.CompilerServices;
+using Microsoft.EntityFrameworkCore;
+using AppBroker.Core.Models;
+using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 
 namespace AppBrokerASP.Devices;
 
@@ -135,10 +140,16 @@ public class JavaScriptDevice : Device
 
 
     public override Task UpdateFromApp(Command command, List<JToken> parameters)
-    => Task.Run(() => OnUpdateFromApp?.Invoke(this, new(command, parameters)));
+    {
+        base.UpdateFromApp(command, parameters);
+        return Task.Run(() => OnUpdateFromApp?.Invoke(this, new(command, parameters)));
+    }
 
     public override void OptionsFromApp(Command command, List<JToken> parameters)
-        => OnOptionsFromApp?.Invoke(this, new(command, parameters));
+    {
+        base.OptionsFromApp(command, parameters);
+        OnOptionsFromApp?.Invoke(this, new(command, parameters));
+    }
 
     private Guid Interval(Action method, int interval)
     {
@@ -234,6 +245,8 @@ public class JavaScriptDevice : Device
             .DefineFunction("checkForChanges", HasChanges)
             .DefineFunction("rebuild", RebuildEngine)
             .DefineFunction("save", StorePersistent)
+            .DefineFunction("currentHeaterSetting", CurrentHeaterConfig)
+            .DefineFunction("nextHeaterSetting", NextHeaterConfig)
             ;
 
         //engine.Debugging = true;
@@ -261,6 +274,61 @@ public class JavaScriptDevice : Device
         Console.WriteLine();
         Console.WriteLine("Output:");
 
+    }
+
+    private IHeaterConfigModel? CurrentHeaterConfig()
+    {
+        using BrokerDbContext? cont = DbProvider.BrokerDbContext;
+        DeviceModel? d = cont.Devices
+            .Include(x => x.HeaterConfigs)
+            .FirstOrDefault(x => x.Id == Id);
+
+        if (d is null || d.HeaterConfigs is null || d.HeaterConfigs.Count < 1)
+            return null;
+        IHeaterConfigModel? bestFit = null;
+
+        var curDow = (DayOfWeek)((int)(DateTime.Now.DayOfWeek + 6) % 7);
+        var curTimeOfDay = DateTime.Now.TimeOfDay;
+        foreach (var item in d.HeaterConfigs.OrderByDescending(x => x.DayOfWeek).ThenByDescending(x => x.TimeOfDay))
+        {
+            bestFit = item;
+
+            if ((item.DayOfWeek == curDow 
+                    && item.TimeOfDay.TimeOfDay < curTimeOfDay) 
+                || item.DayOfWeek < curDow)
+            {
+                break;
+            }
+        }
+        return bestFit;
+    }
+
+    private IHeaterConfigModel? NextHeaterConfig()
+    {
+        using BrokerDbContext? cont = DbProvider.BrokerDbContext;
+        DeviceModel? d = cont.Devices
+            .Include(x => x.HeaterConfigs)
+            .FirstOrDefault(x => x.Id == Id);
+
+        if (d is null || d.HeaterConfigs is null || d.HeaterConfigs.Count < 1)
+            return null;
+        IHeaterConfigModel? bestFit = null;
+
+        var curDow = (DayOfWeek)((int)(DateTime.Now.DayOfWeek + 6) % 7);
+        var curTimeOfDay = DateTime.Now.TimeOfDay;
+        foreach (var item in d.HeaterConfigs.OrderByDescending(x => x.DayOfWeek).ThenByDescending(x => x.TimeOfDay))
+        {
+            bestFit ??= item;
+
+            if ((item.DayOfWeek == curDow
+                 && item.TimeOfDay.TimeOfDay < curTimeOfDay)
+                || item.DayOfWeek < curDow)
+            {
+                break;
+            }
+            bestFit = item;
+        }
+        return bestFit;
     }
 
     protected virtual Engine ExtendEngine(Engine engine)
