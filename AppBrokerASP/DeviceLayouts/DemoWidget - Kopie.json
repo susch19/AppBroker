@@ -1,4 +1,5 @@
 {
+  "Version": 3,
   "UniqueName": "TestDevice",
   "TypeName": "TestDevice",
   "DashboardDeviceLayout": {
@@ -6,7 +7,7 @@
       {
         "Name": "id",
         "Order": 1,
-        "RowNr": 3
+        "RowNr": 2
       },
       {
         "Name": "speaking",
@@ -18,21 +19,83 @@
         }
       },
       {
-
         "Name": "targetTemp",
         "RowNr": 3
       },
       {
-
         "Name": "dayOfWeek",
         "RowNr": 4
       },
       {
-
         "Name": "timeOfDay",
         "RowNr": 5
       }
-
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "temperature",
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "Radial",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": 889,
+              "Value": false,
+              "Parameters": []
+            }
+          ],
+          "Min": 5.0,
+          "Max": 35.0,
+          "Interval": 5,
+          "StartAngle": 180,
+          "EndAngle": 0,
+          "GradientColors": [
+            [
+              255,
+              0,
+              255,
+              255
+            ],
+            [
+              255,
+              0,
+              0,
+              0
+            ],
+            [
+              255,
+              255,
+              0,
+              0
+            ]
+          ],
+          "Margin": 96,
+          "Displays": [
+            {
+              "Text": "Id: ",
+              "Prop": "id"
+            },
+            {
+              "Text": "Ziel: ",
+              "Prop": "targetTemp",
+              "Unit": " °C"
+            },
+            {
+              "Text": "Aktuell: ",
+              "Prop": "temperature"
+            },
+            {
+              "Text": "Ziel: ",
+              "Prop": "timeOfDay",
+              "Unit": " Uhr"
+            }
+          ]
+        },
+        "UnitOfMeasurement": " °C"
+      }
     ]
   }
 }
