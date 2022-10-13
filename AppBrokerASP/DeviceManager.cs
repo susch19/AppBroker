@@ -69,6 +69,11 @@ public class DeviceManager : IDisposable, IDeviceManager
             _ = client.Connect().ContinueWith((x) => _ = client.Subscribe());
         }
 
+
+    }
+
+    public void LoadDevices()
+    {
         using var ctx = DbProvider.BrokerDbContext;
         foreach (var item in ctx.Devices.Where(x => x.StartAutomatically && x.DeserializationData != null))
         {
@@ -79,8 +84,8 @@ public class DeviceManager : IDisposable, IDeviceManager
 
             AddNewDevice(device);
         }
-
     }
+
     public bool AddNewDevice(Device device)
     {
         if (Devices.TryAdd(device.Id, device))
@@ -90,6 +95,14 @@ public class DeviceManager : IDisposable, IDeviceManager
             return true;
         }
         return false;
+    }
+
+    public void AddNewDevices(IReadOnlyCollection<Device> devices)
+    {
+        foreach (var device in devices)
+        {
+            AddNewDevice(device);
+        }
     }
 
     public bool RemoveDevice(long id)

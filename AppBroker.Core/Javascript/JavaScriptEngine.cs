@@ -147,6 +147,15 @@ public class JavaScriptEngineManager
                 //engines.Enqueue(engine);
             }
         }
+
+        foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices)
+        {
+            if(item.Value is JavaScriptDevice jsDevice)
+            {
+                jsDevice.AnyDeviceStateChanged(e);
+            }
+        }
+        
     }
     private void DeviceStateManager_StateChangedOld(object? sender, StateChangeArgs e)
     {

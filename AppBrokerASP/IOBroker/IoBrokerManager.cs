@@ -8,6 +8,7 @@ using AppBroker.Core.Devices;
 using System.Text.RegularExpressions;
 using NonSucking.Framework.Extension.Threading;
 using AppBroker.Core.Database;
+using AppBroker.Core;
 
 namespace AppBrokerASP.IOBroker;
 
@@ -19,7 +20,6 @@ public class IoBrokerManager
     private readonly NLog.Logger logger;
     private readonly ZigbeeConfig Config;
     private readonly HttpClient http;
-    private readonly ConcurrentDictionary<long, Device> Devices;
     private readonly Dictionary<string, Type> alternativeNamesForTypes;
 
     public IoBrokerManager(NLog.Logger logger, HttpClient http, ConcurrentDictionary<long, Device> devices, Dictionary<string, Type> alternativeNamesForTypes, ZigbeeConfig config)
@@ -27,16 +27,9 @@ public class IoBrokerManager
         this.logger = logger;
         this.http = http;
         this.alternativeNamesForTypes = alternativeNamesForTypes;
-        Devices = devices;
         Config = config;
     }
 
-    // TODO: is copy pasted and duplicated in devicemanager
-    private void AddNewDeviceToDic(long id, Device device)
-    {
-        if (Devices.TryAdd(id, device))
-            NewDeviceAdded?.Invoke(this, (id, device));
-    }
 
     // TODO: is copy pasted and duplicated in devicemanager
     private Device? CreateDeviceFromName(string deviceName, params object[] ctorArgs)
@@ -74,7 +67,7 @@ public class IoBrokerManager
             if (IoBrokerZigbee.TryParse(eventName, response.ToString(), out var zo) && zo is not null)
             {
                 using var _ = stateSemaphroe.Wait();
-                if (Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
+                if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(zo.Id, out var dev) && dev is ZigbeeDevice zigbeeDev)
                 {
                     try
                     {
@@ -207,35 +200,39 @@ public class IoBrokerManager
             content = await http.GetStringAsync(stateRequest);
             deviceStates.AddRange(JsonConvert.DeserializeObject<IoBrokerStateResponse[]>(content)!);
         }
-
+        var existingDevices = IInstanceContainer.Instance.DeviceManager.Devices;
+        List<Device> devices = new List<Device>();
         foreach (var deviceRes in getDeviceResponses)
         {
             if (!long.TryParse(deviceRes.native.id, System.Globalization.NumberStyles.HexNumber, null, out var id))
                 continue;
-
-            if (!Devices.TryGetValue(id, out var dev))
+            if (!existingDevices.TryGetValue(id, out var dev))
             {
-                dev = CreateDeviceFromName(deviceRes.common.type, id, client);
-
-                if (dev is null or default(Device))
+                dev = devices.FirstOrDefault(x => x.Id == id);
+                if (dev is null)
                 {
-                    logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
-                    continue;
+                    dev = CreateDeviceFromName(deviceRes.common.type, id, client);
+
+                    if (dev is null or default(Device))
+                    {
+                        logger.Warn($"Found not mapped device: {deviceRes.common.name} ({deviceRes.common.type})");
+                        continue;
+                    }
+
+                    if (dev is ZigbeeDevice zd)
+                        zd.AdapterWithId = deviceRes._id;
+
+                    //_ = Devices.TryAdd(id, dev);
+
+                    if (!DbProvider.AddDeviceToDb(dev))
+                        _ = DbProvider.MergeDeviceWithDbData(dev);
+
+                    // If name is only numbers, try to get better name
+                    if (string.IsNullOrWhiteSpace(dev.FriendlyName) || long.TryParse(dev.FriendlyName, out _))
+                        dev.FriendlyName = deviceRes.common.name;
+
+                    devices.Add(dev);
                 }
-
-                if (dev is ZigbeeDevice zd)
-                    zd.AdapterWithId = deviceRes._id;
-
-                //_ = Devices.TryAdd(id, dev);
-
-                if (!DbProvider.AddDeviceToDb(dev))
-                    _ = DbProvider.MergeDeviceWithDbData(dev);
-
-                // If name is only numbers, try to get better name
-                if (string.IsNullOrWhiteSpace(dev.FriendlyName) || long.TryParse(dev.FriendlyName, out _))
-                    dev.FriendlyName = deviceRes.common.name;
-
-                AddNewDeviceToDic(id, dev);
             }
 
             foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
@@ -249,6 +246,8 @@ public class IoBrokerManager
             }
             dev.Initialized = true;
         }
+        if (devices.Count > 0)
+            IInstanceContainer.Instance.DeviceManager.AddNewDevices(devices);
     }
 
 }

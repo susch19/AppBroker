@@ -38,6 +38,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         HistoryManager = new HistoryManager();
         var localDeviceManager = new DeviceManager();
         DeviceManager = localDeviceManager;
+        localDeviceManager.LoadDevices();
         DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);
     }
 

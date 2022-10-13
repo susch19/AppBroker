@@ -10,5 +10,7 @@ public interface IDeviceManager
     IReadOnlyCollection<Type> DeviceTypes { get; }
 
     bool AddNewDevice(Device device);
+    void AddNewDevices(IReadOnlyCollection<Device> device);
+    void LoadDevices();
     bool RemoveDevice(long id);
 }

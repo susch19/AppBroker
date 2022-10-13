@@ -44,7 +44,9 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
     {
         TypeName = typeName;
         Socket = socket;
-
+#if DEBUG
+        StartAutomatically = true;
+#endif
         propertyInfos =
             Array.AsReadOnly(
                 GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)

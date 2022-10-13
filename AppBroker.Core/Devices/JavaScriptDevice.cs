@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using Microsoft.EntityFrameworkCore;
 using AppBroker.Core.Models;
 using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
+using Esprima;
 
 namespace AppBrokerASP.Devices;
 
@@ -59,12 +60,10 @@ public class ConnectionJavaScriptDevice : JavaScriptDevice
     }
     public ConnectionJavaScriptDevice(FileInfo info) : base(info)
     {
-        Connected = true;
     }
 
     public ConnectionJavaScriptDevice(long id, string? typeName, FileInfo? info) : base(id, typeName, info)
     {
-        Connected = true;
     }
 
     public override void StopDevice() => Connected = false;
@@ -73,10 +72,14 @@ public class ConnectionJavaScriptDevice : JavaScriptDevice
 
 public record struct CommandParameters(Command Command, List<JToken> Parameters);
 
+
 public class JavaScriptDevice : Device
 {
+    private record struct StateChangedArgs(string Id, string PropertyName, JToken? OldValue, JToken NewValue);
+
     private event EventHandler<CommandParameters>? OnUpdateFromApp;
     private event EventHandler<CommandParameters>? OnOptionsFromApp;
+    private event EventHandler<StateChangedArgs> OnAnyDeviceStateChanged;
 
 
     [JsonIgnore]
@@ -109,6 +112,73 @@ public class JavaScriptDevice : Device
         //client.GetAsync("").Result.Content.ReadAsStringAsync()
     }
 
+    public override Task UpdateFromApp(Command command, List<JToken> parameters)
+    {
+        base.UpdateFromApp(command, parameters);
+        return Task.Run(() => OnUpdateFromApp?.Invoke(this, new(command, parameters)));
+    }
+
+    public override void OptionsFromApp(Command command, List<JToken> parameters)
+    {
+        base.OptionsFromApp(command, parameters);
+        OnOptionsFromApp?.Invoke(this, new(command, parameters));
+    }
+
+    public bool HasChanges()
+    {
+        fileInfo.File.Refresh();
+        return fileInfo.File.LastWriteTimeUtc > fileInfo.LastWriteTimeUtc;
+
+    }
+
+    public void RebuildEngine()
+    {
+        if (OnUpdateFromApp is not null)
+        {
+            foreach (EventHandler<CommandParameters> d in OnUpdateFromApp.GetInvocationList())
+                OnUpdateFromApp -= d;
+        }
+
+        if (OnOptionsFromApp is not null)
+        {
+            foreach (EventHandler<CommandParameters> d in OnOptionsFromApp.GetInvocationList())
+                OnOptionsFromApp -= d;
+        }
+
+        if (HasChanges())
+            fileInfo = fileInfo with { LastWriteTimeUtc = fileInfo.File.LastWriteTimeUtc, Content = File.ReadAllText(fileInfo.File.FullName) };
+
+        runningIntervalls.Clear();
+        var logger = LogManager.GetLogger(FriendlyName + "_" + Id);
+        engine = ExtendEngine(IInstanceContainer.Instance.JavaScriptEngineManager
+            .GetNilJSEngineWithDefaults(logger)
+            );
+        engine.DefineVariable("device").Assign(JSValue.Marshal(this));
+        engine.DefineVariable("deviceId").Assign(JSValue.Marshal(Id.ToString()));
+        engine.DefineFunction("interval", Interval)
+            .DefineFunction("timedTrigger", TimeTrigger)
+            .DefineFunction("stopInterval", StopInterval)
+            .DefineFunction("onUpdateFromApp", UpdateFromAppJS)
+            .DefineFunction("onOptionsFromApp", OptionsFromAppJS)
+            .DefineFunction("removeUpdateFromApp", RemoveUpdateFromAppJS)
+            .DefineFunction("removeOptionsFromApp", RemoveOptionsFromAppJS)
+            .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
+            .DefineFunction("checkForChanges", HasChanges)
+            .DefineFunction("rebuild", RebuildEngine)
+            .DefineFunction("save", StorePersistent)
+            .DefineFunction("currentHeaterSetting", CurrentHeaterConfig)
+            .DefineFunction("nextHeaterSetting", NextHeaterConfig)
+            .DefineFunction("onAnyDeviceStateChanged", SubscribeAnyDeviceStateChanged)
+            ;
+
+        //engine.Debugging = true;
+        //engine.DebuggerCallback += Context_DebuggerCallback;
+        engine.Eval(fileInfo.Content);
+    }
+
+    public void AnyDeviceStateChanged(StateChangeArgs e)
+        => OnAnyDeviceStateChanged?.Invoke(this, new(e.Id.ToString(), e.PropertyName, e.OldValue, e.NewValue));
+
     private EventHandler<CommandParameters> UpdateFromAppJS(Action<object, CommandParameters> method)
     {
         var evHandler = new EventHandler<CommandParameters>(
@@ -137,19 +207,6 @@ public class JavaScriptDevice : Device
         => OnUpdateFromApp -= handler;
     private void RemoveOptionsFromAppJS(EventHandler<CommandParameters> handler)
         => OnOptionsFromApp -= handler;
-
-
-    public override Task UpdateFromApp(Command command, List<JToken> parameters)
-    {
-        base.UpdateFromApp(command, parameters);
-        return Task.Run(() => OnUpdateFromApp?.Invoke(this, new(command, parameters)));
-    }
-
-    public override void OptionsFromApp(Command command, List<JToken> parameters)
-    {
-        base.OptionsFromApp(command, parameters);
-        OnOptionsFromApp?.Invoke(this, new(command, parameters));
-    }
 
     private Guid Interval(Action method, int interval)
     {
@@ -203,56 +260,7 @@ public class JavaScriptDevice : Device
         return guid;
     }
 
-    public bool HasChanges()
-    {
-        fileInfo.File.Refresh();
-        return fileInfo.File.LastWriteTimeUtc > fileInfo.LastWriteTimeUtc;
-
-    }
-
-    public void RebuildEngine()
-    {
-        if (OnUpdateFromApp is not null)
-        {
-            foreach (EventHandler<CommandParameters> d in OnUpdateFromApp.GetInvocationList())
-                OnUpdateFromApp -= d;
-        }
-
-        if (OnOptionsFromApp is not null)
-        {
-            foreach (EventHandler<CommandParameters> d in OnOptionsFromApp.GetInvocationList())
-                OnOptionsFromApp -= d;
-        }
-
-        if (HasChanges())
-            fileInfo = fileInfo with { LastWriteTimeUtc = fileInfo.File.LastWriteTimeUtc, Content = File.ReadAllText(fileInfo.File.FullName) };
-
-        runningIntervalls.Clear();
-        var logger = LogManager.GetLogger(FriendlyName + "_" + Id);
-        engine = ExtendEngine(IInstanceContainer.Instance.JavaScriptEngineManager
-            .GetNilJSEngineWithDefaults(logger)
-            );
-        engine.DefineVariable("device").Assign(JSValue.Marshal(this));
-        engine.DefineVariable("deviceId").Assign(JSValue.Marshal(Id.ToString()));
-        engine.DefineFunction("interval", Interval)
-            .DefineFunction("timedTrigger", TimeTrigger)
-            .DefineFunction("stopInterval", StopInterval)
-            .DefineFunction("onUpdateFromApp", UpdateFromAppJS)
-            .DefineFunction("onOptionsFromApp", OptionsFromAppJS)
-            .DefineFunction("removeUpdateFromApp", RemoveUpdateFromAppJS)
-            .DefineFunction("removeOptionsFromApp", RemoveOptionsFromAppJS)
-            .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
-            .DefineFunction("checkForChanges", HasChanges)
-            .DefineFunction("rebuild", RebuildEngine)
-            .DefineFunction("save", StorePersistent)
-            .DefineFunction("currentHeaterSetting", CurrentHeaterConfig)
-            .DefineFunction("nextHeaterSetting", NextHeaterConfig)
-            ;
-
-        //engine.Debugging = true;
-        //engine.DebuggerCallback += Context_DebuggerCallback;
-        engine.Eval(fileInfo.Content);
-    }
+   
 
     private void Context_DebuggerCallback(Context sender, DebuggerCallbackEventArgs e)
     {
@@ -293,8 +301,8 @@ public class JavaScriptDevice : Device
         {
             bestFit = item;
 
-            if ((item.DayOfWeek == curDow 
-                    && item.TimeOfDay.TimeOfDay < curTimeOfDay) 
+            if ((item.DayOfWeek == curDow
+                    && item.TimeOfDay.TimeOfDay < curTimeOfDay)
                 || item.DayOfWeek < curDow)
             {
                 break;
@@ -329,6 +337,20 @@ public class JavaScriptDevice : Device
             bestFit = item;
         }
         return bestFit;
+    }
+
+
+
+    private EventHandler<StateChangedArgs> SubscribeAnyDeviceStateChanged(Action<string, string, JToken?, JToken> method)
+    {
+        var evHandler = new EventHandler<StateChangedArgs>(
+            (s, e) =>
+            {
+                using (semaphore.Wait())
+                    method(e.Id, e.PropertyName, e.OldValue, e.NewValue);
+            });
+        OnAnyDeviceStateChanged += evHandler;
+        return evHandler;
     }
 
     protected virtual Engine ExtendEngine(Engine engine)
