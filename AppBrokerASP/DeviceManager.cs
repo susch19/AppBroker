@@ -158,13 +158,13 @@ public class DeviceManager : IDisposable, IDeviceManager
             if (newDevice is null)
                 return;
 
-            logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
-            AddNewDevice(newDevice);
             //_ = Devices.TryAdd(e.c.NodeId, newDevice);
 
             if (!DbProvider.AddDeviceToDb(newDevice))
                 _ = DbProvider.MergeDeviceWithDbData(newDevice);
 
+            logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
+            AddNewDevice(newDevice);
         }
     }
 

@@ -30,6 +30,7 @@ public enum Command : int
     Calibration,
     Ota,
     OtaPart,
+    Log,
     Zigbee = 100
 
 };

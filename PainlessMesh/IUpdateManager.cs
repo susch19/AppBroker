@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.IO;
 
 namespace PainlessMesh.Ota;
@@ -8,7 +9,7 @@ public interface IUpdateManager
 {
     event EventHandler<FirmwareMetadata> Advertisment;
 
-    void AdvertiseUpdate(FirmwareMetadata metadata, Stream data);
+    void AdvertiseUpdate(FirmwareMetadata metadata, byte[] data, List<byte[]> parts);
     void EndAdvertisingUpdate(FirmwareMetadata firmwarePart);
     byte[] GetPart(RequestFirmwarePart firmwarePart);
     string GetPartBase64(RequestFirmwarePart firmwarePart);

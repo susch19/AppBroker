@@ -24,6 +24,7 @@ using Microsoft.EntityFrameworkCore;
 using AppBroker.Core.Models;
 using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 using Esprima;
+using Jint.Native;
 
 namespace AppBrokerASP.Devices;
 
@@ -46,17 +47,9 @@ public partial class PropChangedJavaScriptDevice : ConnectionJavaScriptDevice
 
 public class ConnectionJavaScriptDevice : JavaScriptDevice
 {
-    private bool isConnected;
-
-    [JsonIgnore]
-    public virtual bool Connected
+    public virtual bool IsConnected
     {
-        get => isConnected;
-        set
-        {
-            isConnected = value;
-            SetState("isConnected", value);
-        }
+        get;set;
     }
     public ConnectionJavaScriptDevice(FileInfo info) : base(info)
     {
@@ -66,8 +59,15 @@ public class ConnectionJavaScriptDevice : JavaScriptDevice
     {
     }
 
-    public override void StopDevice() => Connected = false;
-    public override void Reconnect(ByteLengthList parameter) => Connected = true;
+    public void SetConnectionStatus(bool newState)
+    {
+        IsConnected = newState;
+        SetState("isConnected", newState);
+
+    }
+    public override void StopDevice() => SetConnectionStatus(false);
+
+    public override void Reconnect(ByteLengthList parameter) => SetConnectionStatus(true);
 }
 
 public record struct CommandParameters(Command Command, List<JToken> Parameters);

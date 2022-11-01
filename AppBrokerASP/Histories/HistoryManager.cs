@@ -115,7 +115,7 @@ public class HistoryManager : IHistoryManager
     Random random = new Random();
     public HistoryRecord[] GetHistoryFor(long deviceId, string propertyName, DateTime start, DateTime end)
     {
-        return Enumerable.Range(0, 100).Select(x => new HistoryRecord(random.NextDouble() * 30, (long)new TimeSpan(start.AddMinutes((long)(5 * x)).Ticks).TotalMilliseconds)).ToArray();
+        //return Enumerable.Range(0, 100).Select(x => new HistoryRecord(random.NextDouble() * 30, (long)new TimeSpan(start.AddMinutes((long)(5 * x)).Ticks).TotalMilliseconds)).ToArray();
 
         using var ctx = DbProvider.HistoryContext;
 

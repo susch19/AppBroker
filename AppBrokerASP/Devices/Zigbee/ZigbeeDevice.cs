@@ -25,6 +25,16 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
 {
     protected SocketIO Socket { get; }
 
+    public bool Available
+    {
+        get => available;
+        set
+        {
+            SetConnectionStatus(value);
+            available = value;
+        }
+    }
+
     //[property: JsonIgnore()]
     private DateTime lastReceived;
 
@@ -39,6 +49,8 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
     [AppBroker.IgnoreField]
     private readonly HashSet<string> unknownProperties = new();
 
+    [AppBroker.IgnoreField]
+    private bool available;
 
     public ZigbeeDevice(long nodeId, SocketIO socket, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {

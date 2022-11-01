@@ -7,11 +7,20 @@ namespace PainlessMesh.Ota;
 
 public struct FileOtaUpdate
 {
+
     public string FilePath { get; set; }
+    public long[] TargetIds { get; set; }
     public FirmwareMetadata FirmwareMetadata { get; set; }
+
+    public FileOtaUpdate(string filePath, long[] targetIds, FirmwareMetadata firmwareMetadata)
+    {
+        FilePath = filePath;
+        TargetIds = targetIds;
+        FirmwareMetadata = firmwareMetadata;
+    }
 }
 
-public struct FirmwareMetadata : IEquatable<FirmwareMetadata>
+public record struct FirmwareMetadata 
 {
     public bool Forced { get; init; }
     public uint FirmwareVersion { get; init; }
@@ -48,12 +57,7 @@ public struct FirmwareMetadata : IEquatable<FirmwareMetadata>
 
     }
 
-    public override bool Equals(object obj) => obj is FirmwareMetadata metadata && Equals(metadata);
-    public bool Equals(FirmwareMetadata other) => Forced == other.Forced && FirmwareVersion == other.FirmwareVersion && SizeInBytes == other.SizeInBytes && PartSize == other.PartSize && PackageCount == other.PackageCount && DeviceType == other.DeviceType && DeviceNr == other.DeviceNr;
-    public override int GetHashCode() => HashCode.Combine(Forced, FirmwareVersion, SizeInBytes, PartSize, PackageCount, DeviceType, DeviceNr);
 
-    public static bool operator ==(FirmwareMetadata left, FirmwareMetadata right) => left.Equals(right);
-    public static bool operator !=(FirmwareMetadata left, FirmwareMetadata right) => !(left == right);
 
     public byte[] ToBinary()
     {
