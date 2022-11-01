@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 
 using NLog;
+using NLog.Targets;
 
 using System;
 using System.Collections.Generic;
@@ -51,38 +52,80 @@ public class UpdateManager : IUpdateManager
 
     private void CreateAdvertismentFromFile(string path)
     {
-        var content = File.ReadAllText(path);
-        var otaUpdate = JsonConvert.DeserializeObject<FileOtaUpdate>(content);
-        if (!File.Exists(otaUpdate.FilePath))
+        if (!File.Exists(path))
         {
-            logger.Warn("Found ota metadata without existing firmware. Path: " + otaUpdate.FilePath);
+            logger.Warn("Ota Metadata Path not existing. Path: " + path);
+
+            return;
+        }
+        FileOtaUpdate otaUpdate;
+        string content;
+        try
+        {
+            content = File.ReadAllText(path);
+            otaUpdate
+                = JsonConvert.DeserializeObject<FileOtaUpdate>(content);
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex);
+            return;
+        }
+        var fi = new FileInfo(otaUpdate.FilePath);
+        if (!fi.Exists)
+        {
+            logger.Warn("Found ota metadata without existing firmware. Path: " + fi.FullName);
             return;
         }
         logger.Debug("Found ota metadata " + content);
 
-        var fi = new FileInfo(otaUpdate.FilePath);
         var metaData = otaUpdate.FirmwareMetadata;
         metaData.SizeInBytes = (uint)fi.Length;
         metaData.PackageCount = metaData.SizeInBytes / metaData.PartSize;
 
         if (metaData.SizeInBytes % metaData.PartSize > 0)
             metaData.PackageCount++;
-        otaUpdate.FirmwareMetadata = metaData;
+        List<long> targets = new(otaUpdate.TargetIds);
+
+        if (targets.Count <= 0)
+        {
+            targets.Add(0);
+        }
+
+        var dataBytes = File.ReadAllBytes(fi.FullName);
+
+        List<byte[]> parts = new();
+
+        for (int i = 0; i < metaData.PackageCount - 1; i++)
+            parts.Add(ReadPart(dataBytes, metaData.PartSize, i, false));
+
+        parts.Add(ReadPart(dataBytes, metaData.PartSize, 0, true));
+
         if (fileOtas.TryGetValue(path, out var val))
         {
             EndAdvertisingUpdate(val.FirmwareMetadata);
             _ = fileOtas.Remove(path);
         }
-
         fileOtas.Add(path, otaUpdate);
-        using FileStream str = File.OpenRead(otaUpdate.FilePath);
-        AdvertiseUpdate(metaData, str);
+        foreach (var item in targets)
+        {
+            metaData = metaData with { TargetId = item };
+            otaUpdate.FirmwareMetadata = metaData;
+
+            AdvertiseUpdate(metaData, dataBytes, parts);
+        }
+    }
+    static byte[] ReadPart(byte[] data, uint read, int i, bool rest)
+    {
+        byte[] part = new byte[read];
+        int from = rest ? (int)(data.Length - (data.Length % read)) : (int)(read * i);
+        int to = rest ? data.Length : (int)(read * (i + 1));
+        return data[from..to];
     }
 
     private void StopAdvertismentFromFile(object sender, FileSystemEventArgs e) => StopAdvertismentFromFile(e.FullPath);
     private void StopAdvertismentFromFile(string path)
     {
-
         if (Path.GetExtension(path) != ".ota")
         {
             logger.Info("Deleted file that didn't end with .ota, ignoring it: " + path);
@@ -103,28 +146,13 @@ public class UpdateManager : IUpdateManager
     public bool IsAdvertising(FirmwareMetadata metaData) => currentAdvertisments.ContainsKey(metaData.FirmwareId);
     public bool IsAdvertising(uint firmwareVersion, string deviceType, long targetId) => currentAdvertisments.ContainsKey(new(firmwareVersion, deviceType, targetId));
 
-    public void AdvertiseUpdate(FirmwareMetadata metadata, Stream data)
+    public void AdvertiseUpdate(FirmwareMetadata metadata, byte[] data, List<byte[]> parts)
     {
         var firmwareId = metadata.FirmwareId;
         if (currentAdvertisments.TryGetValue(firmwareId, out var advertisment) && advertisment.AdvertiseUntil > DateTime.Now)
             return;
 
-        static void ReadPart(Stream data, List<byte[]> parts, uint read)
-        {
-            byte[] part = new byte[read];
-            _ = data.Read(part);
-            parts.Add(part);
-        }
-
-        List<byte[]> parts = new();
-
-        for (int i = 0; i < metadata.PackageCount - 1; i++)
-            ReadPart(data, parts, metadata.PartSize);
-
-        var rest = ((metadata.SizeInBytes - 1) % metadata.PartSize) + 1;
-        ReadPart(data, parts, rest);
-
-        currentAdvertisments[firmwareId] = new FirmwareAdvertisment(parts, DateTime.Now.AddHours(1), metadata);
+        currentAdvertisments[firmwareId] = new FirmwareAdvertisment(parts, DateTime.Now.AddHours(1), metadata, data);
 
         if (advertismentTimers.TryGetValue(firmwareId, out var timer))
             timer?.Dispose();
@@ -144,7 +172,18 @@ public class UpdateManager : IUpdateManager
     {
         if (currentAdvertisments.TryGetValue(firmwarePart.FirmwareId, out var advertisment))
         {
-            return firmwarePart.PartNo > advertisment.Parts.Count ? Array.Empty<byte>() : advertisment.Parts[(int)firmwarePart.PartNo - 1];
+            if (!firmwarePart.IncludeSize || firmwarePart.PartSize == 0)
+            {
+                return firmwarePart.PartNo > advertisment.Parts.Count
+                    ? Array.Empty<byte>()
+                    : advertisment.Parts[(int)firmwarePart.PartNo - 1];
+            }
+            var from = (int)((firmwarePart.PartNo - 1) * firmwarePart.PartSize);
+            var to = (int)(firmwarePart.PartNo * firmwarePart.PartSize);
+            if (to > advertisment.RawBytes.Length)
+                to = advertisment.RawBytes.Length;
+            return advertisment.RawBytes[from..to];
+
         }
         return Array.Empty<byte>();
 
@@ -156,7 +195,7 @@ public class UpdateManager : IUpdateManager
         {
             if (firmwarePart.PartNo > advertisment.Parts.Count)
             {
-                logger.Warn($"Got a PartNo {firmwarePart.PartNo} that was bigger than the advertisments max of { advertisment.Parts.Count}, returning empty");
+                logger.Warn($"Got a PartNo {firmwarePart.PartNo} that was bigger than the advertisments max of {advertisment.Parts.Count}, returning empty");
                 return "";
             }
             return Convert.ToBase64String(advertisment.Parts[(int)firmwarePart.PartNo - 1]);

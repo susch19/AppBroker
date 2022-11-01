@@ -60,9 +60,9 @@ public class SmarthomeMeshManager : IDisposable
         if (!enabled)
             return;
 #if DEBUG
-        Task.Delay(500).ContinueWith(_ =>
+        Task.Delay(5000).ContinueWith(_ =>
         {
-            this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257171131, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.4"), Encoding.UTF8.GetBytes("heater")));
+            this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257232294, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.4"), Encoding.UTF8.GetBytes("heater")));
             this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257171132, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.5"), Encoding.UTF8.GetBytes("ledstri")));
         });
 #endif

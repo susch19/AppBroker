@@ -10,9 +10,13 @@ using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json.Linq;
 
+using NLog;
+using NLog.Time;
+
 using PainlessMesh;
 
 using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -62,6 +66,7 @@ public partial class Heater : PainlessDevice, IDisposable
         {
 
         }
+
         Initialized = true;
         IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
     }
@@ -154,6 +159,29 @@ public partial class Heater : PainlessDevice, IDisposable
                 break;
             case Command.On:
                 DisableHeating = false;
+                break;
+            case Command.Log:
+                
+                foreach (var item in e.Parameters)
+                {
+                    try
+                    {
+
+                        var seconds = BitConverter.ToInt64(item.AsSpan(0, sizeof(long)));
+
+                        var dt = DateTime.UnixEpoch.AddSeconds(seconds);
+                        var logLine = Encoding.UTF8.GetString(item.AsSpan(sizeof(long)));
+
+                        Logger.Info($"{Id}|{FriendlyName}|{dt:yyyy-MM-dd HH:mm:ss}|{logLine}");
+                    }
+                    catch (Exception ex)
+                    {
+                        var logLine = Encoding.UTF8.GetString(item.AsSpan(sizeof(long)));
+
+                        Logger.Info($"{Id}|{FriendlyName}|{DateTime.Now:yyyy-MM-dd HH:mm:ss}-Unknown|{logLine}|Binary:{BitConverter.ToString(item)}");
+                        
+                    }
+                }
                 break;
             default:
                 break;

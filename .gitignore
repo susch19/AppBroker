@@ -275,3 +275,4 @@ OTA/*
 /AppBrokerASP/*.db-wal
 /AppBrokerASP/*.db-shm
 *.js
+*.bak

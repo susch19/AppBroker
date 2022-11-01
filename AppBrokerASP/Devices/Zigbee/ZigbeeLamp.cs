@@ -54,7 +54,8 @@ public abstract partial class ZigbeeLamp : UpdateableZigbeeDevice
                 await SetValue(nameof(state), state);
                 break;
             case Command.Off:
-                state = true;
+                state = false;
+                SetState(nameof(state), state);
                 await SetValue(nameof(state), state);
                 break;
             default:

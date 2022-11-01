@@ -123,7 +123,7 @@ public class Program
                 {
                     ks.ListenAnyIP(InstanceContainer.Instance.ConfigManager.MqttConfig.Port, x => x.UseMqtt());
                 }
-            }).UseStaticWebAssets();
+            });
 
             _ = webBuilder.Host.ConfigureLogging(logging =>
             {

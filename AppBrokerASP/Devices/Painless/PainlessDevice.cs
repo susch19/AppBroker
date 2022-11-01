@@ -5,6 +5,10 @@ using AppBroker.Elsa.Signaler;
 
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
+using Newtonsoft.Json;
+
+using NonSucking.Framework.Extension.Threading;
+
 using PainlessMesh;
 using PainlessMesh.Ota;
 
@@ -20,10 +24,15 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
     private string iP = "";
 
     private uint firmwareVersionNr;
+    [JsonProperty("version")]
     public string FirmwareVersion => "Firmware Version: " + FirmwareVersionNr;
     protected string LogName => Id + "/" + FriendlyName;
     private string deviceName;
     private DateTime lastPartRequestReceived;
+
+
+    [AppBroker.IgnoreField]
+    private static ScopedSemaphore updateSemaphore = new ScopedSemaphore(1);
 
     protected PainlessDevice(long nodeId, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {
@@ -46,7 +55,7 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
 
     }
 
-    private void Node_SingleGetMessageReceived(object? sender, BinarySmarthomeMessage e)
+    private async void Node_SingleGetMessageReceived(object? sender, BinarySmarthomeMessage e)
     {
         if (e.NodeId != Id)
             return;
@@ -80,7 +89,11 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
                     str = memoryStream.ToArray();
                 }
 
-                _ = Task.Delay(str.Length / 8).ContinueWith(x => InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, str));
+                using (updateSemaphore.Wait())
+                {
+                    InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, str);
+                }
+
 
                 break;
             case Command.OtaPart:
