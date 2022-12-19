@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>preview</LangVersion>
@@ -18,18 +18,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Elsa.Abstractions" Version="2.8.2" />
-		<PackageReference Include="Elsa.Activities.Conductor" Version="2.8.2" />
-		<PackageReference Include="Elsa.Activities.Console" Version="2.8.2" />
-		<PackageReference Include="Elsa.Activities.Email" Version="2.8.2" />
-		<PackageReference Include="Elsa.Activities.File" Version="2.8.2" />
-		<PackageReference Include="Elsa.Activities.Http" Version="2.8.2" />
-		<PackageReference Include="Elsa.Activities.Temporal.Common" Version="2.8.2" />
-		<PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.8.2" />
-		<PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.8.2" />
-		<PackageReference Include="Elsa.Scripting.JavaScript" Version="2.8.2" />
-		<PackageReference Include="Elsa.Scripting.Liquid" Version="2.8.2" />
-		<PackageReference Include="Elsa" Version="2.8.2" />
+		<PackageReference Include="Elsa.Abstractions" Version="2.9.2" />
+		<PackageReference Include="Elsa.Activities.Conductor" Version="2.9.2" />
+		<PackageReference Include="Elsa.Activities.Console" Version="2.9.2" />
+		<PackageReference Include="Elsa.Activities.Email" Version="2.9.2" />
+		<PackageReference Include="Elsa.Activities.File" Version="2.9.2" />
+		<PackageReference Include="Elsa.Activities.Http" Version="2.9.2" />
+		<PackageReference Include="Elsa.Activities.Temporal.Common" Version="2.9.2" />
+		<PackageReference Include="Elsa.Activities.Temporal.Quartz" Version="2.9.2" />
+		<PackageReference Include="Elsa.Persistence.EntityFramework.Sqlite" Version="2.9.2" />
+		<PackageReference Include="Elsa.Scripting.JavaScript" Version="2.9.2" />
+		<PackageReference Include="Elsa.Scripting.Liquid" Version="2.9.2" />
+		<PackageReference Include="Elsa" Version="2.9.2" />
 		<PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
 	</ItemGroup>
 

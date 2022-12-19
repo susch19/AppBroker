@@ -25,6 +25,8 @@ using AppBroker.Core.Models;
 using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 using Esprima;
 using Jint.Native;
+using CoordinateSharp;
+using NonSucking.Framework.Extension.Collections;
 
 namespace AppBrokerASP.Devices;
 
@@ -49,13 +51,13 @@ public class ConnectionJavaScriptDevice : JavaScriptDevice
 {
     public virtual bool IsConnected
     {
-        get;set;
+        get; set;
     }
     public ConnectionJavaScriptDevice(FileInfo info) : base(info)
     {
     }
 
-    public ConnectionJavaScriptDevice(long id, string? typeName, FileInfo? info) : base(id, typeName, info)
+    public ConnectionJavaScriptDevice(long id, string? typeName, params FileInfo[] info) : base(id, typeName, info)
     {
     }
 
@@ -75,6 +77,22 @@ public record struct CommandParameters(Command Command, List<JToken> Parameters)
 
 public class JavaScriptDevice : Device
 {
+    private class JSFileAndEngine
+    {
+        public JavaScriptFile JS { get; set; }
+        public Context? Engine { get; set; }
+
+        public JSFileAndEngine()
+        {
+            
+        }
+
+        public JSFileAndEngine(JavaScriptFile jS)
+        {
+            JS = jS;
+        }
+    }
+
     private record struct StateChangedArgs(string Id, string PropertyName, JToken? OldValue, JToken NewValue);
 
     private event EventHandler<CommandParameters>? OnUpdateFromApp;
@@ -85,31 +103,38 @@ public class JavaScriptDevice : Device
     [JsonIgnore]
     public string IdStr { get; set; }
 
+    [JsonIgnore]
+    public bool FileBased { get; }
+
     private readonly HashSet<Guid> runningIntervalls = new();
     private readonly ScopedSemaphore semaphore = new ScopedSemaphore();
-    private JavaScriptFile fileInfo;
-    private Context engine;
+    private List<JSFileAndEngine> fileInfos;
 
 
     public JavaScriptDevice(FileInfo info) : base(0)
     {
-        fileInfo = new JavaScriptFile() with { File = info, LastWriteTimeUtc = info.LastWriteTimeUtc, Content = File.ReadAllText(info.FullName) };
+        fileInfos = new()
+        {
+            new(new JavaScriptFile() { Content = File.ReadAllText(info.FullName) })
+        };
+
         Id = long.Parse(Path.GetFileNameWithoutExtension(info.Name));
+        FileBased = true;
     }
 
-    public JavaScriptDevice(long id, string? typeName, FileInfo? info) : base(id, typeName)
+    public JavaScriptDevice(long id, string? typeName, params FileInfo[] info) : base(id, typeName)
     {
         Id = id;
-        if (info is not null)
+
+        fileInfos = info
+            .Select(info => new JSFileAndEngine(new JavaScriptFile() with { Content = File.ReadAllText(info.FullName) }))
+            .ToList();
+
+        if (fileInfos.Count > 0)
         {
-            fileInfo = new JavaScriptFile() with { File = info };
-            if (info.Exists)
-            {
-                fileInfo = fileInfo with { LastWriteTimeUtc = info.LastWriteTimeUtc, Content = File.ReadAllText(info.FullName) };
-                RebuildEngine();
-            }
+            RebuildEngine();
         }
-        //client.GetAsync("").Result.Content.ReadAsStringAsync()
+        FileBased = false;
     }
 
     public override Task UpdateFromApp(Command command, List<JToken> parameters)
@@ -124,12 +149,6 @@ public class JavaScriptDevice : Device
         OnOptionsFromApp?.Invoke(this, new(command, parameters));
     }
 
-    public bool HasChanges()
-    {
-        fileInfo.File.Refresh();
-        return fileInfo.File.LastWriteTimeUtc > fileInfo.LastWriteTimeUtc;
-
-    }
 
     public void RebuildEngine()
     {
@@ -145,35 +164,39 @@ public class JavaScriptDevice : Device
                 OnOptionsFromApp -= d;
         }
 
-        if (HasChanges())
-            fileInfo = fileInfo with { LastWriteTimeUtc = fileInfo.File.LastWriteTimeUtc, Content = File.ReadAllText(fileInfo.File.FullName) };
 
         runningIntervalls.Clear();
         var logger = LogManager.GetLogger(FriendlyName + "_" + Id);
-        engine = ExtendEngine(IInstanceContainer.Instance.JavaScriptEngineManager
-            .GetNilJSEngineWithDefaults(logger)
+        foreach (var item in fileInfos)
+        {
+            var engine = ExtendEngine(IInstanceContainer.Instance.JavaScriptEngineManager
+                .GetNilJSEngineWithDefaults(logger)
             );
-        engine.DefineVariable("device").Assign(JSValue.Marshal(this));
-        engine.DefineVariable("deviceId").Assign(JSValue.Marshal(Id.ToString()));
-        engine.DefineFunction("interval", Interval)
-            .DefineFunction("timedTrigger", TimeTrigger)
-            .DefineFunction("stopInterval", StopInterval)
-            .DefineFunction("onUpdateFromApp", UpdateFromAppJS)
-            .DefineFunction("onOptionsFromApp", OptionsFromAppJS)
-            .DefineFunction("removeUpdateFromApp", RemoveUpdateFromAppJS)
-            .DefineFunction("removeOptionsFromApp", RemoveOptionsFromAppJS)
-            .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
-            .DefineFunction("checkForChanges", HasChanges)
-            .DefineFunction("rebuild", RebuildEngine)
-            .DefineFunction("save", StorePersistent)
-            .DefineFunction("currentHeaterSetting", CurrentHeaterConfig)
-            .DefineFunction("nextHeaterSetting", NextHeaterConfig)
-            .DefineFunction("onAnyDeviceStateChanged", SubscribeAnyDeviceStateChanged)
-            ;
+            engine.DefineVariable("device").Assign(JSValue.Marshal(this));
+            engine.DefineVariable("deviceId").Assign(JSValue.Marshal(Id.ToString()));
+            engine.DefineFunction("interval", Interval)
+                .DefineFunction("timedTrigger", TimeTrigger)
+                .DefineFunction("stopInterval", StopInterval)
+                .DefineFunction("onUpdateFromApp", UpdateFromAppJS)
+                .DefineFunction("onOptionsFromApp", OptionsFromAppJS)
+                .DefineFunction("removeUpdateFromApp", RemoveUpdateFromAppJS)
+                .DefineFunction("removeOptionsFromApp", RemoveOptionsFromAppJS)
+                .DefineFunction("sendDataToAllSubscribers", SendDataToAllSubscribers)
+                .DefineFunction("rebuild", RebuildEngine)
+                .DefineFunction("save", StorePersistent)
+                .DefineFunction("currentHeaterSetting", CurrentHeaterConfig)
+                .DefineFunction("nextHeaterSetting", NextHeaterConfig)
+                .DefineFunction("onAnyDeviceStateChanged", SubscribeAnyDeviceStateChanged)
+                .DefineFunction("getCoordinateInfo", (float lan, float lon, DateTime time) => new Coordinate(lan, lon, time))
+                .DefineFunction("executeAt", (DateTime at, Action method) => Task.Delay(DateTime.UtcNow.Subtract(at)).ContinueWith(x => method()))
+                ;
 
-        //engine.Debugging = true;
-        //engine.DebuggerCallback += Context_DebuggerCallback;
-        engine.Eval(fileInfo.Content);
+            //engine.Debugging = true;
+            //engine.DebuggerCallback += Context_DebuggerCallback;
+            engine.Eval(item.JS.Content);
+            item.Engine = engine;
+        }
+
     }
 
     public void AnyDeviceStateChanged(StateChangeArgs e)
@@ -260,29 +283,29 @@ public class JavaScriptDevice : Device
         return guid;
     }
 
-   
 
-    private void Context_DebuggerCallback(Context sender, DebuggerCallbackEventArgs e)
-    {
-        Console.Clear();
-        for (var i = 0; i < fileInfo.Content.Length; i++)
-        {
-            if (i >= e.Statement.Position && i <= e.Statement.EndPosition)
-            {
-                Console.Write(fileInfo.Content[i]);
-            }
 
-        }
+    //private void Context_DebuggerCallback(Context sender, DebuggerCallbackEventArgs e)
+    //{
+    //    Console.Clear();
+    //    for (var i = 0; i < fileInfos.Content.Length; i++)
+    //    {
+    //        if (i >= e.Statement.Position && i <= e.Statement.EndPosition)
+    //        {
+    //            Console.Write(fileInfos.Content[i]);
+    //        }
 
-        Console.WriteLine();
+    //    }
 
-        Console.WriteLine("Variables:");
-        Console.WriteLine(string.Join(Environment.NewLine, new ContextDebuggerProxy(sender).Variables.Select(x => x.Key + ": " + x.Value)));
+    //    Console.WriteLine();
 
-        Console.WriteLine();
-        Console.WriteLine("Output:");
+    //    Console.WriteLine("Variables:");
+    //    Console.WriteLine(string.Join(Environment.NewLine, new ContextDebuggerProxy(sender).Variables.Select(x => x.Key + ": " + x.Value)));
 
-    }
+    //    Console.WriteLine();
+    //    Console.WriteLine("Output:");
+
+    //}
 
     private IHeaterConfigModel? CurrentHeaterConfig()
     {
@@ -352,6 +375,7 @@ public class JavaScriptDevice : Device
         OnAnyDeviceStateChanged += evHandler;
         return evHandler;
     }
+
 
     protected virtual Engine ExtendEngine(Engine engine)
     {

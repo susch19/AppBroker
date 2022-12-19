@@ -58,7 +58,7 @@ public class IoBrokerManager
     {
         client = new SocketIO(new Uri(Config.SocketIOUrl), new SocketIOOptions()
         {
-            EIO = Config.NewSocketIoversion ? 4 : 3
+            EIO = Config.NewSocketIoversion ? EngineIO.V4 : EngineIO.V3
         });
 
         ScopedSemaphore stateSemaphroe = new();

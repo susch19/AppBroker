@@ -1,5 +1,6 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Devices;
+using AppBroker.Core.Javascript;
 
 using AppBrokerASP.Devices;
 
@@ -8,6 +9,10 @@ using MQTTnet.Extensions.ManagedClient;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
+using NiL.JS.Core;
+
+using Quartz;
 
 using System.Globalization;
 using System.Xml.Linq;
@@ -20,15 +25,21 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
     internal record SetFeatureValue(GenericExposedFeature Feature, object Value);
 
     internal readonly Device device;
-    private readonly IManagedMqttClient client;
+    private static readonly IManagedMqttClient client;
 
     private static string GetId(Device d) => d.Definition?.Model ?? d.ModelId ?? d.Type.ToString();
 
-    internal Zigbee2MqttDevice(Device device, long id, IManagedMqttClient client)
+    private Dictionary<string, GenericExposedFeature> cachedFeatures = new();
+
+    static Zigbee2MqttDevice()
+    {
+        client = InstanceContainer.Instance.Zigbee2MqttManager.MQTTClient!;
+    }
+
+    internal Zigbee2MqttDevice(Device device, long id)
         : base(id, GetId(device), new FileInfo(Path.Combine("JSExtensionDevices", $"{GetId(device)}.js")))
     {
         this.device = device;
-        this.client = client;
 
         ShowInApp = true;
         FriendlyName = device.FriendlyName;
@@ -43,8 +54,7 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
         if (value is null)
             return;
 
-        //InvokeOnDevice(name,
-        //    async x => await SetValues(x.Select(y => new SetFeatureValue(y, value))));
+        client.EnqueueAsync($"zigbee2mqtt/{device.FriendlyName}/set/name", newValue.ToString());
     }
 
     public async Task FetchCurrentData()
@@ -101,6 +111,12 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
         if (device?.Definition?.Exposes is null)
             return;
 
+        if (cachedFeatures.TryGetValue(property, out var feature))
+        {
+            action(feature);
+            return;
+        }
+
         var toFind = property.Split('.');
 
         GenericExposedFeature? lastFound =
@@ -133,7 +149,7 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
         //    .SelectMany(x => x.Features)
         //    .Where(x => x is not null)
         //    .Where(x => string.Equals(x.Name, property, StringComparison.OrdinalIgnoreCase));
-
+        cachedFeatures[property] = lastFound;
         action(lastFound);
     }
 
@@ -146,10 +162,17 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
                 object? value = parameters[1].ToOObject();
                 if (value is null)
                     return Task.CompletedTask;
-                
+
                 InvokeOnDevice(name, async x => await SetValue(new SetFeatureValue(x, value)));
                 break;
         }
         return base.UpdateFromApp(command, parameters);
+    }
+
+    protected override Context ExtendEngine(Context engine)
+    {
+        engine.DefineFunction("invokeOnDevice", (string name, object value) => InvokeOnDevice(name, (x) => SetValue(new SetFeatureValue(x, value))));
+
+        return base.ExtendEngine(engine);
     }
 }

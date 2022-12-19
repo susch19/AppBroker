@@ -24,6 +24,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     public IconService IconService { get; }
     public IDeviceStateManager DeviceStateManager { get; }
     public IHistoryManager HistoryManager { get; } 
+    public IZigbee2MqttManager Zigbee2MqttManager { get; } 
 
     public InstanceContainer()
     {
@@ -40,6 +41,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         DeviceManager = localDeviceManager;
         localDeviceManager.LoadDevices();
         DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);
+        Zigbee2MqttManager = new Zigbee2MqttManager(ConfigManager.Zigbee2MqttConfig);
     }
 
     public void Dispose()

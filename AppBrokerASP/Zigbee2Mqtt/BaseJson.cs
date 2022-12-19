@@ -292,7 +292,7 @@ internal enum LogLevel
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum BridgeState
+internal enum AvailabilityState
 {
     [EnumMember(Value = "online")]
     Online,

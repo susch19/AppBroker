@@ -178,7 +178,7 @@ public partial class Heater : PainlessDevice, IDisposable
                     {
                         var logLine = Encoding.UTF8.GetString(item.AsSpan(sizeof(long)));
 
-                        Logger.Info($"{Id}|{FriendlyName}|{DateTime.Now:yyyy-MM-dd HH:mm:ss}-Unknown|{logLine}|Binary:{BitConverter.ToString(item)}");
+                        Logger.Error($"{Id}|{FriendlyName}|{DateTime.Now:yyyy-MM-dd HH:mm:ss}-Unknown|{logLine}|Binary:{BitConverter.ToString(item)}");
                         
                     }
                 }
@@ -225,8 +225,8 @@ public partial class Heater : PainlessDevice, IDisposable
         ttm = TimeTempMessageLE.LoadFromBinary(message[6..9]);
         try
         {
+            ttm.Temp -= 51.2f;
             CurrentCalibration = ttm;
-            CurrentCalibration.Temperature -= 51.2f;
         }
         catch (Exception e)
         {
@@ -255,15 +255,18 @@ public partial class Heater : PainlessDevice, IDisposable
             case Command.Off:
                 msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                DisableHeating = true;
                 break;
             case Command.On:
                 msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                DisableHeating = false;
                 break;
             default:
                 break;
         }
 
+        SendDataToAllSubscribers();
         return Task.CompletedTask;
     }
 
@@ -291,16 +294,20 @@ public partial class Heater : PainlessDevice, IDisposable
             case Command.Off:
                 msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                DisableLed = true;
                 break;
             case Command.On:
                 msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                DisableLed = false;
                 break;
             case Command.Mode:
                 msg = new((uint)Id, MessageType.Options, command);
                 InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
                 break;
         }
+
+        SendDataToAllSubscribers();
     }
 
     private void UpdateDB(IEnumerable<HeaterConfig> hc)
@@ -364,9 +371,9 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void DeviceStateManager_StateChanged(object? sender, StateChangeArgs e)
     {
-        if (e.Id != XiaomiTempSensor || e.PropertyName != "Temperature")
+        if (e.Id != XiaomiTempSensor || !e.PropertyName.Equals("Temperature", StringComparison.OrdinalIgnoreCase))
             return;
-
+        
         var temp = e.NewValue.Value<float>();
         var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToBinary());
@@ -391,13 +398,12 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void SendLastTempData()
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out AppBroker.Core.Devices.Device? device)
-                && device is XiaomiTempSensor sensor)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(XiaomiTempSensor, out AppBroker.Core.Devices.Device? device))
         {
-            var existing = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(sensor.Id
+            var existing = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(device.Id
                 , "temperature");
             if (existing is not null)
-                DeviceStateManager_StateChanged(this, new(sensor.Id, "temperature", null, existing));
+                DeviceStateManager_StateChanged(this, new(device.Id, "temperature", null, existing));
         }
     }
 

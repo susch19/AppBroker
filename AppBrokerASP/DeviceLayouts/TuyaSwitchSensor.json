@@ -1,7 +1,8 @@
 {
   "UniqueName": "TuyaLayout",
   "TypeNames": [
-    "TuyaSwitchSensor"
+    "TuyaSwitchSensor",
+    "TS011F_plug_1"
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [

@@ -146,14 +146,19 @@ public class SmartHome : Hub<ISmartHomeClient>
     }
 
 
-    public List<Device> Subscribe(IEnumerable<long> DeviceIds)
+    public List<Device> Subscribe(List<long> DeviceIds)
     {
         FieldInfo? proxyFieldInfo = Clients
             .Caller
             .GetType()
             .GetRuntimeFields()
             .First(x => x.Name == "_proxy");
-        object? proxy = proxyFieldInfo!.GetValue(Clients.Caller)!;
+        object? singeClientProxy = proxyFieldInfo!.GetValue(Clients.Caller)!;
+        FieldInfo? singeClientProxyFieldInfo = singeClientProxy
+            .GetType()
+            .GetRuntimeFields()
+            .First(x => x.Name == "_proxy");
+        object? proxy = singeClientProxyFieldInfo!.GetValue(singeClientProxy)!;
         FieldInfo? highlightedItemProperty =
             proxy
             .GetType()
@@ -180,7 +185,7 @@ public class SmartHome : Hub<ISmartHomeClient>
         return devices;
     }
 
-    public void Unsubscribe(IEnumerable<long> DeviceIds)
+    public void Unsubscribe(List<long> DeviceIds)
     {
         FieldInfo? proxyFieldInfo = Clients
             .Caller

@@ -65,7 +65,7 @@ public class DeviceManager : IDisposable, IDeviceManager
 
         if (InstanceContainer.Instance.ConfigManager.Zigbee2MqttConfig.Enabled)
         {
-            var client = new Zigbee2MqttManager(InstanceContainer.Instance.ConfigManager.Zigbee2MqttConfig);
+            var client = InstanceContainer.Instance.Zigbee2MqttManager;
             _ = client.Connect().ContinueWith((x) => _ = client.Subscribe());
         }
 
@@ -177,16 +177,27 @@ public class DeviceManager : IDisposable, IDeviceManager
             logger.Error($"Failed to get device with name {deviceName}");
             return null;
         }
-
-        var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
-
-        if (newDeviceObj is null || newDeviceObj is not Device newDevice)
+        try
         {
-            logger.Error($"Failed to get create device {deviceName}");
+
+            logger.Trace($"Trying to create device {deviceName}");
+            var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
+            logger.Trace($"Created device {deviceName}");
+            if (newDeviceObj is null || newDeviceObj is not Device newDevice)
+            {
+                logger.Error($"Failed to get create device {deviceName}");
+                return null;
+            }
+            return newDevice;
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"Exeption during device creation {deviceName}", ex);
             return null;
+
         }
 
-        return newDevice;
+
     }
 
     protected virtual void Dispose(bool disposing)

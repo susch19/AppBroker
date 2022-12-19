@@ -30,6 +30,9 @@ using MQTTnet.Server;
 using Microsoft.AspNetCore.Connections;
 using System.Globalization;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
+using CoordinateSharp;
+using Newtonsoft.Json.Linq;
 
 namespace AppBrokerASP;
 
@@ -150,7 +153,7 @@ public class Program
                 if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
                 {
                     _ = e.MapConnectionHandler<MqttConnectionHandler>(
-                        "/mqtt",
+                        "/MQTTClient",
                         httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
                         protocolList => protocolList.FirstOrDefault() ?? string.Empty);
                 }

@@ -21,13 +21,17 @@ using ILogger = NLog.ILogger;
 namespace AppBroker.Core.Javascript;
 public class JavaScriptEngineManager
 {
+    public ConcurrentDictionary<string, WatcherChangeTypes> ChangedDevices = new();
+
     private readonly HttpClient client;
 
-    private readonly List<JavaScriptFile> files = new();
+    private readonly ConcurrentDictionary<string, JavaScriptFile> files = new();
     private readonly ScopedSemaphore filesSemaphore = new();
     private readonly ILogger logger;
     private readonly DirectoryInfo jsDeviceDirectory;
     private readonly DirectoryInfo scriptsDirectory;
+    private readonly FileSystemWatcher devicesWatcher;
+    private readonly FileSystemWatcher scriptsWatcher;
 
     public JavaScriptEngineManager()
     {
@@ -35,9 +39,35 @@ public class JavaScriptEngineManager
         jsDeviceDirectory = new DirectoryInfo("./JSDevices");
         jsDeviceDirectory.Create();
         scriptsDirectory = new DirectoryInfo("./Scripts");
+        scriptsDirectory.Create();
+
+        devicesWatcher = new FileSystemWatcher(jsDeviceDirectory.FullName, "*.js")
+        {
+            NotifyFilter = NotifyFilters.FileName |
+                           NotifyFilters.LastWrite |
+                           NotifyFilters.Security
+        };
+        devicesWatcher.Renamed += DeviceChanged;
+        devicesWatcher.Deleted += DeviceChanged;
+        devicesWatcher.Changed += DeviceChanged;
+        devicesWatcher.Created += DeviceChanged;
+        devicesWatcher.EnableRaisingEvents = true;
+
+        scriptsWatcher = new FileSystemWatcher(scriptsDirectory.FullName, "*.js")
+        {
+            NotifyFilter = NotifyFilters.FileName |
+                           NotifyFilters.LastWrite |
+                           NotifyFilters.Security
+        };
+        scriptsWatcher.Renamed += ScriptRenamed;
+        scriptsWatcher.Deleted += ScriptChanged;
+        scriptsWatcher.Changed += ScriptChanged;
+        scriptsWatcher.Created += ScriptChanged;
+        scriptsWatcher.EnableRaisingEvents = true;
 
         client = new();
     }
+
     public void Initialize()
     {
         IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
@@ -47,6 +77,12 @@ public class JavaScriptEngineManager
     public void ReloadJsDevices(bool onlyLoadNew)
     {
         var scriptFiles = jsDeviceDirectory.GetFiles("*.js", SearchOption.AllDirectories);
+        IInstanceContainer.Instance.DeviceManager.Devices.Where(x =>
+            x.Value is JavaScriptDevice && ((JavaScriptDevice)x.Value).FileBased)
+            .Select(x => x.Key)
+            .ToList()
+            .ForEach(x => IInstanceContainer.Instance.DeviceManager.RemoveDevice(x));
+
         foreach (var item in scriptFiles)
         {
             var dv = new JavaScriptDevice(item);
@@ -102,107 +138,79 @@ public class JavaScriptEngineManager
 
     private void DeviceStateManager_StateChanged(object? sender, StateChangeArgs e)
     {
-        if (!scriptsDirectory.Exists)
-            return;
-
-        var currentFiles = scriptsDirectory.GetFiles("*.js").ToArray();
-        using (filesSemaphore.Wait())
-            for (int i = 0; i < currentFiles.Length; i++)
-            {
-                FileInfo item = currentFiles[i];
-                if (!files.Any(x => x.File.FullName == item.FullName))
-                    files.Add(new() { File = item });
-            }
-
-        for (int i = files.Count - 1; i >= 0; i--)
+        foreach (var item in files)
         {
-            JavaScriptFile item = files[i];
-            using (filesSemaphore.Wait())
-                if (!currentFiles.Any(x => x.FullName == item.File.FullName))
-                {
-                    files.Remove(item);
-                    continue;
-                }
-
-            item.File.Refresh();
-            if (item.File.LastWriteTimeUtc > item.LastWriteTimeUtc)
-            {
-                using var _ = filesSemaphore.Wait();
-                files.Remove(item);
-                item = item with { Content = File.ReadAllText(item.File.FullName), LastWriteTimeUtc = item.File.LastWriteTimeUtc, Engine = GetNilJSEngineWithDefaults(logger) };
-                files.Add(item);
-            }
-
-            item.Engine.DefineVariable("State").Assign(JSValue.Marshal(e));
+            item.Value.Engine.DefineVariable("State").Assign(JSValue.Marshal(e));
             try
             {
-                item.Engine.Eval(item.Content);
+                item.Value.Engine.Eval(item.Value.Content);
             }
             catch (Exception ex)
             {
-                logger.Error(ex, "Error during execution of " + item.File.Name);
+                logger.Error(ex, "Error during execution of " + item.Key);
             }
             finally
             {
-                //engines.Enqueue(engine);
+                //engines.Enqueue(engines);
             }
         }
 
+
         foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices)
         {
-            if(item.Value is JavaScriptDevice jsDevice)
+            if (item.Value is JavaScriptDevice jsDevice)
             {
                 jsDevice.AnyDeviceStateChanged(e);
             }
         }
-        
+
     }
-    private void DeviceStateManager_StateChangedOld(object? sender, StateChangeArgs e)
+    private void ScriptChanged(object sender, FileSystemEventArgs e)
     {
-        if (!scriptsDirectory.Exists)
+        if (e.Name is null)
             return;
 
-        var currentFiles = scriptsDirectory.GetFiles("*.js").ToArray();
-        using (filesSemaphore.Wait())
-            for (int i = 0; i < currentFiles.Length; i++)
-            {
-                FileInfo item = currentFiles[i];
-                if (!files.Any(x => x.File.FullName == item.FullName))
-                    files.Add(new() { File = item });
-            }
-
-        for (int i = files.Count - 1; i >= 0; i--)
+        switch (e.ChangeType)
         {
-            JavaScriptFile item = files[i];
-            using (filesSemaphore.Wait())
-                if (!currentFiles.Any(x => x.FullName == item.File.FullName))
-                {
-                    files.Remove(item);
-                    continue;
-                }
+            case WatcherChangeTypes.Created:
+                var content = File.ReadAllText(e.FullPath);
+                files[e.Name] = new(content, GetNilJSEngineWithDefaults(logger));
+                break;
+            case WatcherChangeTypes.Deleted:
+                files.Remove(e.Name, out _);
+                break;
+            case WatcherChangeTypes.Changed:
+                var newContent = File.ReadAllText(e.FullPath);
 
-            using var engine = GetEngineWithDefaults(logger);
-            engine.SetValue("State", e);
-            item.File.Refresh();
-            if (item.File.LastWriteTimeUtc > item.LastWriteTimeUtc)
-            {
-                using var _ = filesSemaphore.Wait();
-                files.Remove(item);
-                item = item with { Content = File.ReadAllText(item.File.FullName), LastWriteTimeUtc = item.File.LastWriteTimeUtc };
-                files.Add(item);
-            }
-            try
-            {
-                engine.Execute(item.Content);
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, "Error during execution of " + item.File.Name);
-            }
-            finally
-            {
-                //engines.Enqueue(engine);
-            }
+                files[e.Name] = files[e.Name] with { Content = newContent };
+                break;
+
+        }
+    }
+    private void ScriptRenamed(object sender, RenamedEventArgs e)
+    {
+        if (e.OldName is null || e.Name is null)
+            return;
+
+        if (files.Remove(e.OldName, out var info))
+        {
+            files[e.Name] = info;
+        }
+    }
+
+    private void DeviceChanged(object sender, FileSystemEventArgs e)
+    {
+        switch (e.ChangeType)
+        {
+            case WatcherChangeTypes.Created:
+                ReloadJsDevices(true);
+                break;
+
+            case WatcherChangeTypes.Changed:
+            case WatcherChangeTypes.Renamed:
+            case WatcherChangeTypes.Deleted:
+                ReloadJsDevices(false);
+                break;
         }
     }
 }

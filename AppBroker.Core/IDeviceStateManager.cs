@@ -14,4 +14,6 @@ public interface IDeviceStateManager
     void PushNewState(long id, Dictionary<string, JToken> newState);
     void SetSingleState(long id, string propertyName, JToken newVal);
     bool TryGetCurrentState(long id, out Dictionary<string, JToken>? result);
+    void PushNewState(long id, string propertyName, JToken newVal);
+    string MapValueName(long id, string name);
 }

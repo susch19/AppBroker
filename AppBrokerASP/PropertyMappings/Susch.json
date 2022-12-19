@@ -1,0 +1,13 @@
+{
+    "Device": {
+        "linkQuality": [
+            "linkquality"
+        ]
+    },
+    "TS011F_plug_1":{
+        "loadPower": [
+            "power"
+        ]
+
+    }
+}

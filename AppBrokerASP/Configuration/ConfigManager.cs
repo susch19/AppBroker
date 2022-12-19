@@ -15,7 +15,7 @@ public class ConfigManager
     private const string ZigbeeConfigName = "zigbee.json";
     private const string Zigbee2MqttConfigName = "zigbee2mqtt.json";
     private const string NlogConfigName = "nlog.json";
-    private const string MqttConfigName = "mqtt.json";
+    private const string MqttConfigName = "MQTTClient.json";
 
 #if DEBUG
     private const string ConfigName = "appsettings.debug.json";

@@ -2,4 +2,4 @@
 
 namespace AppBroker.Core.Javascript;
 
-public record struct JavaScriptFile(DateTime LastWriteTimeUtc, FileInfo File, string Content, Context Engine);
+public record struct JavaScriptFile(string Content, Context Engine);
