@@ -12,8 +12,6 @@ using Microsoft.AspNetCore.SignalR;
 
 using Newtonsoft.Json;
 
-using PainlessMesh;
-
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -214,7 +212,10 @@ public class SmartHome : Hub<ISmartHomeClient>
         Console.WriteLine(subMessage);
     }
 
-    public void UpdateTime() => InstanceContainer.Instance.MeshManager.UpdateTime();
+    public void UpdateTime()
+    {
+        //TODO How to call smarthome mesh manager update time, without knowing the existence of said manager?
+    }
 
     public string GetHashCodeByTypeName(string typeName) => InstanceContainer.Instance.IconService.GetBestFitIcon(typeName).Hash;
     public string GetHashCodeByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName).Hash;

@@ -12,4 +12,7 @@ public interface IInstanceContainer
     IHistoryManager HistoryManager { get; }
     IDeviceStateManager DeviceStateManager { get; }
     JavaScriptEngineManager JavaScriptEngineManager { get; }
+
+    void RegisterDynamic<T>(T instance) where T : class;
+    bool TryGetDynamic<T>(out T? instance) where T : class;
 }

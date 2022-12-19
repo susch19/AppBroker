@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace PainlessMesh.Ota;
+﻿namespace PainlessMesh.Ota;
 
 internal struct FirmwareId : IEquatable<FirmwareId>
 {

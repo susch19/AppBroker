@@ -1,8 +1,5 @@
 ﻿using Newtonsoft.Json;
 
-using System;
-using System.Collections.Generic;
-
 namespace PainlessMesh;
 
 [NonSucking.Framework.Serialization.Nooson]

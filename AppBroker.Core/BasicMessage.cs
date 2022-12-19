@@ -3,10 +3,7 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
-using System.Collections;
-using System.Text;
-
-namespace PainlessMesh;
+namespace AppBroker.Core;
 
 public abstract class BaseSmarthomeMessage
 {

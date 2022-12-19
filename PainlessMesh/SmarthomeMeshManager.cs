@@ -1,17 +1,16 @@
 ﻿using AppBroker.Core;
 
+using AppBrokerASP;
 using AppBrokerASP.Devices.Painless;
 
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using PainlessMesh;
 
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
-namespace AppBrokerASP;
+namespace PainlessMesh;
 
 public class SmarthomeMeshManager : IDisposable
 {
@@ -68,7 +67,7 @@ public class SmarthomeMeshManager : IDisposable
 #endif
     }
 
-    public void Start()
+    public void Start(Ota.UpdateManager um)
     {
         if (running)
             return;
@@ -79,7 +78,7 @@ public class SmarthomeMeshManager : IDisposable
         timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(1.0), WaitBeforeWhoIAmSendAgain));
         timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1.0), TimeSpan.FromHours(1d)));
         timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10.0), TimeSpan.FromSeconds(10d)));
-        InstanceContainer.Instance.UpdateManager.Advertisment += OtaAdvertisment;
+        um.Advertisment += OtaAdvertisment;
     }
 
     public void Stop()

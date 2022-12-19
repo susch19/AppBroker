@@ -1,10 +1,14 @@
 ﻿
+using AppBroker;
 using AppBroker.Core;
 using AppBroker.Core.Devices;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using PainlessMesh;
+
+using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless;
 
@@ -21,9 +25,13 @@ public partial class LedStrip : PainlessDevice
     private uint colorNumber;
     private ushort version;
 
+    [IgnoreField]
+    private SmarthomeMeshManager? smarthomeMeshManager;
+
     public LedStrip(long id, ByteLengthList parameter) : base(id, parameter, "PainlessMeshLedStrip")
     {
         ShowInApp = true;
+        IInstanceContainer.Instance.TryGetDynamic(out smarthomeMeshManager);
 
     }
 
@@ -88,7 +96,7 @@ public partial class LedStrip : PainlessDevice
         }
 
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, command, meshParams);
-        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+        smarthomeMeshManager?.SendSingle((uint)Id, msg);
         return Task.CompletedTask;
     }
 
@@ -129,6 +137,6 @@ public partial class LedStrip : PainlessDevice
         }
 
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, meshParams);
-        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+        smarthomeMeshManager?.SendSingle((uint)Id, msg);
     }
 }

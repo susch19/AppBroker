@@ -1,9 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
-using System.IO;
-
-namespace PainlessMesh.Ota;
+﻿namespace PainlessMesh.Ota;
 
 public interface IUpdateManager
 {

@@ -12,6 +12,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Globalization;
+using AppBrokerASP.Plugins;
 
 namespace AppBrokerASP;
 
@@ -42,8 +43,6 @@ public class Program
 
         try
         {
-            if (InstanceContainer.Instance.ConfigManager.PainlessMeshConfig.Enabled)
-                InstanceContainer.Instance.MeshManager.Start();
 
             UsedPortForSignalR = port;
             if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
@@ -151,6 +150,12 @@ public class Program
             {
                 InstanceContainer.Instance.JavaScriptEngineManager.Initialize();
             }
+
+            var pluginLoader = new PluginLoader(LogManager.LogFactory);
+
+            pluginLoader.LoadAssemblies();
+            pluginLoader.InitializePlugins(LogManager.LogFactory);
+
             app.Run();
         }
         catch (Exception ex)

@@ -1,16 +1,12 @@
 ﻿using Newtonsoft.Json;
 
 using NLog;
-using NLog.Targets;
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 
 namespace PainlessMesh.Ota;
 
-public class UpdateManager : IUpdateManager
+public class UpdateManager : IUpdateManager, IDisposable
 {
     public event EventHandler<FirmwareMetadata> Advertisment;
 
@@ -215,5 +211,11 @@ public class UpdateManager : IUpdateManager
         }
 
         _ = currentAdvertisments.Remove(id);
+    }
+
+    public void Dispose()
+    {
+        watcher.Dispose();
+
     }
 }

@@ -7,8 +7,6 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using PainlessMesh;
-
 using SocketIOClient;
 
 using System.Threading.Tasks;

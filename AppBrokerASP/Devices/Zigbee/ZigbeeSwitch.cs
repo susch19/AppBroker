@@ -2,8 +2,6 @@
 
 using Newtonsoft.Json.Linq;
 
-using PainlessMesh;
-
 using SocketIOClient;
 
 using System.Threading.Tasks;

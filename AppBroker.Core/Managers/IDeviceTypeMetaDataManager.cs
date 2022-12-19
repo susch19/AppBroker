@@ -19,4 +19,5 @@ public interface IDeviceTypeMetaDataManager
     Device? CreateDeviceFromName(string deviceName, Type? defaultDevice, object[] ctorArgs, object[]? defaultDeviceCtorArgs);
     Device? CreateDeviceFromNameWithBaseType(string deviceName, Type? defaultType, Type baseType, params object[] ctorArgs);
     Device? CreateDeviceFromNameWithBaseType(string deviceName, Type baseType, Type? defaultDevice, object[] ctorArgs, object[]? defaultDeviceCtorArgs);
+    void RegisterDeviceType(Type type);
 }

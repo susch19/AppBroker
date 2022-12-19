@@ -3,13 +3,9 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using System.Collections.Generic;
-using System.Dynamic;
-using System.Linq;
-
 using nj = Newtonsoft.Json;
 
-namespace PainlessMesh;
+namespace AppBroker.Core;
 
 //[NonSucking.Framework.Serialization.Nooson]
 public partial class JsonSmarthomeMessage : BaseSmarthomeMessage

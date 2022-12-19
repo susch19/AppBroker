@@ -1,9 +1,6 @@
 ﻿
 using AppBroker.Core;
 using AppBroker.Core.Devices;
-using AppBroker.Elsa.Signaler;
-
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 using Newtonsoft.Json;
 
@@ -14,7 +11,6 @@ using PainlessMesh.Ota;
 
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless;
 
@@ -34,24 +30,44 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
     [AppBroker.IgnoreField]
     private static ScopedSemaphore updateSemaphore = new ScopedSemaphore(1);
 
+    [AppBroker.IgnoreField]
+    protected SmarthomeMeshManager meshManager;
+
+    [AppBroker.IgnoreField]
+    protected UpdateManager updateManager;
+
+
     protected PainlessDevice(long nodeId, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {
         deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
-        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+        IInstanceContainer.Instance.TryGetDynamic(out SmarthomeMeshManager? mm);
+        meshManager = mm!;
+        IInstanceContainer.Instance.TryGetDynamic(out UpdateManager? um);
+        updateManager = um!;
+
+        meshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        meshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        meshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+
 
         Initialized = true;
 
     }
 
-    protected PainlessDevice(long nodeId, ByteLengthList parameter, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName +".js")))
+    protected PainlessDevice(long nodeId, ByteLengthList parameter, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {
         deviceName = GetType().GetCustomAttribute<DeviceNameAttribute>()?.PreferredName ?? TypeName;
         InterpretParameters(parameter);
-        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+        IInstanceContainer.Instance.TryGetDynamic(out SmarthomeMeshManager? mm);
+        meshManager = mm!;
+        IInstanceContainer.Instance.TryGetDynamic(out UpdateManager? um);
+        updateManager = um!;
+
+        meshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        meshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        meshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+
+
 
     }
 
@@ -66,11 +82,11 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
             case Command.Ota:
                 var request = new RequestFirmwarePart(e.Parameters[0], Id);
                 // Deserialize RequestFirmwarePart, send base64 as non json
-                var b64 = InstanceContainer.Instance.UpdateManager.GetPart(request);
+                var b64 = updateManager.GetPart(request);
                 if (b64.Length == 0)
                 {
                     request.TargetId = 0;
-                    b64 = InstanceContainer.Instance.UpdateManager.GetPart(request);
+                    b64 = updateManager.GetPart(request);
                 }
                 if (b64.Length == 0)
                 {
@@ -91,7 +107,7 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
 
                 using (updateSemaphore.Wait())
                 {
-                    InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, str);
+                    meshManager.SendSingle((uint)Id, str);
                 }
 
 
@@ -136,7 +152,7 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
 
         //Do OTA
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Update, Command.Ota, metadata.ToBinary());
-        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+        meshManager.SendSingle((uint)Id, msg);
     }
 
     protected virtual void InterpretParameters(ByteLengthList parameter)
@@ -168,9 +184,9 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
     public override void StopDevice()
     {
         base.StopDevice();
-        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
+        meshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+        meshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+        meshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
     }
 
     public override void Reconnect(ByteLengthList parameter)
@@ -179,12 +195,12 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
 
         InterpretParameters(parameter);
 
-        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        meshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+        meshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+        meshManager.SingleGetMessageReceived -= Node_SingleGetMessageReceived;
+        meshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
+        meshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        meshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
 
     }
     protected virtual void GetMessageReceived(BinarySmarthomeMessage e) { }

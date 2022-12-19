@@ -66,7 +66,6 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
-		<ProjectReference Include="..\PainlessMesh\PainlessMesh.csproj" />
 		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 

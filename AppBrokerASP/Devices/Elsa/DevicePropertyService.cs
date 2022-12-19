@@ -26,15 +26,15 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
 
     IReadOnlyCollection<Type> DeviceTypes => deviceTypes;
 
-    private readonly List<long> deviceIds = new() { };
-    private readonly List<string> deviceNames = new() { "" };
-    private readonly List<string> typeNames ;
-    private readonly List<string> propertyNames ;
-    private readonly List<PropertyInfo> properties;
+    private readonly HashSet<long> deviceIds = new() { };
+    private readonly HashSet<string> deviceNames = new() { "" };
+    private readonly HashSet<string> typeNames;
+    private readonly HashSet<string> propertyNames;
+    private readonly HashSet<PropertyInfo> properties;
+    private readonly HashSet<Type> deviceTypes;
 
     private readonly IDeviceManager manager;
     private readonly ILog logger;
-    private readonly List<Type> deviceTypes;
 
     public DeviceTypeMetaDataManager(DeviceManager manager)
     {
@@ -45,7 +45,7 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
             .GetExecutingAssembly()
             .GetTypes()
             .Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device))
-        .ToList();
+        .ToHashSet();
 
         foreach (var type in deviceTypes)
         {
@@ -55,17 +55,27 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
                 AlternativeNamesForTypes[name] = type;
             }
         }
-        properties = deviceTypes.SelectMany(x => x.GetProperties()).Distinct().ToList();
-        typeNames = stringArrWithEmpty.Concat(deviceTypes.Select(x => x.Name).Distinct()).ToList();
-        propertyNames = stringArrWithEmpty.Concat(Properties.Select(x => x.Name).Distinct().OrderBy(x => x)).ToList();
+        properties = deviceTypes.SelectMany(x => x.GetProperties()).ToHashSet();
+        typeNames = stringArrWithEmpty.Concat(deviceTypes.Select(x => x.Name)).ToHashSet();
+        propertyNames = stringArrWithEmpty.Concat(Properties.Select(x => x.Name).OrderBy(x => x)).ToHashSet();
         manager.NewDeviceAdded += Manager_NewDeviceAdded;
     }
 
     public void RegisterDeviceType(Type type)
     {
-        if (!type.IsAssignableTo(typeof(AppBroker.Core.Devices.Device)))
+        if (!type.IsAssignableTo(typeof(Device)))
             return;
 
+        deviceTypes.Add(type);
+        typeNames.Add(type.Name);
+        foreach (var name in GetAllNamesFor(type))
+            AlternativeNamesForTypes[name] = type;
+
+        foreach (var item in type.GetProperties())
+        {
+            properties.Add(item);
+            propertyNames.Add(item.Name);
+        }
 
     }
 
@@ -83,7 +93,7 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
         return names;
     }
 
-    public Device? CreateDeviceFromNameWithBaseType(string deviceName, Type baseType, Type? defaultDevice, params object[] ctorArgs) 
+    public Device? CreateDeviceFromNameWithBaseType(string deviceName, Type baseType, Type? defaultDevice, params object[] ctorArgs)
         => CreateDeviceFromNameWithBaseType(deviceName, baseType, defaultDevice, ctorArgs, ctorArgs);
     public Device? CreateDeviceFromNameWithBaseType(string deviceName, Type baseType, Type? defaultDevice, object[] ctorArgs, object[]? defaultDeviceCtorArgs)
     {

@@ -11,11 +11,9 @@ using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json.Linq;
 
 using NLog;
-using NLog.Time;
 
 using PainlessMesh;
 
-using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -89,7 +87,7 @@ public partial class Heater : PainlessDevice, IDisposable
                 {
                     Logger.Warn($"Heater {LogName} has wrong temps saved, trying correcting");
                     var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2);
-                    InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                    meshManager.SendSingle((uint)Id, msg);
                 }
             }
             catch (Exception e)
@@ -246,7 +244,7 @@ public partial class Heater : PainlessDevice, IDisposable
                 var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
 
                 msg = new((uint)Id, MessageType.Update, command, ttm.ToBinary());
-                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                meshManager.SendSingle((uint)Id, msg);
                 break;
             case Command.DeviceMapping:
                 if (UpdateDeviceMappingInDb((long)parameters[0], (long)parameters[1]))
@@ -254,12 +252,12 @@ public partial class Heater : PainlessDevice, IDisposable
                 break;
             case Command.Off:
                 msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
-                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                meshManager.SendSingle((uint)Id, msg);
                 DisableHeating = true;
                 break;
             case Command.On:
                 msg = new((uint)Id, MessageType.Update, command, new ByteLengthList());
-                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                meshManager.SendSingle((uint)Id, msg);
                 DisableHeating = false;
                 break;
             default:
@@ -288,22 +286,22 @@ public partial class Heater : PainlessDevice, IDisposable
                 byte[]? s = ttm.SelectMany(x => x.ToBinary()).ToArray();
 
                 msg = new((uint)Id, MessageType.Options, command, s);
-                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                meshManager.SendSingle((uint)Id, msg);
                 break;
             }
             case Command.Off:
                 msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
-                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                meshManager.SendSingle((uint)Id, msg);
                 DisableLed = true;
                 break;
             case Command.On:
                 msg = new((uint)Id, MessageType.Options, command, new ByteLengthList());
-                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                meshManager.SendSingle((uint)Id, msg);
                 DisableLed = false;
                 break;
             case Command.Mode:
                 msg = new((uint)Id, MessageType.Options, command);
-                InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+                meshManager.SendSingle((uint)Id, msg);
                 break;
         }
 
@@ -377,7 +375,7 @@ public partial class Heater : PainlessDevice, IDisposable
         var temp = e.NewValue.Value<float>();
         var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToBinary());
-        InstanceContainer.Instance.MeshManager.SendSingle((uint)Id, msg);
+        meshManager.SendSingle((uint)Id, msg);
     }
 
     public override void Reconnect(ByteLengthList parameter)
@@ -386,10 +384,10 @@ public partial class Heater : PainlessDevice, IDisposable
 
         InterpretParameters(parameter);
 
-        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        InstanceContainer.Instance.MeshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
+        meshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
+        meshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
+        meshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
+        meshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
 
         SendLastTempData();
     }

@@ -1,32 +1,42 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net7.0</TargetFramework>
-	  <EnablePreviewFeatures>True</EnablePreviewFeatures>
-	  <Nullable>enable</Nullable>
-	  <!--<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<EnablePreviewFeatures>True</EnablePreviewFeatures>
+		<Nullable>enable</Nullable>
+		<!--<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
 	  <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
 	  <CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>-->
-  </PropertyGroup>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <LangVersion>preview</LangVersion>
-  </PropertyGroup>
+	<ItemGroup>
+		<Using Include="System" />
+		<Using Include="System.Collections.Generic" />
+		<Using Include="System.Collections.Concurrent" />
+		<Using Include="System.Linq" />
+		<Using Include="System.IO" />
+	</ItemGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>preview</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Azura" Version="0.9.0" />
-    <PackageReference Include="Azura.Generator" Version="0.9.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
-    <PackageReference Include="NonSucking.Framework.Serialization" Version="0.1.0.66-alpha" />
-    <PackageReference Include="NLog" Version="5.1.0" />
-  </ItemGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Azura" Version="0.9.0" />
+		<PackageReference Include="Azura.Generator" Version="0.9.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+		<PackageReference Include="NonSucking.Framework.Serialization" Version="0.1.0.66-alpha" />
+		<PackageReference Include="NLog" Version="5.1.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
+		<ProjectReference Include="..\AppBrokerASP\AppBrokerASP.csproj" />
+		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
 
 </Project>

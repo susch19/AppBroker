@@ -8,9 +8,6 @@ using AppBrokerASP.Histories;
 using AppBrokerASP.State;
 using AppBrokerASP.Zigbee2Mqtt;
 
-using Namotion.Reflection;
-
-using PainlessMesh.Ota;
 
 namespace AppBrokerASP;
 
@@ -19,22 +16,22 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     public static InstanceContainer Instance { get; private set; } = null!;
     public IDeviceTypeMetaDataManager DeviceTypeMetaDataManager { get; }
     public JavaScriptEngineManager JavaScriptEngineManager { get; }
-    public SmarthomeMeshManager MeshManager { get; }
-    public IUpdateManager UpdateManager { get; }
+    //public SmarthomeMeshManager MeshManager { get; }
+    //public IUpdateManager UpdateManager { get; }
     public ConfigManager ConfigManager { get; }
     public IDeviceManager DeviceManager { get; }
     public IconService IconService { get; }
     public IDeviceStateManager DeviceStateManager { get; }
-    public IHistoryManager HistoryManager { get; } 
-    public IZigbee2MqttManager Zigbee2MqttManager { get; } 
+    public IHistoryManager HistoryManager { get; }
+    public IZigbee2MqttManager Zigbee2MqttManager { get; }
+
+    private Dictionary<Type, object> dynamicObjects = new();
 
     public InstanceContainer()
     {
         IInstanceContainer.Instance = Instance = this;
         IconService = new IconService();
         ConfigManager = new ConfigManager();
-        UpdateManager = new UpdateManager();
-        MeshManager = new SmarthomeMeshManager(ConfigManager.PainlessMeshConfig.Enabled, ConfigManager.PainlessMeshConfig.ListenPort);
         DeviceStateManager = new DeviceStateManager();
 
         JavaScriptEngineManager = new JavaScriptEngineManager();
@@ -47,11 +44,28 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     }
 
 
+    public void RegisterDynamic<T>(T instance) where T : class
+    {
+        dynamicObjects[typeof(T)] = instance;
+    }
+    public bool TryGetDynamic<T>(out T? instance) where T : class
+    {
+        var ret = dynamicObjects.TryGetValue(typeof(T), out var t);
+        if (!ret)
+        {
+            instance = null;
+            return ret;
+        }
+
+        instance = (T)t;
+        return ret;
+    }
+
+
+
     public void Dispose()
     {
         if (DeviceManager is IDisposable disposable)
             disposable.Dispose();
-        if (MeshManager is IDisposable disposable2)
-            disposable2.Dispose();
     }
 }

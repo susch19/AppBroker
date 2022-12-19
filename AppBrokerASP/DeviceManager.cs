@@ -2,7 +2,6 @@ using System.Reflection;
 using System.Text;
 using AppBrokerASP.IOBroker;
 
-using PainlessMesh;
 using AppBrokerASP.Configuration;
 using AppBroker.Core;
 using AppBroker.Core.Devices;
@@ -35,10 +34,6 @@ public class DeviceManager : IDisposable, IDeviceManager
     {
         Config = InstanceContainer.Instance.ConfigManager.ZigbeeConfig;
 
-       
-        InstanceContainer.Instance.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
-        InstanceContainer.Instance.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
-        InstanceContainer.Instance.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
 
         if (Config.Enabled is null or true)
         {
@@ -100,44 +95,6 @@ public class DeviceManager : IDisposable, IDeviceManager
     }
 
 
-    private void MeshManager_ConnectionLost(object? sender, uint e)
-    {
-        if (Devices.TryGetValue(e, out var device))
-        {
-            device.StopDevice();
-        }
-    }
-    private void MeshManager_ConnectionReastablished(object? sender, (uint id, ByteLengthList parameter) e)
-    {
-        if (Devices.TryGetValue(e.id, out var device))
-        {
-            device.Reconnect(e.parameter);
-        }
-    }
-
-    private void Node_NewConnectionEstablished(object? sender, (Sub c, ByteLengthList l) e)
-    {
-        if (Devices.TryGetValue(e.c.NodeId, out var device))
-        {
-            device.Reconnect(e.l);
-        }
-        else
-        {
-            var deviceName = Encoding.UTF8.GetString(e.l[1]);
-            var newDevice = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromName(deviceName, null, e.c.NodeId, e.l);
-
-            if (newDevice is null)
-                return;
-
-            //_ = Devices.TryAdd(e.c.NodeId, newDevice);
-
-            if (!DbProvider.AddDeviceToDb(newDevice))
-                _ = DbProvider.MergeDeviceWithDbData(newDevice);
-
-            logger.Debug($"New Zigbee2MqttDeviceJson: {newDevice.TypeName}, {newDevice.Id}");
-            AddNewDevice(newDevice);
-        }
-    }
 
 
     protected virtual void Dispose(bool disposing)
