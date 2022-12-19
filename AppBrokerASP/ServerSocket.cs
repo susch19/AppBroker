@@ -80,7 +80,7 @@ public class ServerSocket
                             clientsToRemove.Add(client);
                             continue;
                         }
-                        //if (msg.LogMessage)
+                        //if (msg.Zigbee2MqttLogMessage)
                         //    logger.Debug($"Send to NodeId: {msg.NodeId}, Type: {msg.PackageType}, Data: {msg.Data}");
                         client.Send(msg.PackageType, msg.Data.Span, msg.NodeId);
                     }

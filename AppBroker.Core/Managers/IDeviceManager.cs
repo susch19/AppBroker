@@ -7,7 +7,6 @@ namespace AppBroker.Core.Managers;
 public interface IDeviceManager
 {
     ConcurrentDictionary<long, Device> Devices { get; }
-    IReadOnlyCollection<Type> DeviceTypes { get; }
 
     bool AddNewDevice(Device device);
     void AddNewDevices(IReadOnlyCollection<Device> device);

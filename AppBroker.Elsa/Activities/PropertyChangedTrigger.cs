@@ -43,6 +43,6 @@ public class PropertyChangedTrigger : Activity, IActivityPropertyOptionsProvider
         return Done(Output);
     }
 
-    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DevicePropertyManager.PropertyNames;
+    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DeviceTypeMetaDataManager.PropertyNames;
 }
 

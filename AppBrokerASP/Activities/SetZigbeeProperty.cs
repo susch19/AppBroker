@@ -52,11 +52,11 @@ public partial class SetZigbeeProperty : Activity
         }
 
         if (device is null)
-            return Fault($"No updateable Zigbee Device found with id {DeviceId} or name {DeviceName}");
+            return Fault($"No updateable Zigbee Zigbee2MqttDeviceJson found with id {DeviceId} or name {DeviceName}");
 
         if (device is not UpdateableZigbeeDevice updateable)
         {
-            return Fault($"No updateable Zigbee Device found with id {DeviceId}");
+            return Fault($"No updateable Zigbee Zigbee2MqttDeviceJson found with id {DeviceId}");
         }
 
         await updateable.SetValue(PropertyName, Value);

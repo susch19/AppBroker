@@ -2,10 +2,6 @@
 
 using Makaretu.Dns;
 
-using MQTTnet.Client;
-using MQTTnet.Extensions.ManagedClient;
-using MQTTnet;
-
 using MQTTnet.AspNetCore;
 
 using NLog;
@@ -15,24 +11,7 @@ using NLog.Web;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using MQTTnet.Channel;
-using System.Security.Cryptography.X509Certificates;
-using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
-using System.Threading.Channels;
-using MQTTnet.Formatter;
-using Org.BouncyCastle.Bcpg;
-using MQTTnet.Packets;
-using MQTTnet.Implementations;
-using NLog.Fluent;
-using MQTTnet.Server;
-using Microsoft.AspNetCore.Connections;
 using System.Globalization;
-using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
-using CoordinateSharp;
-using Newtonsoft.Json.Linq;
 
 namespace AppBrokerASP;
 

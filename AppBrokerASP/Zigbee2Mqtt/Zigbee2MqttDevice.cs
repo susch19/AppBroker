@@ -22,28 +22,30 @@ namespace AppBrokerASP.Zigbee2Mqtt;
 
 public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
 {
-    internal record SetFeatureValue(GenericExposedFeature Feature, object Value);
+    internal record SetFeatureValue(Zigbee2MqttGenericExposedFeature Feature, object Value);
 
-    internal readonly Device device;
+    internal readonly Zigbee2MqttDeviceJson device;
     private static readonly IManagedMqttClient client;
 
-    private static string GetId(Device d) => d.Definition?.Model ?? d.ModelId ?? d.Type.ToString();
 
-    private Dictionary<string, GenericExposedFeature> cachedFeatures = new();
+    private Dictionary<string, Zigbee2MqttGenericExposedFeature> cachedFeatures = new();
 
     static Zigbee2MqttDevice()
     {
         client = InstanceContainer.Instance.Zigbee2MqttManager.MQTTClient!;
     }
 
-    internal Zigbee2MqttDevice(Device device, long id)
-        : base(id, GetId(device), new FileInfo(Path.Combine("JSExtensionDevices", $"{GetId(device)}.js")))
+    internal Zigbee2MqttDevice(Zigbee2MqttDeviceJson device, long id)
+        : base(id, GetTypeName(device), new FileInfo(Path.Combine("JSExtensionDevices", $"{GetTypeName(device)}.js")))
     {
         this.device = device;
 
         ShowInApp = true;
         FriendlyName = device.FriendlyName;
     }
+
+    public static string GetTypeName(Zigbee2MqttDeviceJson d) 
+        => d.Definition?.Model ?? d.ModelId ?? d.Type.ToString();
 
     public override void SetState(string name, JToken newValue)
     {
@@ -74,7 +76,7 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
 
     private static bool CanSetValue(SetFeatureValue value)
     {
-        if (!value.Feature.Access.HasFlag(FeatureAccessMode.Write))
+        if (!value.Feature.Access.HasFlag(Zigbee2MqttFeatureAccessMode.Write))
         {
             // TODO: log warning, eg. for light type it has child features which you can set
             return false;
@@ -98,7 +100,7 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
         return true;
     }
 
-    private void InvokeOnDevice<T>(Action<IEnumerable<T>> action) where T : GenericExposedFeature
+    private void InvokeOnDevice<T>(Action<IEnumerable<T>> action) where T : Zigbee2MqttGenericExposedFeature
     {
         if (device?.Definition?.Exposes is null)
             return;
@@ -106,7 +108,7 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
         action(device.Definition.Exposes.OfType<T>());
     }
 
-    private void InvokeOnDevice(string property, Action<GenericExposedFeature> action)
+    private void InvokeOnDevice(string property, Action<Zigbee2MqttGenericExposedFeature> action)
     {
         if (device?.Definition?.Exposes is null)
             return;
@@ -119,7 +121,7 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
 
         var toFind = property.Split('.');
 
-        GenericExposedFeature? lastFound =
+        Zigbee2MqttGenericExposedFeature? lastFound =
             device
             .Definition
             .Exposes.FirstOrDefault(x => x.Name == toFind[0])

@@ -7,7 +7,7 @@ public interface IInstanceContainer
 {
     public static IInstanceContainer Instance { get; set; } = null!;
     IDeviceManager DeviceManager { get; }
-    IDeviceTypeMetaDataManager DevicePropertyManager { get; }
+    IDeviceTypeMetaDataManager DeviceTypeMetaDataManager { get; }
     IconService IconService { get; }
     IHistoryManager HistoryManager { get; }
     IDeviceStateManager DeviceStateManager { get; }

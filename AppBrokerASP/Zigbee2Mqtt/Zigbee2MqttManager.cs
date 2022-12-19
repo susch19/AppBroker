@@ -15,13 +15,13 @@ namespace AppBrokerASP.Zigbee2Mqtt;
 public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
 {
     public IManagedMqttClient? MQTTClient { get; set; }
-    Device[]? devices = null;
-    private readonly Zigbee2MqttConfig config;
+    Zigbee2MqttDeviceJson[]? devices = null;
+    private readonly Configuration.Zigbee2MqttConfig config;
     private readonly Logger logger;
     private readonly Dictionary<string, long> friendlyNameToIdMapping = new();
     private readonly Stack<(string, string, string)> cachedBeforeConnect = new();
 
-    public Zigbee2MqttManager(Zigbee2MqttConfig zigbee2MqttConfig)
+    public Zigbee2MqttManager(Configuration.Zigbee2MqttConfig zigbee2MqttConfig)
     {
         config = zigbee2MqttConfig;
         logger = LogManager.GetCurrentClassLogger();
@@ -96,7 +96,7 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
         switch (method)
         {
             case "devices":
-                devices = JsonConvert.DeserializeObject<Device[]>(payload);
+                devices = JsonConvert.DeserializeObject<Zigbee2MqttDeviceJson[]>(payload);
                 using (var ctx = DbProvider.BrokerDbContext)
                 {
 
@@ -111,10 +111,13 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
                         }
 
                         friendlyNameToIdMapping[item.FriendlyName] = id;
-                        if (item.Type == DeviceType.Coordinator || IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
+                        if (item.Type == Zigbee2MqttDeviceType.Coordinator || IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
                             continue;
-                        var dev = new Zigbee2MqttDevice(item, id);
-                        InstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
+
+                        var dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromNameWithBaseType(Zigbee2MqttDevice.GetTypeName(item), typeof(Zigbee2MqttDevice), typeof(Zigbee2MqttDevice), item, id);
+
+                        if (dev is not null)
+                            InstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
                     }
                 }
                 while (cachedBeforeConnect.TryPop(out var item))
@@ -123,29 +126,29 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
                 break;
 
             case "config":
-                var b = JsonConvert.DeserializeObject<BridgeConfig>(payload);
+                var b = JsonConvert.DeserializeObject<Zigbee2MqttBridgeConfig>(payload);
                 ;
                 break;
 
             case "info":
-                var c = JsonConvert.DeserializeObject<BridgeInfo>(payload);
+                var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
                 ;
                 break;
 
             case "groups":
-                var d = JsonConvert.DeserializeObject<Group[]>(payload);
+                var d = JsonConvert.DeserializeObject<Zigbee2MqttGroup[]>(payload);
                 break;
             //case "state":
-            //    _ = Enum.TryParse<AvailabilityState>(payload, out var f);
+            //    _ = Enum.TryParse<Zigbee2MqttAvailabilityState>(payload, out var f);
             //    ;
             //    break;
             case "logging":
-                var g = JsonConvert.DeserializeObject<LogMessage>(payload);
+                var g = JsonConvert.DeserializeObject<Zigbee2MqttLogMessage>(payload);
                 var lvl = g!.Level switch
                 {
-                    LogLevel.Error => NLog.LogLevel.Error,
-                    LogLevel.Warning => NLog.LogLevel.Warn,
-                    LogLevel.Info => NLog.LogLevel.Info,
+                    Zigbee2MqttLogLevel.Error => NLog.LogLevel.Error,
+                    Zigbee2MqttLogLevel.Warning => NLog.LogLevel.Warn,
+                    Zigbee2MqttLogLevel.Info => NLog.LogLevel.Info,
                     _ => NLog.LogLevel.Info,
                 };
                 _ = logger.ForLogEvent(lvl).Message(g.Message).Callsite();
@@ -153,13 +156,13 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
                 break;
             //"zigbee2mqtt/MY_DEVICE/availability"
             case "availability":
-                if (Enum.TryParse<AvailabilityState>(payload, out var available)
+                if (Enum.TryParse<Zigbee2MqttAvailabilityState>(payload, out var available)
                     && friendlyNameToIdMapping.TryGetValue(deviceName, out var deviceId))
                 {
                     InstanceContainer
                         .Instance
                         .DeviceStateManager
-                        .PushNewState(deviceId, "available", available == AvailabilityState.Online);
+                        .PushNewState(deviceId, "available", available == Zigbee2MqttAvailabilityState.Online);
                 }
                 break;
             case "extensions":
@@ -190,7 +193,7 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
         if (!IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev) || dev is not Zigbee2MqttDevice zdev)
             return customStates;
 
-        foreach (var item in GetFeatures<BinaryFeature>(zdev.device.Definition.Exposes))
+        foreach (var item in GetFeatures<Zigbee2MqttBinaryFeature>(zdev.device.Definition.Exposes))
         {
             if (customStates.TryGetValue(item.Property, out var token))
                 customStates[item.Name] = item.ConvertToBool(token.ToOObject());
@@ -199,7 +202,7 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
         return customStates;
     }
 
-    private IEnumerable<T> GetFeatures<T>(GenericExposedFeature[] feature) where T : GenericExposedFeature
+    private IEnumerable<T> GetFeatures<T>(Zigbee2MqttGenericExposedFeature[] feature) where T : Zigbee2MqttGenericExposedFeature
     {
         foreach (var item in feature)
         {
@@ -219,7 +222,7 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
         }
     }
 
-    public async Task<bool> SetState(string deviceName, string propertyName, JToken newValue)
+    public async Task<bool> SetStateOnDevice(string deviceName, string propertyName, JToken newValue)
     {
         if (MQTTClient is null)
             return false;

@@ -10,6 +10,6 @@ namespace AppBroker.ValueProvider;
 
 public class DeviceIdProvider : IActivityPropertyOptionsProvider
 {
-    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DevicePropertyManager.DeviceIds.Select(x => x.ToString("X2"));
+    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DeviceTypeMetaDataManager.DeviceIds.Select(x => x.ToString("X2"));
 
 }

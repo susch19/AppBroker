@@ -39,7 +39,7 @@ public class DeviceController : ControllerBase
             jsd.RebuildEngine();
             return Content($"Successfully rebuild {id}");
         }
-        return Content("Device not found");
+        return Content("Zigbee2MqttDeviceJson not found");
     }
 
     [HttpPatch]

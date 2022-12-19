@@ -22,14 +22,12 @@ public class DeviceManager : IDisposable, IDeviceManager
 {
     public ZigbeeConfig Config { get; }
     public ConcurrentDictionary<long, Device> Devices { get; } = new();
-    public IReadOnlyCollection<Type> DeviceTypes => types;
 
     public event EventHandler<(long id, Device device)>? NewDeviceAdded;
 
     private bool disposed;
     private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
     private readonly List<Type> types;
-    private readonly Dictionary<string, Type> alternativeNamesForTypes = new(StringComparer.OrdinalIgnoreCase);
     private static readonly HttpClient http = new();
     private readonly IoBrokerManager? ioBrokerManager;
 
@@ -37,28 +35,14 @@ public class DeviceManager : IDisposable, IDeviceManager
     {
         Config = InstanceContainer.Instance.ConfigManager.ZigbeeConfig;
 
-        types = Assembly
-            .GetExecutingAssembly()
-            .GetTypes()
-            .Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device))
-            .ToList();
-
-        foreach (var type in types)
-        {
-            var names = GetAllNamesFor(type);
-            foreach (var name in names)
-            {
-                alternativeNamesForTypes[name] = type;
-            }
-        }
-
+       
         InstanceContainer.Instance.MeshManager.NewConnectionEstablished += Node_NewConnectionEstablished;
         InstanceContainer.Instance.MeshManager.ConnectionLost += MeshManager_ConnectionLost;
         InstanceContainer.Instance.MeshManager.ConnectionReastablished += MeshManager_ConnectionReastablished;
 
         if (Config.Enabled is null or true)
         {
-            ioBrokerManager = new IoBrokerManager(logger, http, Devices, alternativeNamesForTypes, Config);
+            ioBrokerManager = new IoBrokerManager(logger, http, Devices, Config);
             ioBrokerManager.NewDeviceAdded += NewDeviceAdded;
             _ = ioBrokerManager.ConnectToIOBroker();
         }
@@ -115,19 +99,6 @@ public class DeviceManager : IDisposable, IDeviceManager
         return false;
     }
 
-    private static List<string> GetAllNamesFor(Type y)
-    {
-        var names = new List<string>();
-        var attribute = y.GetCustomAttribute<DeviceNameAttribute>();
-
-        if (attribute is not null)
-        {
-            names.Add(attribute.PreferredName);
-            names.AddRange(attribute.AlternativeNames);
-        }
-        names.Add(y.Name);
-        return names;
-    }
 
     private void MeshManager_ConnectionLost(object? sender, uint e)
     {
@@ -153,7 +124,7 @@ public class DeviceManager : IDisposable, IDeviceManager
         else
         {
             var deviceName = Encoding.UTF8.GetString(e.l[1]);
-            var newDevice = CreateDeviceFromName(deviceName, e.c.NodeId, e.l);
+            var newDevice = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromName(deviceName, null, e.c.NodeId, e.l);
 
             if (newDevice is null)
                 return;
@@ -163,42 +134,11 @@ public class DeviceManager : IDisposable, IDeviceManager
             if (!DbProvider.AddDeviceToDb(newDevice))
                 _ = DbProvider.MergeDeviceWithDbData(newDevice);
 
-            logger.Debug($"New Device: {newDevice.TypeName}, {newDevice.Id}");
+            logger.Debug($"New Zigbee2MqttDeviceJson: {newDevice.TypeName}, {newDevice.Id}");
             AddNewDevice(newDevice);
         }
     }
 
-    private Device? CreateDeviceFromName(string deviceName, params object[] ctorArgs)
-    {
-        logger.Trace($"Trying to get device with {deviceName} name");
-
-        if (!alternativeNamesForTypes.TryGetValue(deviceName, out var type) || type is null)
-        {
-            logger.Error($"Failed to get device with name {deviceName}");
-            return null;
-        }
-        try
-        {
-
-            logger.Trace($"Trying to create device {deviceName}");
-            var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
-            logger.Trace($"Created device {deviceName}");
-            if (newDeviceObj is null || newDeviceObj is not Device newDevice)
-            {
-                logger.Error($"Failed to get create device {deviceName}");
-                return null;
-            }
-            return newDevice;
-        }
-        catch (Exception ex)
-        {
-            logger.Error($"Exeption during device creation {deviceName}", ex);
-            return null;
-
-        }
-
-
-    }
 
     protected virtual void Dispose(bool disposing)
     {

@@ -8,13 +8,13 @@ using System.Runtime.Serialization;
 namespace AppBrokerASP.Zigbee2Mqtt;
 
 #nullable disable
-internal abstract class BaseJson
+public abstract class Zigbee2MqttDeviceBaseJson
 {
     [JsonExtensionData]
     public IDictionary<string, JToken> AdditionalData { get; set; }
 }
 
-internal class Clusters : BaseJson
+public class Zigbee2MqttClusters : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("input")]
     public string[] Input { get; set; }
@@ -23,7 +23,7 @@ internal class Clusters : BaseJson
     public string[] Output { get; set; }
 }
 
-internal class DeviceDefinition : BaseJson
+public class Zigbee2MqttDeviceDefinition : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("description")]
     public string Description { get; set; }
@@ -38,10 +38,10 @@ internal class DeviceDefinition : BaseJson
     public string Vendor { get; set; }
 
     [JsonProperty("exposes")]
-    public GenericExposedFeature[] Exposes { get; set; }
+    public Zigbee2MqttGenericExposedFeature[] Exposes { get; set; }
 
     [JsonProperty("options")]
-    public GenericExposedFeature[] Options { get; set; }
+    public Zigbee2MqttGenericExposedFeature[] Options { get; set; }
 
     [JsonProperty("supports_ota")]
     public bool SupportsOta { get; set; }
@@ -50,7 +50,7 @@ internal class DeviceDefinition : BaseJson
     public string Icon { get; set; }
 }
 
-internal class ReportingConfig : BaseJson
+public class Zigbee2MqttReportingConfig : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("cluster")]
     public string Cluster { get; set; }
@@ -68,22 +68,22 @@ internal class ReportingConfig : BaseJson
     public JToken ReportableChange { get; set; }
 }
 
-internal class EndpointDescription : BaseJson
+public class Zigbee2MqttEndpointDescription : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("bindings")]
-    public BindRule[] Bindings { get; set; }
+    public Zigbee2MqttBindRule[] Bindings { get; set; }
 
     [JsonProperty("configured_reportings")]
-    public ReportingConfig[] ConfiguredReportings { get; set; }
+    public Zigbee2MqttReportingConfig[] ConfiguredReportings { get; set; }
 
     [JsonProperty("clusters")]
-    public Clusters Clusters { get; set; }
+    public Zigbee2MqttClusters Clusters { get; set; }
 
     [JsonProperty("scenes")]
-    public Scene[] Scenes { get; set; }
+    public Zigbee2MqttScene[] Scenes { get; set; }
 }
 
-internal class Scene : BaseJson
+public class Zigbee2MqttScene : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("id")]
     public float Id { get; set; }
@@ -95,13 +95,13 @@ internal class Scene : BaseJson
     public string Endpoint { get; set; }
 }
 
-internal class Group : BaseJson
+public class Zigbee2MqttGroup : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("id")]
     public float Id { get; set; }
 
     [JsonProperty("members")]
-    public GroupAddress[] Members { get; set; }
+    public Zigbee2MqttGroupAddress[] Members { get; set; }
 
     [JsonProperty("friendly_name")]
     public string FriendlyName { get; set; }
@@ -110,23 +110,23 @@ internal class Group : BaseJson
     public string Description { get; set; }
 
     [JsonProperty("scenes")]
-    public Scene[] Scenes { get; set; }
+    public Zigbee2MqttScene[] Scenes { get; set; }
 }
 
 [DebuggerDisplay("{FriendlyName} {ModelId}")]
-internal class Device : BaseJson
+public class Zigbee2MqttDeviceJson : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("ieee_address")]
     public string IEEEAddress { get; set; }
 
     [JsonProperty("type")]
-    public DeviceType Type { get; set; }
+    public Zigbee2MqttDeviceType Type { get; set; }
 
     [JsonProperty("network_address")]
     public float NetworkAddress { get; set; }
 
     [JsonProperty("power_source")]
-    public PowerSource PowerSource { get; set; }
+    public Zigbee2MqttPowerSource PowerSource { get; set; }
 
     [JsonProperty("model_id")]
     public string ModelId { get; set; }
@@ -147,13 +147,13 @@ internal class Device : BaseJson
     public bool Supported { get; set; }
 
     [JsonProperty("definition")]
-    public DeviceDefinition Definition { get; set; }
+    public Zigbee2MqttDeviceDefinition Definition { get; set; }
 
     [JsonProperty("date_code")]
     public string DateCode { get; set; }
 
     [JsonProperty("endpoints")]
-    public Dictionary<string, EndpointDescription> Endpoints { get; set; }
+    public Dictionary<string, Zigbee2MqttEndpointDescription> Endpoints { get; set; }
 
     [JsonProperty("friendly_name")]
     public string FriendlyName { get; set; }
@@ -162,16 +162,16 @@ internal class Device : BaseJson
     public string Description { get; set; }
 }
 
-internal class BindRule : BaseJson
+public class Zigbee2MqttBindRule : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("cluster")]
     public string Cluster { get; set; }
 
     [JsonProperty("target")]
-    public Target Target { get; set; }
+    public Zigbee2MqttTarget Target { get; set; }
 }
 
-internal class Target : BaseJson
+public class Zigbee2MqttTarget : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("id")]
     public float Id { get; set; }
@@ -186,7 +186,7 @@ internal class Target : BaseJson
     public string Type { get; set; }
 }
 
-internal class GroupAddress : BaseJson
+public class Zigbee2MqttGroupAddress : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("endpoint")]
     public string Endpoint { get; set; }
@@ -195,7 +195,7 @@ internal class GroupAddress : BaseJson
     public string IEEEAddress { get; set; }
 }
 
-internal class Meta : BaseJson
+public class Zigbee2MqttMeta : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("revision")]
     public float Revision { get; set; }
@@ -216,7 +216,7 @@ internal class Meta : BaseJson
     public float Maintrel { get; set; }
 }
 
-internal class Coordinator : BaseJson
+public class Zigbee2MqttCoordinator : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("channel")]
     public float Channel { get; set; }
@@ -228,13 +228,13 @@ internal class Coordinator : BaseJson
     public float[] ExtendedPanId { get; set; }
 }
 
-internal class Z2MConfig : BaseJson
+public class Zigbee2MqttConfig : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("homeassistant")]
     public bool Homeassistant { get; set; }
 
     [JsonProperty("advanced")]
-    public AdvancedConfig Advanced { get; set; }
+    public Zigbee2MqttAdvancedConfig Advanced { get; set; }
 
     [JsonProperty("devices")]
     public Dictionary<string, Dictionary<string, object>> Devices { get; set; }
@@ -243,7 +243,7 @@ internal class Z2MConfig : BaseJson
     public Dictionary<string, object> DeviceOptions { get; set; }
 }
 
-internal class BridgeConfig : BaseJson
+public class Zigbee2MqttBridgeConfig : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("version")]
     public string Version { get; set; }
@@ -252,10 +252,10 @@ internal class BridgeConfig : BaseJson
     public string Commit { get; set; }
 
     [JsonProperty("coordinator")]
-    public Coordinator Coordinator { get; set; }
+    public Zigbee2MqttCoordinator Coordinator { get; set; }
 
     [JsonProperty("network")]
-    public Network Network { get; set; }
+    public Zigbee2MqttNetwork Network { get; set; }
 
     [JsonProperty("log_level")]
     public string LogLevel { get; set; }
@@ -264,7 +264,7 @@ internal class BridgeConfig : BaseJson
     public bool PermitJoin { get; set; }
 }
 
-internal class LogMessage
+public class Zigbee2MqttLogMessage
 {
     [JsonProperty("message")]
     public string Message { get; set; }
@@ -273,11 +273,11 @@ internal class LogMessage
     public string Timestamp { get; set; }
 
     [JsonProperty("level")]
-    public LogLevel Level { get; set; }
+    public Zigbee2MqttLogLevel Level { get; set; }
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum LogLevel
+public enum Zigbee2MqttLogLevel
 {
     [EnumMember(Value = "error")]
     Error,
@@ -292,7 +292,7 @@ internal enum LogLevel
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum AvailabilityState
+public enum Zigbee2MqttAvailabilityState
 {
     [EnumMember(Value = "online")]
     Online,
@@ -301,10 +301,10 @@ internal enum AvailabilityState
     Offline,
 }
 
-internal class BridgeInfo : BaseJson
+public class Zigbee2MqttBridgeInfo : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("config")]
-    public Z2MConfig Config { get; set; }
+    public Zigbee2MqttConfig Config { get; set; }
 
     [JsonProperty("config_schema")]
     public object ConfigSchema { get; set; }
@@ -322,7 +322,7 @@ internal class BridgeInfo : BaseJson
     public string Version { get; set; }
 
     [JsonProperty("coordinator")]
-    public Coordinator1 Coordinator { get; set; }
+    public Zigbee2MqttCoordinator Coordinator { get; set; }
 
     [JsonProperty("device_options")]
     public Dictionary<string, object> DeviceOptions { get; set; }
@@ -332,7 +332,7 @@ internal class BridgeInfo : BaseJson
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum GenericFeatureType
+public enum Zigbee2MqttGenericFeatureType
 {
     [EnumMember(Value = "numeric")]
     Numeric,
@@ -373,7 +373,7 @@ internal enum GenericFeatureType
 
 [Flags]
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum FeatureAccessMode
+public enum Zigbee2MqttFeatureAccessMode
 {
     [EnumMember(Value = "NONE")]
     None = 0,
@@ -388,10 +388,10 @@ internal enum FeatureAccessMode
     Read = 4,
 }
 
-internal class FeatureJsonConverter : JsonConverter
+public class FeatureJsonConverter : JsonConverter
 {
     /// <inheritdoc/>
-    public override bool CanConvert(Type objectType) => typeof(GenericExposedFeature).IsAssignableFrom(objectType);
+    public override bool CanConvert(Type objectType) => typeof(Zigbee2MqttGenericExposedFeature).IsAssignableFrom(objectType);
 
     /// <inheritdoc/>
     public override bool CanWrite => false;
@@ -407,16 +407,16 @@ internal class FeatureJsonConverter : JsonConverter
         var type = jObject.Value<string>("type");
         var targetType = type switch
         {
-            "numeric" => new NumericFeature(),
-            "binary" => new BinaryFeature(),
-            "enum" => new EnumFeature(),
-            "list" => new ListFeature(),
-            "fan" => new FanFeature(),
-            "light" => new LightFeature(),
-            "switch" => new SwitchFeature(),
-            "cover" => new CoverFeature(),
-            "lock" => new LockFeature(),
-            "climate" => new ClimateFeature(),
+            "numeric" => new Zigbee2MqttNumericFeature(),
+            "binary" => new Zigbee2MqttBinaryFeature(),
+            "enum" => new Zigbee2MqttEnumFeature(),
+            "list" => new Zigbee2MqttListFeature(),
+            "fan" => new Zigbee2MqttFanFeature(),
+            "light" => new Zigbee2MqttLightFeature(),
+            "switch" => new Zigbee2MqttSwitchFeature(),
+            "cover" => new Zigbee2MqttCoverFeature(),
+            "lock" => new Zigbee2MqttLockFeature(),
+            "climate" => new Zigbee2MqttClimateFeature(),
 
             _ => Default(),
         };
@@ -425,13 +425,13 @@ internal class FeatureJsonConverter : JsonConverter
 
         return targetType;
 
-        GenericExposedFeature Default()
+        Zigbee2MqttGenericExposedFeature Default()
         {
             var name = jObject.Value<string>("name");
             return name switch
             {
-                "color_hs" or "color_xy" => new ColorFeature(),
-                _ => new GenericExposedFeature()
+                "color_hs" or "color_xy" => new Zigbee2MqttColorFeature(),
+                _ => new Zigbee2MqttGenericExposedFeature()
             };
         }
     }
@@ -445,10 +445,10 @@ internal class FeatureJsonConverter : JsonConverter
 
 [DebuggerDisplay("{Type} {Name}")]
 [JsonConverter(typeof(FeatureJsonConverter))]
-internal class GenericExposedFeature : BaseJson
+public class Zigbee2MqttGenericExposedFeature : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("type")]
-    public GenericFeatureType Type { get; set; }
+    public Zigbee2MqttGenericFeatureType Type { get; set; }
 
 
     [JsonProperty("name")]
@@ -460,7 +460,7 @@ internal class GenericExposedFeature : BaseJson
 
 
     [JsonProperty("access")]
-    public FeatureAccessMode Access { get; set; }
+    public Zigbee2MqttFeatureAccessMode Access { get; set; }
 
 
     [JsonProperty("endpoint")]
@@ -475,12 +475,12 @@ internal class GenericExposedFeature : BaseJson
     public string Description { get; set; }
 
     [JsonProperty("features")]
-    public GenericExposedFeature[] Features { get; set; }
+    public Zigbee2MqttGenericExposedFeature[] Features { get; set; }
 
     public virtual bool ValidateValue(object value) => true;
 }
 
-internal class BinaryFeature : GenericExposedFeature
+public class Zigbee2MqttBinaryFeature : Zigbee2MqttGenericExposedFeature
 {
     [JsonProperty("value_on")]
     public object ValueOn { get; set; }
@@ -491,30 +491,30 @@ internal class BinaryFeature : GenericExposedFeature
     [JsonProperty("value_toggle")]
     public object ValueToggle { get; set; }
 
-    public BinaryFeature()
+    public Zigbee2MqttBinaryFeature()
     {
-        Type = GenericFeatureType.Binary;
+        Type = Zigbee2MqttGenericFeatureType.Binary;
     }
 
-    internal JToken ConvertToBool(object v)
+    public JToken ConvertToBool(object v)
     {
         
         return string.Equals(v.ToString(), ValueOn.ToString(), StringComparison.OrdinalIgnoreCase);
     }
 }
 
-internal class ListFeature : GenericExposedFeature
+public class Zigbee2MqttListFeature : Zigbee2MqttGenericExposedFeature
 {
     [JsonProperty("item_type")]
     public string ItemType { get; set; } = "number";
 
-    public ListFeature()
+    public Zigbee2MqttListFeature()
     {
-        Type = GenericFeatureType.List;
+        Type = Zigbee2MqttGenericFeatureType.List;
     }
 }
 
-internal class NumericFeaturePreset : BaseJson
+public class Zigbee2MqttNumericFeaturePreset : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("name")]
     public string Name { get; set; }
@@ -526,7 +526,7 @@ internal class NumericFeaturePreset : BaseJson
     public string Description { get; set; }
 }
 
-internal class NumericFeature : GenericExposedFeature
+public class Zigbee2MqttNumericFeature : Zigbee2MqttGenericExposedFeature
 {
     [JsonProperty("value_min")]
     public float ValueMin { get; set; }
@@ -538,99 +538,99 @@ internal class NumericFeature : GenericExposedFeature
     public float ValueStep { get; set; }
 
     [JsonProperty("presets")]
-    public NumericFeaturePreset[] Presets { get; set; }
+    public Zigbee2MqttNumericFeaturePreset[] Presets { get; set; }
 
-    public NumericFeature()
+    public Zigbee2MqttNumericFeature()
     {
-        Type = GenericFeatureType.Numeric;
+        Type = Zigbee2MqttGenericFeatureType.Numeric;
     }
 }
 
-internal class TextualFeature : GenericExposedFeature
+public class Zigbee2MqttTextualFeature : Zigbee2MqttGenericExposedFeature
 {
-    public TextualFeature()
+    public Zigbee2MqttTextualFeature()
     {
-        Type = GenericFeatureType.Text;
+        Type = Zigbee2MqttGenericFeatureType.Text;
     }
 }
 
-internal class EnumFeature : GenericExposedFeature
+public class Zigbee2MqttEnumFeature : Zigbee2MqttGenericExposedFeature
 {
     [JsonProperty("values")]
     public object[] Values { get; set; }
 
-    public EnumFeature()
+    public Zigbee2MqttEnumFeature()
     {
-        Type = GenericFeatureType.Enum;
+        Type = Zigbee2MqttGenericFeatureType.Enum;
     }
 
     public override bool ValidateValue(object value) 
         => Values.Contains(value);
 }
 
-internal class LightFeature : GenericExposedFeature
+public class Zigbee2MqttLightFeature : Zigbee2MqttGenericExposedFeature
 {
-    public LightFeature()
+    public Zigbee2MqttLightFeature()
     {
-        Type = GenericFeatureType.Light;
+        Type = Zigbee2MqttGenericFeatureType.Light;
     }
 }
 
-internal class SwitchFeature : GenericExposedFeature
+public class Zigbee2MqttSwitchFeature : Zigbee2MqttGenericExposedFeature
 {
-    public SwitchFeature()
+    public Zigbee2MqttSwitchFeature()
     {
-        Type = GenericFeatureType.Switch;
+        Type = Zigbee2MqttGenericFeatureType.Switch;
     }
 }
 
-internal class CoverFeature : GenericExposedFeature
+public class Zigbee2MqttCoverFeature : Zigbee2MqttGenericExposedFeature
 {
-    public CoverFeature()
+    public Zigbee2MqttCoverFeature()
     {
-        Type = GenericFeatureType.Cover;
+        Type = Zigbee2MqttGenericFeatureType.Cover;
     }
 }
 
-internal class LockFeature : GenericExposedFeature
+public class Zigbee2MqttLockFeature : Zigbee2MqttGenericExposedFeature
 {
-    public LockFeature()
+    public Zigbee2MqttLockFeature()
     {
-        Type = GenericFeatureType.Lock;
+        Type = Zigbee2MqttGenericFeatureType.Lock;
     }
 }
-internal class FanFeature : GenericExposedFeature
+public class Zigbee2MqttFanFeature : Zigbee2MqttGenericExposedFeature
 {
-    public FanFeature()
+    public Zigbee2MqttFanFeature()
     {
-        Type = GenericFeatureType.Fan;
-    }
-}
-
-internal class ClimateFeature : GenericExposedFeature
-{
-    public ClimateFeature()
-    {
-        Type = GenericFeatureType.Climate;
+        Type = Zigbee2MqttGenericFeatureType.Fan;
     }
 }
 
-internal class ColorFeature : GenericExposedFeature
+public class Zigbee2MqttClimateFeature : Zigbee2MqttGenericExposedFeature
+{
+    public Zigbee2MqttClimateFeature()
+    {
+        Type = Zigbee2MqttGenericFeatureType.Climate;
+    }
+}
+
+public class Zigbee2MqttColorFeature : Zigbee2MqttGenericExposedFeature
 {
     [JsonProperty("name")]
-    public new ColorName Name { get; set; }
+    public new Zigbee2MqttColorName Name { get; set; }
 
     [JsonProperty("features")]
-    public new NumericFeature[] Features { get; set; }
+    public new Zigbee2MqttNumericFeature[] Features { get; set; }
 
-    public ColorFeature()
+    public Zigbee2MqttColorFeature()
     {
-        Type = GenericFeatureType.Composite;
+        Type = Zigbee2MqttGenericFeatureType.Composite;
     }
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum ColorName
+public enum Zigbee2MqttColorName
 {
     [EnumMember(Value = "color_xy")]
     ColorXY,
@@ -640,7 +640,7 @@ internal enum ColorName
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum PowerSource
+public enum Zigbee2MqttPowerSource
 {
     [EnumMember(Value = "Battery")]
     Battery,
@@ -652,16 +652,10 @@ internal enum PowerSource
     DC,
 }
 
-internal class Meta1 : BaseJson
-{
-    [JsonProperty("revision")]
-    public string Revision { get; set; }
-}
-
-internal class Coordinator1 : BaseJson
+public class Coordinator1 : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("meta")]
-    public Meta1 Meta { get; set; }
+    public Zigbee2MqttMeta Meta { get; set; }
 
     [JsonProperty("type")]
     public string Type { get; set; }
@@ -671,7 +665,7 @@ internal class Coordinator1 : BaseJson
 }
 
 
-internal class TouchLinkDevice : BaseJson
+public class Zigbee2MqttTouchLinkDevice : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("ieee_address")]
     public string IEEEEAddress { get; set; }
@@ -682,7 +676,7 @@ internal class TouchLinkDevice : BaseJson
 
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum LastSeen
+public enum Zigbee2MqttLastSeen
 {
     [EnumMember(Value = "disable")]
     Disable,
@@ -697,29 +691,29 @@ internal enum LastSeen
     Epoch
 }
 
-internal class AdvancedConfig : BaseJson
+public class Zigbee2MqttAdvancedConfig : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("elapsed")]
     public bool Elapsed { get; set; }
 
     [JsonProperty("last_seen")]
-    public LastSeen LastSeen { get; set; }
+    public Zigbee2MqttLastSeen LastSeen { get; set; }
 
     [JsonProperty("legacy_api")]
     public bool LegacyApi { get; set; }
 }
 
-internal class Network : BaseJson
+public class Zigbee2MqttNetwork : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("type")]
     public string Type { get; set; }
 
     [JsonProperty("meta")]
-    public Meta Meta { get; set; }
+    public Zigbee2MqttMeta Meta { get; set; }
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum DeviceType
+public enum Zigbee2MqttDeviceType
 {
     [EnumMember(Value = "EndDevice")]
     EndDevice,
@@ -732,7 +726,7 @@ internal enum DeviceType
 }
 
 [JsonConverter(typeof(StringEnumConverter))]
-internal enum State
+public enum Zigbee2MqttState
 {
     [EnumMember(Value = "available")]
     Available,
@@ -741,10 +735,10 @@ internal enum State
     Updating
 }
 
-internal class OTAState : BaseJson
+public class Zigbee2MqttOTAState : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("state")]
-    public State State { get; set; }
+    public Zigbee2MqttState State { get; set; }
 
     [JsonProperty("progress")]
     public float Progress { get; set; }

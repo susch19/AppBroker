@@ -127,6 +127,7 @@ public class JavaScriptDevice : Device
         Id = id;
 
         fileInfos = info
+            .Where(info=> info.Exists)
             .Select(info => new JSFileAndEngine(new JavaScriptFile() with { Content = File.ReadAllText(info.FullName) }))
             .ToList();
 
@@ -187,7 +188,11 @@ public class JavaScriptDevice : Device
                 .DefineFunction("currentHeaterSetting", CurrentHeaterConfig)
                 .DefineFunction("nextHeaterSetting", NextHeaterConfig)
                 .DefineFunction("onAnyDeviceStateChanged", SubscribeAnyDeviceStateChanged)
-                .DefineFunction("getCoordinateInfo", (float lan, float lon, DateTime time) => new Coordinate(lan, lon, time))
+                .DefineFunction("getCoordinateInfo", (float lan, float lon) => new Coordinate(lan, lon, DateTime.Now))
+                .DefineFunction("getSunSet", (float lan, float lon) => new Coordinate(lan, lon, DateTime.Now).CelestialInfo.SunSet!)
+                .DefineFunction("getSunRise", (float lan, float lon) => new Coordinate(lan, lon, DateTime.Now).CelestialInfo.SunRise!)
+                .DefineFunction("getMoonSet", (float lan, float lon) => new Coordinate(lan, lon, DateTime.Now).CelestialInfo.MoonSet!)
+                .DefineFunction("getMoonRise", (float lan, float lon) => new Coordinate(lan, lon, DateTime.Now).CelestialInfo.MoonRise!)
                 .DefineFunction("executeAt", (DateTime at, Action method) => Task.Delay(DateTime.UtcNow.Subtract(at)).ContinueWith(x => method()))
                 ;
 

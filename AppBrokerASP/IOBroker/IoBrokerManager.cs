@@ -20,39 +20,13 @@ public class IoBrokerManager
     private readonly NLog.Logger logger;
     private readonly ZigbeeConfig Config;
     private readonly HttpClient http;
-    private readonly Dictionary<string, Type> alternativeNamesForTypes;
 
-    public IoBrokerManager(NLog.Logger logger, HttpClient http, ConcurrentDictionary<long, Device> devices, Dictionary<string, Type> alternativeNamesForTypes, ZigbeeConfig config)
+    public IoBrokerManager(NLog.Logger logger, HttpClient http, ConcurrentDictionary<long, Device> devices, ZigbeeConfig config)
     {
         this.logger = logger;
         this.http = http;
-        this.alternativeNamesForTypes = alternativeNamesForTypes;
         Config = config;
     }
-
-
-    // TODO: is copy pasted and duplicated in devicemanager
-    private Device? CreateDeviceFromName(string deviceName, params object[] ctorArgs)
-    {
-        logger.Trace($"Trying to get device with {deviceName} name");
-
-        if (!alternativeNamesForTypes.TryGetValue(deviceName, out var type) || type is null)
-        {
-            logger.Warn($"Failed to get device with name {deviceName}, using generic zigbee device instead");
-            return new UpdateableZigbeeDevice((long)ctorArgs[0], (SocketIO)ctorArgs[1], deviceName);
-        }
-
-        var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
-
-        if (newDeviceObj is null || newDeviceObj is not Device newDevice)
-        {
-            logger.Error($"Failed to get create device {deviceName}");
-            return null;
-        }
-
-        return newDevice;
-    }
-
 
     public async Task ConnectToIOBroker()
     {
@@ -211,7 +185,8 @@ public class IoBrokerManager
                 dev = devices.FirstOrDefault(x => x.Id == id);
                 if (dev is null)
                 {
-                    dev = CreateDeviceFromName(deviceRes.common.type, id, client);
+                    var deviceName = deviceRes.common.type;
+                    dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromName(deviceName, typeof(UpdateableZigbeeDevice), new object[] { id, client }, new object[] { id, client, deviceName });
 
                     if (dev is null or default(Device))
                     {

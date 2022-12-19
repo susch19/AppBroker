@@ -8,6 +8,8 @@ using AppBrokerASP.Histories;
 using AppBrokerASP.State;
 using AppBrokerASP.Zigbee2Mqtt;
 
+using Namotion.Reflection;
+
 using PainlessMesh.Ota;
 
 namespace AppBrokerASP;
@@ -15,7 +17,7 @@ namespace AppBrokerASP;
 public class InstanceContainer : IInstanceContainer, IDisposable
 {
     public static InstanceContainer Instance { get; private set; } = null!;
-    public IDeviceTypeMetaDataManager DevicePropertyManager { get; }
+    public IDeviceTypeMetaDataManager DeviceTypeMetaDataManager { get; }
     public JavaScriptEngineManager JavaScriptEngineManager { get; }
     public SmarthomeMeshManager MeshManager { get; }
     public IUpdateManager UpdateManager { get; }
@@ -37,12 +39,13 @@ public class InstanceContainer : IInstanceContainer, IDisposable
 
         JavaScriptEngineManager = new JavaScriptEngineManager();
         HistoryManager = new HistoryManager();
+        Zigbee2MqttManager = new Zigbee2MqttManager(ConfigManager.Zigbee2MqttConfig);
         var localDeviceManager = new DeviceManager();
         DeviceManager = localDeviceManager;
         localDeviceManager.LoadDevices();
-        DevicePropertyManager = new DeviceTypeMetaDataManager(localDeviceManager);
-        Zigbee2MqttManager = new Zigbee2MqttManager(ConfigManager.Zigbee2MqttConfig);
+        DeviceTypeMetaDataManager = new DeviceTypeMetaDataManager(localDeviceManager);
     }
+
 
     public void Dispose()
     {
