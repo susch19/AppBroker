@@ -52,9 +52,7 @@ public class Startup
         _ = services.AddSingleton(container.IconService);
         _ = services.AddSingleton(container.ConfigManager);
         _ = services.AddSingleton(container.ConfigManager.CloudConfig);
-        _ = services.AddSingleton(container.ConfigManager.PainlessMeshConfig);
         _ = services.AddSingleton(container.ConfigManager.ServerConfig);
-        _ = services.AddSingleton(container.ConfigManager.ZigbeeConfig);
         _ = services.AddSingleton(container.DeviceTypeMetaDataManager);
         _ = services.AddSingleton(container.DeviceManager);
         _ = services.AddSingleton(container.DeviceStateManager);

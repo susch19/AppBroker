@@ -8,6 +8,8 @@ public interface IDeviceManager
 {
     ConcurrentDictionary<long, Device> Devices { get; }
 
+    event EventHandler<(long id, Device device)>? NewDeviceAdded;
+
     bool AddNewDevice(Device device);
     void AddNewDevices(IReadOnlyCollection<Device> device);
     void LoadDevices();

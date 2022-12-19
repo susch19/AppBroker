@@ -4,7 +4,7 @@
 		<TargetFramework>net7.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<EnablePreviewFeatures>True</EnablePreviewFeatures>
+		
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -21,7 +21,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
-		<ProjectReference Include="..\PainlessMesh\PainlessMesh.csproj" />
+		<ProjectReference Include="..\PainlessMesh\AppBroker.PainlessMesh.csproj" />
 	</ItemGroup>
 
 </Project>

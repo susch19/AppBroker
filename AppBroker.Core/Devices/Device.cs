@@ -12,6 +12,7 @@ using NonSucking.Framework.Extension.Threading;
 using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace AppBroker.Core.Devices;
 
@@ -202,6 +203,10 @@ public abstract class Device : IDisposable
         return history;
 
     }
+    public virtual Task<List<History>> GetHistory(DateTimeOffset start, DateTimeOffset end)
+    {
+        return Task.FromResult(new List<History>());
+    }
 
     public void StorePersistent()
     {
@@ -231,4 +236,5 @@ public abstract class Device : IDisposable
     {
         sendLastDataTimer?.Dispose();
     }
+
 }

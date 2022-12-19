@@ -6,11 +6,18 @@
 		<LangVersion>preview</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!--<WarningsAsErrors>nullable</WarningsAsErrors>-->
-		<EnablePreviewFeatures>True</EnablePreviewFeatures>
+		
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<NoWarn>CS0657;CA2252</NoWarn>
 		<IncludePackageReferencesDuringMarkupCompilation>true</IncludePackageReferencesDuringMarkupCompilation>
 	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="Devices\Dynamic\**" />
+	  <Content Remove="Devices\Dynamic\**" />
+	  <EmbeddedResource Remove="Devices\Dynamic\**" />
+	  <None Remove="Devices\Dynamic\**" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<Using Include="System" />
@@ -82,7 +89,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Devices\Dynamic\" />
 		<Folder Include="Properties\" />
 	</ItemGroup>
 

@@ -6,8 +6,6 @@ using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices.Elsa;
 using AppBrokerASP.Histories;
 using AppBrokerASP.State;
-using AppBrokerASP.Zigbee2Mqtt;
-
 
 namespace AppBrokerASP;
 
@@ -16,14 +14,12 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     public static InstanceContainer Instance { get; private set; } = null!;
     public IDeviceTypeMetaDataManager DeviceTypeMetaDataManager { get; }
     public JavaScriptEngineManager JavaScriptEngineManager { get; }
-    //public SmarthomeMeshManager MeshManager { get; }
-    //public IUpdateManager UpdateManager { get; }
+
     public ConfigManager ConfigManager { get; }
     public IDeviceManager DeviceManager { get; }
     public IconService IconService { get; }
     public IDeviceStateManager DeviceStateManager { get; }
     public IHistoryManager HistoryManager { get; }
-    public IZigbee2MqttManager Zigbee2MqttManager { get; }
 
     private Dictionary<Type, object> dynamicObjects = new();
 
@@ -36,7 +32,6 @@ public class InstanceContainer : IInstanceContainer, IDisposable
 
         JavaScriptEngineManager = new JavaScriptEngineManager();
         HistoryManager = new HistoryManager();
-        Zigbee2MqttManager = new Zigbee2MqttManager(ConfigManager.Zigbee2MqttConfig);
         var localDeviceManager = new DeviceManager();
         DeviceManager = localDeviceManager;
         localDeviceManager.LoadDevices();
@@ -61,7 +56,10 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         return ret;
     }
 
-
+    public T GetDynamic<T>() where T : class
+    {
+        return (T)dynamicObjects[typeof(T)];
+    }
 
     public void Dispose()
     {

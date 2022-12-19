@@ -1,14 +1,7 @@
-using System.Reflection;
-using System.Text;
-using AppBrokerASP.IOBroker;
+
 
 using AppBrokerASP.Configuration;
 using AppBroker.Core;
-using AppBroker.Core.Devices;
-using MQTTnet;
-using MQTTnet.Client;
-using MQTTnet.Extensions.ManagedClient;
-using AppBrokerASP.Zigbee2Mqtt;
 
 using Device = AppBroker.Core.Devices.Device;
 using AppBroker.Core.Managers;
@@ -19,37 +12,11 @@ namespace AppBrokerASP;
 
 public class DeviceManager : IDisposable, IDeviceManager
 {
-    public ZigbeeConfig Config { get; }
     public ConcurrentDictionary<long, Device> Devices { get; } = new();
 
     public event EventHandler<(long id, Device device)>? NewDeviceAdded;
 
     private bool disposed;
-    private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
-    private readonly List<Type> types;
-    private static readonly HttpClient http = new();
-    private readonly IoBrokerManager? ioBrokerManager;
-
-    public DeviceManager()
-    {
-        Config = InstanceContainer.Instance.ConfigManager.ZigbeeConfig;
-
-
-        if (Config.Enabled is null or true)
-        {
-            ioBrokerManager = new IoBrokerManager(logger, http, Devices, Config);
-            ioBrokerManager.NewDeviceAdded += NewDeviceAdded;
-            _ = ioBrokerManager.ConnectToIOBroker();
-        }
-
-        if (InstanceContainer.Instance.ConfigManager.Zigbee2MqttConfig.Enabled)
-        {
-            var client = InstanceContainer.Instance.Zigbee2MqttManager;
-            _ = client.Connect().ContinueWith((x) => _ = client.Subscribe());
-        }
-
-
-    }
 
     public void LoadDevices()
     {
@@ -109,10 +76,6 @@ public class DeviceManager : IDisposable, IDeviceManager
                 }
                 Devices.Clear();
 
-                if (ioBrokerManager is not null)
-                {
-                    ioBrokerManager.NewDeviceAdded -= NewDeviceAdded;
-                }
             }
 
             disposed = true;

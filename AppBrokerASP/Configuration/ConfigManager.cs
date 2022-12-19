@@ -3,9 +3,7 @@
 public class ConfigManager
 {
     public IConfiguration Configuration { get; }
-    public ZigbeeConfig ZigbeeConfig { get; }
-    public Zigbee2MqttConfig Zigbee2MqttConfig { get; }
-    public PainlessMeshSettings PainlessMeshConfig { get; }
+
     public MqttConfig MqttConfig { get; }
     public ServerConfig ServerConfig { get; }
     public HistoryConfig HistoryConfig { get; }
@@ -38,15 +36,6 @@ public class ConfigManager
             .Build();
 
         Configuration = configuration;
-
-        PainlessMeshConfig = new PainlessMeshSettings();
-        configuration.GetSection(PainlessMeshSettings.ConfigName).Bind(PainlessMeshConfig);
-
-        ZigbeeConfig = new ZigbeeConfig();
-        configuration.GetSection(ZigbeeConfig.ConfigName).Bind(ZigbeeConfig);
-
-        Zigbee2MqttConfig = new Zigbee2MqttConfig();
-        configuration.GetSection(Zigbee2MqttConfig.ConfigName).Bind(Zigbee2MqttConfig);
 
         MqttConfig = new MqttConfig();
         configuration.GetSection(MqttConfig.ConfigName).Bind(MqttConfig);
