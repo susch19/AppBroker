@@ -11,26 +11,60 @@ using Newtonsoft.Json.Linq;
 
 using NiL.JS.Core;
 
+using NLog;
 
-namespace AppBroker.Zigbee2Mqtt;
+using Org.BouncyCastle.Asn1.Cmp;
 
-public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
+namespace AppBroker.Zigbee2Mqtt.Devices;
+
+public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 {
     internal record SetFeatureValue(Zigbee2MqttGenericExposedFeature Feature, object Value);
 
     internal readonly Zigbee2MqttDeviceJson device;
     private static readonly IManagedMqttClient client;
-
-
+    private readonly ILogger logger = LogManager.GetCurrentClassLogger();
     private Dictionary<string, Zigbee2MqttGenericExposedFeature> cachedFeatures = new();
+
+    public override bool IsConnected
+    {
+        get
+        {
+            if (IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(Id, "available") is bool b)
+                return b;
+            return base.IsConnected;
+        }
+        set => base.IsConnected = value;
+    }
+
+    public string LastReceivedFormatted
+    {
+        get
+        {
+            var stateFromManager =
+                IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(Id, "lastReceived");
+            if (stateFromManager is DateTime dt)
+                 return dt.ToString("dd.MM.yyyy HH:mm:ss");
+
+            return "No Data";
+        }
+    }
 
     static Zigbee2MqttDevice()
     {
         client = InstanceContainer.Instance.GetDynamic<Zigbee2MqttManager>().MQTTClient!;
     }
 
-    internal Zigbee2MqttDevice(Zigbee2MqttDeviceJson device, long id)
+    public Zigbee2MqttDevice(Zigbee2MqttDeviceJson device, long id)
         : base(id, GetTypeName(device), new FileInfo(Path.Combine("JSExtensionDevices", $"{GetTypeName(device)}.js")))
+    {
+        this.device = device;
+
+        ShowInApp = true;
+        FriendlyName = device.FriendlyName;
+    }
+    public Zigbee2MqttDevice(Zigbee2MqttDeviceJson device, long id, string typeName)
+        : base(id, typeName, new FileInfo(Path.Combine("JSExtensionDevices", $"{typeName}.js")))
     {
         this.device = device;
 
@@ -41,21 +75,14 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
     public static string GetTypeName(Zigbee2MqttDeviceJson d)
         => d.Definition?.Model ?? d.ModelId ?? d.Type.ToString();
 
-    public override void SetState(string name, JToken newValue)
-    {
-        base.SetState(name, newValue);
-
-        object? value = newValue.ToOObject();
-
-        if (value is null)
-            return;
-
-        client.EnqueueAsync($"zigbee2mqtt/{device.FriendlyName}/set/name", newValue.ToString());
-    }
-
     public async Task FetchCurrentData()
     {
         await client.EnqueueAsync($"zigbee2mqtt/{Id}/get", @"{""state"": """"}");
+    }
+
+    internal Task SetValue(string name, JToken newValue)
+    {
+        return client.EnqueueAsync($"zigbee2mqtt/{device.FriendlyName}/set/{name}", newValue.ToString());
     }
 
     internal Task<bool> SetValue(SetFeatureValue value)
@@ -68,15 +95,21 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
         return SetValues(values.Where(CanSetValue).ToDictionary(x => x.Feature.Property, x => x.Value));
     }
 
-    private static bool CanSetValue(SetFeatureValue value)
+    private bool CanSetValue(SetFeatureValue value)
     {
         if (!value.Feature.Access.HasFlag(Zigbee2MqttFeatureAccessMode.Write))
+        {
             // TODO: log warning, eg. for light type it has child features which you can set
+            logger.Warn($"Couldn't set value {value} on {FriendlyName}, because it was not writable");
             return false;
+        }
 
         if (!value.Feature.ValidateValue(value))
+        {
             // TODO: log warning
+            logger.Warn($"Couldn't set value {value} on {FriendlyName}, because the value was not valid");
             return false;
+        }
 
         return true;
     }
@@ -126,21 +159,21 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
         do
         {
             if (lastFound is null)
-                return; //TODO Log not found
+            {
+                logger.Warn($"Couldn't find {property} on {FriendlyName}");
+                return; 
+            }
 
             lastFound = lastFound.Features.FirstOrDefault(x => x.Name == toFind[index])
                 ?? lastFound.Features.FirstOrDefault(x => x.Type.ToString() == toFind[index]);
         } while (++index < toFind.Length);
 
         if (lastFound is null)
-            return; //TODO Log not found
+        {
+            logger.Warn($"Couldn't find {property} on {FriendlyName}");
+            return;
+        }
 
-        //var features = device
-        //    .Definition
-        //    .Exposes
-        //    .SelectMany(x => x.Features)
-        //    .Where(x => x is not null)
-        //    .Where(x => string.Equals(x.Name, property, StringComparison.OrdinalIgnoreCase));
         cachedFeatures[property] = lastFound;
         action(lastFound);
     }
@@ -157,13 +190,23 @@ public class Zigbee2MqttDevice : ConnectionJavaScriptDevice
 
                 InvokeOnDevice(name, async x => await SetValue(new SetFeatureValue(x, value)));
                 break;
+            case (Command)150:
+                var propName = parameters[0].ToString();
+                SetValue(propName, parameters[1]);
+                break;
+            case (Command)151:
+                var propNameR = parameters[1].ToString();
+                SetValue(propNameR, parameters[0]);
+                break;
         }
         return base.UpdateFromApp(command, parameters);
     }
 
     protected override Context ExtendEngine(Context engine)
     {
+        logger.Debug($"Extending engine on {FriendlyName}");
         engine.DefineFunction("invokeOnDevice", (string name, object value) => InvokeOnDevice(name, (x) => SetValue(new SetFeatureValue(x, value))));
+        engine.DefineFunction("setValue", (string name, JToken value) => SetValue(name, value));
 
         return base.ExtendEngine(engine);
     }

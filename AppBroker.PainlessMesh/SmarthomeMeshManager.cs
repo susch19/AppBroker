@@ -29,16 +29,16 @@ public class SmarthomeMeshManager : IDisposable
     public event EventHandler<BinarySmarthomeMessage>? SingleGetMessageReceived;
     public event EventHandler<(Sub, ByteLengthList)>? NewConnectionEstablished;
     public event EventHandler<uint>? ConnectionLost;
-    public event EventHandler<(uint id, ByteLengthList parameter)>? ConnectionReastablished;
+    public event EventHandler<(uint id, ByteLengthList parameter)>? ConnectionReestablished;
 
-    private static readonly ServerSocket serverSocket = new();
+    private static readonly ServerSocket ServerSocket = new();
 
-    private readonly TimeSpan WaitBeforeWhoIAmSendAgain;
+    private readonly TimeSpan waitBeforeWhoIAmSendAgain;
     private readonly List<NodeSync> knownNodeIds;
     private readonly int listenPort;
-    private readonly ConcurrentDictionary<uint, (DateTime time, int count)> WhoIAmSendTime;
+    private readonly ConcurrentDictionary<uint, (DateTime time, int count)> whoIAmSendTime;
 
-    private readonly uint nodeID = 1;
+    private readonly uint nodeId = 1;
     private readonly Dictionary<uint, Queue<BinarySmarthomeMessage>> queuedMessages;
     private readonly List<Timer> timers;
     private readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
@@ -46,13 +46,13 @@ public class SmarthomeMeshManager : IDisposable
 
     public SmarthomeMeshManager(bool enabled, int listenPort, uint nodeId = 1)
     {
-        WaitBeforeWhoIAmSendAgain = new TimeSpan(0, 0, 10);
+        waitBeforeWhoIAmSendAgain = new TimeSpan(0, 0, 30);
 
         queuedMessages = new();
         timers = new();
-        nodeID = nodeId;
-        WhoIAmSendTime = new();
-        knownNodeIds = new() { new NodeSync(nodeID, 0), new NodeSync(0, 0) };
+        this.nodeId = nodeId;
+        whoIAmSendTime = new();
+        knownNodeIds = new() { new NodeSync(this.nodeId, 0), new NodeSync(0, 0) };
         this.listenPort = listenPort;
 
         if (!enabled)
@@ -71,12 +71,13 @@ public class SmarthomeMeshManager : IDisposable
         if (running)
             return;
         running = true;
-        serverSocket.OnClientConnected += ServerSocket_OnClientConnected;
-        serverSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
+        ServerSocket.OnClientConnected += ServerSocket_OnClientConnected;
+        ServerSocket.Start(new IPAddress(new byte[] { 0, 0, 0, 0 }), listenPort);
 
-        timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(1.0), WaitBeforeWhoIAmSendAgain));
+        timers.Add(new Timer(TryCatchWhoAmITask, null, TimeSpan.FromSeconds(15.0), waitBeforeWhoIAmSendAgain));
         timers.Add(new Timer(SendTimeUpdate, null, TimeSpan.FromMinutes(1.0), TimeSpan.FromHours(1d)));
         timers.Add(new Timer(GetMeshUpdate, null, TimeSpan.FromSeconds(10.0), TimeSpan.FromSeconds(10d)));
+
         um.Advertisment += OtaAdvertisment;
     }
 
@@ -85,8 +86,8 @@ public class SmarthomeMeshManager : IDisposable
         if (!running)
             return;
         running = false;
-        serverSocket.Stop();
-        serverSocket.OnClientConnected -= ServerSocket_OnClientConnected;
+        ServerSocket.Stop();
+        ServerSocket.OnClientConnected -= ServerSocket_OnClientConnected;
 
         foreach (Timer? timer in timers)
         {
@@ -132,10 +133,11 @@ public class SmarthomeMeshManager : IDisposable
 
         if (e.Command == Command.WhoIAm)
         {
+            logger.Debug("Received a who am i response from " + e.NodeId);
             if (!knownNodeIds.Any(x => x.Id == e.NodeId))
                 knownNodeIds.Add(new NodeSync(e.NodeId, 0));
 
-            _ = WhoIAmSendTime.TryRemove(e.NodeId, out (DateTime time, int count) asda);
+            _ = whoIAmSendTime.TryRemove(e.NodeId, out (DateTime time, int count) asda);
             if (e.Parameters != null)
                 NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters));
             return;
@@ -144,13 +146,13 @@ public class SmarthomeMeshManager : IDisposable
         NodeSync? known = knownNodeIds.FirstOrDefault(x => x.Id == e.NodeId);
         if (known == default)
         {
-            if (!WhoIAmSendTime.TryGetValue(e.NodeId, out (DateTime time, int count) dt) || dt.time.Add(WaitBeforeWhoIAmSendAgain) > DateTime.Now)
+            if (!whoIAmSendTime.TryGetValue(e.NodeId, out (DateTime time, int count) dt) || dt.time.Add(waitBeforeWhoIAmSendAgain) > DateTime.Now)
             {
                 //SendSingle(e.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                 if (dt == default)
-                    _ = WhoIAmSendTime.TryAdd(e.NodeId, (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0));
+                    _ = whoIAmSendTime.TryAdd(e.NodeId, (DateTime.Now.Subtract(waitBeforeWhoIAmSendAgain), 0));
                 else
-                    WhoIAmSendTime[e.NodeId] = (DateTime.Now.Subtract(WaitBeforeWhoIAmSendAgain), 0);
+                    whoIAmSendTime[e.NodeId] = (DateTime.Now.Subtract(waitBeforeWhoIAmSendAgain), 0);
             }
             if (!queuedMessages.TryGetValue(e.NodeId, out Queue<BinarySmarthomeMessage>? queue))
             {
@@ -164,7 +166,7 @@ public class SmarthomeMeshManager : IDisposable
         if (known.MissedConnections > 0)
         {
             known.MissedConnections = 0;
-            ConnectionReastablished?.Invoke(this, (known.Id, e.Parameters));
+            ConnectionReestablished?.Invoke(this, (known.Id, e.Parameters));
         }
 
         if (queuedMessages.TryGetValue(e.NodeId, out Queue<BinarySmarthomeMessage>? messages))
@@ -203,13 +205,13 @@ public class SmarthomeMeshManager : IDisposable
             subs.Add(sub);
             if (!knownNodeIds.Any(x => x.Id == sub.NodeId))
             {
-                if (!WhoIAmSendTime.TryGetValue(sub.NodeId, out (DateTime time, int count) dt) /*|| dt.time.Add(WaitBeforeWhoIAmSendAgain*2) > DateTime.Now*/)
+                if (!whoIAmSendTime.TryGetValue(sub.NodeId, out (DateTime time, int count) dt) /*|| dt.time.Add(waitBeforeWhoIAmSendAgain*2) > DateTime.Now*/)
                 {
                     //SendSingle(sub.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                     if (dt == default)
-                        _ = WhoIAmSendTime.TryAdd(sub.NodeId, (DateTime.Now, 0));
+                        _ = whoIAmSendTime.TryAdd(sub.NodeId, (DateTime.Now, 0));
                     else
-                        WhoIAmSendTime[sub.NodeId] = (DateTime.Now, 0);
+                        whoIAmSendTime[sub.NodeId] = (DateTime.Now, 0);
                 }
             }
 
@@ -277,7 +279,7 @@ public class SmarthomeMeshManager : IDisposable
                     }
                 }
             }
-            foreach (KeyValuePair<uint, (DateTime time, int count)> item in WhoIAmSendTime)
+            foreach (KeyValuePair<uint, (DateTime time, int count)> item in whoIAmSendTime)
             {
                 if (lostSubs.Contains(item.Key))
                 {
@@ -321,7 +323,7 @@ public class SmarthomeMeshManager : IDisposable
             logger.Debug($"{PackageType.SINGLE}: NodeId: {destination}, Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
             using var ms = new MemoryStream();
             message.Serialize(ms);
-            serverSocket.SendToAllClients(PackageType.SINGLE, ms.ToArray(), destination);
+            ServerSocket.SendToAllClients(PackageType.SINGLE, ms.ToArray(), destination);
         }
         catch (Exception e)
         {
@@ -333,7 +335,7 @@ public class SmarthomeMeshManager : IDisposable
     {
         try
         {
-            serverSocket.SendToAllClients(PackageType.SINGLE, message, destination, false);
+            ServerSocket.SendToAllClients(PackageType.SINGLE, message, destination, false);
         }
         catch (Exception e)
         {
@@ -345,7 +347,7 @@ public class SmarthomeMeshManager : IDisposable
     //{
     //    try
     //    {
-    //        serverSocket.SendToAllClients(type, message.ToJson(), destination);
+    //        ServerSocket.SendToAllClients(type, message.ToJson(), destination);
     //    }
     //    catch (Exception e)
     //    {
@@ -361,7 +363,7 @@ public class SmarthomeMeshManager : IDisposable
             using var ms = new MemoryStream();
             message.Serialize(ms);
             logger.Debug($"{PackageType.BROADCAST}: Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
-            serverSocket.SendToAllClients(PackageType.BROADCAST, ms.ToArray());
+            ServerSocket.SendToAllClients(PackageType.BROADCAST, ms.ToArray());
         }
         catch (Exception e)
         {
@@ -374,7 +376,7 @@ public class SmarthomeMeshManager : IDisposable
     {
         try
         {
-            serverSocket.SendToAllClients(PackageType.BROADCAST, message, false);
+            ServerSocket.SendToAllClients(PackageType.BROADCAST, message, false);
         }
         catch (Exception e)
         {
@@ -386,7 +388,7 @@ public class SmarthomeMeshManager : IDisposable
     //{
     //    try
     //    {
-    //        serverSocket.SendToAllClients(type, message.ToJson(), 0);
+    //        ServerSocket.SendToAllClients(type, message.ToJson(), 0);
     //    }
     //    catch (Exception e)
     //    {
@@ -403,7 +405,7 @@ public class SmarthomeMeshManager : IDisposable
             message.Serialize(ms);
             logger.Debug($"{PackageType.BRIDGE}: Command: {message.Command}, MessageType: {message.MessageType}, ParamsAmount: {message.Parameters.Count}, " + string.Join(", ", message.Parameters.Select(x => BitConverter.ToString(x))));
 
-            serverSocket.SendToAllClients(PackageType.BRIDGE, ms.ToArray(), nodeID);
+            ServerSocket.SendToAllClients(PackageType.BRIDGE, ms.ToArray(), nodeId);
         }
         catch (Exception e)
         {
@@ -430,12 +432,12 @@ public class SmarthomeMeshManager : IDisposable
         var toDelete = new Dictionary<uint, (DateTime time, int count)>();
         try
         {
-            foreach (KeyValuePair<uint, (DateTime time, int count)> item in WhoIAmSendTime)
+            foreach (KeyValuePair<uint, (DateTime time, int count)> item in whoIAmSendTime)
             {
-                if (item.Value.time.Add(WaitBeforeWhoIAmSendAgain) < DateTime.Now)
+                if (item.Value.time.Add(waitBeforeWhoIAmSendAgain) < DateTime.Now)
                 {
                     SendSingle(item.Key, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
-                    WhoIAmSendTime[item.Key] = (DateTime.Now, item.Value.count + 1);
+                    whoIAmSendTime[item.Key] = (DateTime.Now, item.Value.count + 1);
                 }
                 if (item.Value.count > 20)
                     toDelete.Add(item.Key, item.Value);
@@ -443,7 +445,7 @@ public class SmarthomeMeshManager : IDisposable
 
             foreach (KeyValuePair<uint, (DateTime time, int count)> item in toDelete)
             {
-                _ = WhoIAmSendTime.TryRemove(item.Key, out (DateTime time, int count) val);
+                _ = whoIAmSendTime.TryRemove(item.Key, out (DateTime time, int count) val);
             }
             toDelete.Clear();
         }

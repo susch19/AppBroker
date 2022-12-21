@@ -2,14 +2,8 @@
 using AppBroker.Core.Devices;
 using AppBroker.Core.Managers;
 
+using NLog;
 
-using Common.Logging;
-
-using Jint.Runtime;
-
-using SocketIOClient;
-
-using System.Collections.Immutable;
 using System.Reflection;
 
 namespace AppBrokerASP.Devices.Elsa;
@@ -34,7 +28,7 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
     private readonly HashSet<Type> deviceTypes;
 
     private readonly IDeviceManager manager;
-    private readonly ILog logger;
+    private readonly NLog.ILogger logger;
 
     public DeviceTypeMetaDataManager(DeviceManager manager)
     {
@@ -98,31 +92,40 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
     public Device? CreateDeviceFromNameWithBaseType(string deviceName, Type baseType, Type? defaultDevice, object[] ctorArgs, object[]? defaultDeviceCtorArgs)
     {
         logger.Trace($"Trying to get device with {deviceName} name");
-
-        if (!IInstanceContainer.Instance.DeviceTypeMetaDataManager.AlternativeNamesForTypes.TryGetValue(deviceName, out var type))
+        try
         {
-            if (type is not null && !type.IsAssignableTo(baseType))
+
+            if (!IInstanceContainer.Instance.DeviceTypeMetaDataManager.AlternativeNamesForTypes.TryGetValue(deviceName, out var type))
             {
-                if (defaultDevice is null)
+                if (type is not null && !type.IsAssignableTo(baseType))
                 {
-                    logger.Warn($"Failed to get device with name {deviceName} and base device {baseType.Name} and no {nameof(defaultDevice)} type was passed.");
+                    if (defaultDevice is null)
+                    {
+                        logger.Warn($"Failed to get device with name {deviceName} and base device {baseType.Name} and no {nameof(defaultDevice)} type was passed.");
 
-                    return null;
+                        return null;
+                    }
+
                 }
-
+                return (Device?)Activator.CreateInstance(defaultDevice, defaultDeviceCtorArgs);
             }
-            return (Device?)Activator.CreateInstance(defaultDevice, ctorArgs);
+
+            var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
+
+            if (newDeviceObj is null || newDeviceObj is not Device newDevice)
+            {
+                logger.Error($"Failed to get create device {deviceName}");
+                return null;
+            }
+
+            return newDevice;
         }
-
-        var newDeviceObj = Activator.CreateInstance(type, ctorArgs);
-
-        if (newDeviceObj is null || newDeviceObj is not Device newDevice)
+        catch (Exception ex)
         {
-            logger.Error($"Failed to get create device {deviceName}");
+
+            logger.Error(ex, $"Couldn't create {deviceName} with default device {defaultDevice?.Name}");
             return null;
         }
-
-        return newDevice;
     }
 
     public Device? CreateDeviceFromName(string deviceName, Type? defaultDevice, params object[] ctorArgs) => CreateDeviceFromName(deviceName, defaultDevice, ctorArgs, ctorArgs);
@@ -158,7 +161,7 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
         }
         catch (Exception ex)
         {
-            logger.Error($"Couldn't create {deviceName} with default device {defaultDevice?.Name}", ex);
+            logger.Error(ex, $"Couldn't create {deviceName} with default device {defaultDevice?.Name}");
             return null;
         }
     }

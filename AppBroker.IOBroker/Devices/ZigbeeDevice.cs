@@ -34,7 +34,18 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
     //[property: JsonIgnore()]
     private DateTime lastReceived;
 
-    public string LastReceivedFormatted => lastReceived.ToString("dd.MM.yyyy HH:mm:ss");
+    public string LastReceivedFormatted
+    {
+        get
+        {
+            var stateFromManager =
+                IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(Id, "lastReceived");
+            if(stateFromManager is DateTime dt)
+                lastReceived = dt;
+
+            return lastReceived.ToString("dd.MM.yyyy HH:mm:ss");
+        }
+    }
 
     [JsonIgnore]
     public string AdapterWithId { get; set; }

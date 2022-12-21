@@ -23,6 +23,9 @@ internal class Plugin : IPlugin
         var mm = new SmarthomeMeshManager(painlessMeshConfig.Enabled, painlessMeshConfig.ListenPort);
         IInstanceContainer.Instance.RegisterDynamic(mm);
 
+        var pdm = new PainlessMeshDeviceManager();
+        IInstanceContainer.Instance.RegisterDynamic(pdm);
+
         if (painlessMeshConfig.Enabled)
             mm.Start(um);
         return true;

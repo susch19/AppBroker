@@ -25,7 +25,7 @@ public class JavaScriptEngineManager
 
     private readonly HttpClient client;
 
-    private readonly ConcurrentDictionary<string, JavaScriptFile> files = new();
+    private readonly ConcurrentDictionary<string, JavaScriptFile> files;
     private readonly ScopedSemaphore filesSemaphore = new();
     private readonly ILogger logger;
     private readonly DirectoryInfo jsDeviceDirectory;
@@ -64,6 +64,14 @@ public class JavaScriptEngineManager
         scriptsWatcher.Changed += ScriptChanged;
         scriptsWatcher.Created += ScriptChanged;
         scriptsWatcher.EnableRaisingEvents = true;
+
+        files = new();
+
+        foreach (var file in scriptsDirectory.GetFiles("*.js"))
+        {
+            files.TryAdd(file.Name,
+                new JavaScriptFile(File.ReadAllText(file.FullName), GetNilJSEngineWithDefaults(logger)));
+        }
 
         client = new();
     }
@@ -181,7 +189,7 @@ public class JavaScriptEngineManager
                 break;
             case WatcherChangeTypes.Changed:
                 var newContent = File.ReadAllText(e.FullPath);
-
+                
                 files[e.Name] = files[e.Name] with { Content = newContent };
                 break;
 
