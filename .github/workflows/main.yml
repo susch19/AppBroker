@@ -52,7 +52,7 @@ jobs:
         with:
           context: .
           file: TcpProxy/Dockerfile
-          push: ${{ github.event_name == 'push' }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: susch19/appbroker-tcpproxy:latest
           labels: ${{ steps.meta.outputs.labels }}
           
@@ -61,6 +61,6 @@ jobs:
         with:
           context: .
           file: AppBrokerASP/Dockerfile
-          push: ${{ github.event_name == 'push' }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: susch19/appbroker:latest
           labels: ${{ steps.meta.outputs.labels }}
