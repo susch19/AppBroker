@@ -21,7 +21,10 @@ using ILogger = NLog.ILogger;
 namespace AppBroker.Core.Javascript;
 public class JavaScriptEngineManager
 {
-    public ConcurrentDictionary<string, WatcherChangeTypes> ChangedDevices = new();
+    public ConcurrentDictionary<string, Delegate> ExtendedFunctions { get; } = new();
+    public ConcurrentDictionary<string, JSValue> ExtendedVariables { get; } = new();
+    public ConcurrentDictionary<string, (Func<object> getter, Action<object> setter)> ExtendedGetSetVariables { get; } = new();
+    public ConcurrentBag<Type> ExtendedCtors { get; } = new();
 
     private readonly HttpClient client;
 
@@ -32,6 +35,7 @@ public class JavaScriptEngineManager
     private readonly DirectoryInfo scriptsDirectory;
     private readonly FileSystemWatcher devicesWatcher;
     private readonly FileSystemWatcher scriptsWatcher;
+
 
     public JavaScriptEngineManager()
     {
@@ -124,13 +128,23 @@ public class JavaScriptEngineManager
             .DefineFunction("padLeft", (string s, string paddingChar, int count) => s.PadLeft(count, paddingChar[0]))
             .DefineFunction("padRight", (string s, string paddingChar, int count) => s.PadRight(count, paddingChar[0]))
         ;
+        foreach (var item in ExtendedFunctions)
+            jsEngine.DefineFunction(item.Key, item.Value);
+
+        foreach (var item in ExtendedCtors)
+            jsEngine.DefineConstructor(item);
+
+        foreach (var item in ExtendedVariables)
+            jsEngine.DefineVariable(item.Key).Assign(item.Value);
+
+        foreach (var item in ExtendedGetSetVariables)
+            jsEngine.DefineGetSetVariable(item.Key, item.Value.getter, item.Value.setter);
+
         return jsEngine;
     }
 
     public Engine GetEngineWithDefaults(ILogger logger)
     {
-
-
         return new Engine(cfg => cfg.AllowClr(
             typeof(JavaScriptEngineManager).Assembly,
             typeof(Device).Assembly,
@@ -189,7 +203,7 @@ public class JavaScriptEngineManager
                 break;
             case WatcherChangeTypes.Changed:
                 var newContent = File.ReadAllText(e.FullPath);
-                
+
                 files[e.Name] = files[e.Name] with { Content = newContent };
                 break;
 

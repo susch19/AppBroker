@@ -36,7 +36,7 @@ public class ZigbeeLamp : Zigbee2MqttDevice
             case Command.Delay:
                 var transitionTime = parameters[0].ToObject<float>();
                 SetState(nameof(transitionTime), transitionTime);
-                await SetValue("transition_time", transitionTime);
+                await zigbeeManager.SetValue(FriendlyName, "transition_time", transitionTime);
                 break;
         }
     }
@@ -48,22 +48,22 @@ public class ZigbeeLamp : Zigbee2MqttDevice
             case Command.Temp:
                 var colorTemp = parameters[0].ToObject<int>();
                 SetState(nameof(colorTemp), colorTemp);
-                await SetValue("color_temp", colorTemp);
+                await zigbeeManager.SetValue(FriendlyName, "color_temp", colorTemp);
                 break;
             case Command.Brightness:
                 var brightness = System.Math.Clamp(parameters[0].ToObject<byte>(), (byte)0, (byte)254);
                 SetState(nameof(brightness), brightness);
-                await SetValue(nameof(brightness), brightness);
+                await zigbeeManager.SetValue(FriendlyName, nameof(brightness), brightness);
                 break;
             case Command.SingleColor:
                 var state = true;
                 SetState(nameof(state), state);
-                await SetValue(nameof(state), "ON");
+                await zigbeeManager.SetValue(FriendlyName, nameof(state), "ON");
                 break;
             case Command.Off:
                 state = false;
                 SetState(nameof(state), state);
-                await SetValue(nameof(state), "OFF");
+                await zigbeeManager.SetValue(FriendlyName, nameof(state), "OFF");
                 break;
             default:
                 break;

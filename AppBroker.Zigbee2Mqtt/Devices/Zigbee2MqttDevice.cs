@@ -21,8 +21,9 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 {
     internal record SetFeatureValue(Zigbee2MqttGenericExposedFeature Feature, object Value);
 
+    protected static readonly IManagedMqttClient client;
     internal readonly Zigbee2MqttDeviceJson device;
-    private static readonly IManagedMqttClient client;
+    protected static readonly Zigbee2MqttManager zigbeeManager;
     private readonly ILogger logger = LogManager.GetCurrentClassLogger();
     private Dictionary<string, Zigbee2MqttGenericExposedFeature> cachedFeatures = new();
 
@@ -52,6 +53,7 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 
     static Zigbee2MqttDevice()
     {
+        zigbeeManager = InstanceContainer.Instance.GetDynamic<Zigbee2MqttManager>();
         client = InstanceContainer.Instance.GetDynamic<Zigbee2MqttManager>().MQTTClient!;
     }
 
@@ -80,10 +82,6 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
         await client.EnqueueAsync($"zigbee2mqtt/{Id}/get", @"{""state"": """"}");
     }
 
-    internal Task SetValue(string name, JToken newValue)
-    {
-        return client.EnqueueAsync($"zigbee2mqtt/{device.FriendlyName}/set/{name}", newValue.ToString());
-    }
 
     internal Task<bool> SetValue(SetFeatureValue value)
     {
@@ -192,11 +190,11 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
                 break;
             case (Command)150:
                 var propName = parameters[0].ToString();
-                SetValue(propName, parameters[1]);
+                zigbeeManager.SetValue(device.FriendlyName, propName, parameters[1]);
                 break;
             case (Command)151:
                 var propNameR = parameters[1].ToString();
-                SetValue(propNameR, parameters[0]);
+                zigbeeManager.SetValue(device.FriendlyName, propNameR, parameters[0]);
                 break;
         }
         return base.UpdateFromApp(command, parameters);
@@ -206,7 +204,6 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
     {
         logger.Debug($"Extending engine on {FriendlyName}");
         engine.DefineFunction("invokeOnDevice", (string name, object value) => InvokeOnDevice(name, (x) => SetValue(new SetFeatureValue(x, value))));
-        engine.DefineFunction("setValue", (string name, JToken value) => SetValue(name, value));
 
         return base.ExtendEngine(engine);
     }

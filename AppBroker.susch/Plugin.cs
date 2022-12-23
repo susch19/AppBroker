@@ -2,6 +2,7 @@
 
 using AppBroker.Core;
 using AppBroker.Core.Extension;
+using AppBroker.susch.Devices;
 
 using NLog;
 
@@ -16,6 +17,10 @@ internal class Plugin : IPlugin
     {
 
         IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
+
+        var add = new GroupingDevice<float>(0xDDFF, GroupingMode.Avg, "temperature", 0x00158d0002c9ff2a, 0x00158d0002c7775e, 0x00158d0002ca01dc, 0x00158d0002ca02fb, 1234);
+
+        IInstanceContainer.Instance.DeviceManager.AddNewDevice(add);
 
         return true;
     }

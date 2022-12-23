@@ -12,10 +12,11 @@ using AppBrokerASP;
 
 using ZigbeeConfig = AppBroker.Zigbee2Mqtt.Zigbee2MqttConfig;
 using AppBroker.Zigbee2Mqtt.Devices;
+using System.Diagnostics.CodeAnalysis;
 
 namespace AppBroker.Zigbee2Mqtt;
 
-public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
+public class Zigbee2MqttManager : IAsyncDisposable
 {
     public IManagedMqttClient? MQTTClient { get; set; }
     Zigbee2MqttDeviceJson[]? devices;
@@ -28,6 +29,9 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
     {
         config = zigbee2MqttConfig;
         logger = LogManager.GetCurrentClassLogger();
+
+        IInstanceContainer.Instance.JavaScriptEngineManager.ExtendedFunctions["setValueZigbee"] = SetValue;
+        IInstanceContainer.Instance.JavaScriptEngineManager.ExtendedFunctions["sendToZigbee"] = EnqueueToZigbee;
     }
 
     public async Task Subscribe()
@@ -45,6 +49,21 @@ public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
         {
             logger.Error("Erorr during subscribing to zigbee2mqtt topic", ex);
         }
+    }
+
+    public Task SetOption(string name, string propName, JToken value)
+    {
+
+        return MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/options", $$"""{"id":{{name}}, "options":{"{{propName}}":{{value}}} }""");
+    }
+
+    public Task SetValue(string name, string propName, JToken newValue)
+    {
+        return MQTTClient.EnqueueAsync($"zigbee2mqtt/{name}/set/{propName}", newValue.ToString());
+    }
+    public Task EnqueueToZigbee(string path, JToken payload)
+    {
+        return MQTTClient.EnqueueAsync($"zigbee2mqtt/{path}", payload.ToString());
     }
 
     public async Task<IManagedMqttClient> Connect()
