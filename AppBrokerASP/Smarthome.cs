@@ -1,15 +1,13 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Database;
 using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
+using AppBroker.Core.Models;
 
-using AppBrokerASP.Database;
-using AppBrokerASP.Devices;
-using AppBrokerASP.Devices.Zigbee;
-using AppBrokerASP.IOBroker;
 
 using Microsoft.AspNetCore.SignalR;
 
-using PainlessMesh;
+using Newtonsoft.Json;
 
 using System.Reflection;
 using System.Threading.Tasks;
@@ -57,72 +55,105 @@ public class SmartHome : Hub<ISmartHomeClient>
             _ = DbProvider.UpdateDeviceInDb(stored);
             stored.SendDataToAllSubscribers();
         }
-        
+
     }
 
     public dynamic? GetConfig(uint deviceId) => IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device) ? device.GetConfig() : null;
 
     public async void SendUpdate(Device device) => await (Clients.All?.Update(device) ?? Task.CompletedTask);
 
-    public List<Device> GetAllDevices() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
-
-    public record struct DeviceOverview(long Id, IReadOnlyCollection<string> TypeNames, string FriendlyName);
-    public List<DeviceOverview> GetDeviceOverview() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).Select(x => new DeviceOverview(x.Id, x.TypeNames, x.FriendlyName)).ToList();
-
-
-    public Task<List<IoBrokerHistory>> GetIoBrokerHistories(long id, string dt)
+    public List<Device> GetAllDevices()
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
-        {
-            DateTime date = DateTime.Parse(dt).Date;
-            return d.GetHistory(date, date.AddDays(1).AddSeconds(-1));
-        }
-        return Task.FromResult(new List<IoBrokerHistory>());
+        var devices = IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
+        var dev = JsonConvert.SerializeObject(devices);
+
+        return devices;
     }
 
-    public virtual Task<IoBrokerHistory> GetIoBrokerHistory(long id, string dt, string propertyName)
+    public List<HistoryPropertyState> GetHistoryPropertySettings() => IInstanceContainer.Instance.HistoryManager.GetHistoryProperties();
+    public void SetHistory(bool enable, long id, string name)
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
+        if (enable)
+            IInstanceContainer.Instance.HistoryManager.EnableHistory(id, name);
+        else
+            IInstanceContainer.Instance.HistoryManager.DisableHistory(id, name);
+    }
+    public void SetHistories(bool enable, List<long> ids, string name)
+    {
+        if (enable)
         {
-            DateTime date = DateTime.Parse(dt).Date;
-            return d.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
+            foreach (var id in ids)
+                IInstanceContainer.Instance.HistoryManager.EnableHistory(id, name);
         }
-        return Task.FromResult(new IoBrokerHistory());
+        else
+        {
+            foreach (var id in ids)
+                IInstanceContainer.Instance.HistoryManager.DisableHistory(id, name);
+        }
     }
 
-    public Task<List<IoBrokerHistory>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
+    public record struct DeviceOverview(long Id, string TypeName, IReadOnlyCollection<string> TypeNames, string FriendlyName);
+    public List<DeviceOverview> GetDeviceOverview() => IInstanceContainer.Instance.DeviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).Select(x => new DeviceOverview(x.Id, x.TypeName, x.TypeNames, x.FriendlyName)).ToList();
+
+
+    public Task<List<History>> GetIoBrokerHistories(long id, string dt)
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) )
         {
-            return d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
+            DateTime date = DateTime.Parse(dt).Date;
+            return device.GetHistory(date, date.AddDays(1).AddSeconds(-1));
+        }
+        return Task.FromResult(new List<History>());
+    }
+
+    public virtual Task<History> GetIoBrokerHistory(long id, string dt, string propertyName)
+    {
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
+        {
+            DateTime date = DateTime.Parse(dt).Date;
+            return device.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
+        }
+        return Task.FromResult(new History());
+    }
+
+    public Task<List<History>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
+    {
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) )
+        {
+            return device.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
         }
 
-        return Task.FromResult(new List<IoBrokerHistory>());
+        return Task.FromResult(new List<History>());
     }
 
     // TODO: remove list, just return one item
-    public virtual async Task<List<IoBrokerHistory>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
+    public virtual async Task<List<History>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) && device is ZigbeeDevice d)
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) )
         {
-            return new List<IoBrokerHistory>()
+            return new List<History>()
                 {
-                    await d.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), propertyName)
+                    await device.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), propertyName)
                 };
         }
 
-        return new List<IoBrokerHistory>();
+        return new List<History>();
     }
 
 
-    public List<Device> Subscribe(IEnumerable<long> DeviceIds)
+    public List<Device> Subscribe(List<long> DeviceIds)
     {
         FieldInfo? proxyFieldInfo = Clients
             .Caller
             .GetType()
             .GetRuntimeFields()
             .First(x => x.Name == "_proxy");
-        object? proxy = proxyFieldInfo!.GetValue(Clients.Caller)!;
+        object? singeClientProxy = proxyFieldInfo!.GetValue(Clients.Caller)!;
+        FieldInfo? singeClientProxyFieldInfo = singeClientProxy
+            .GetType()
+            .GetRuntimeFields()
+            .First(x => x.Name == "_proxy");
+        object? proxy = singeClientProxyFieldInfo!.GetValue(singeClientProxy)!;
         FieldInfo? highlightedItemProperty =
             proxy
             .GetType()
@@ -144,10 +175,12 @@ public class SmartHome : Hub<ISmartHomeClient>
             subMessage += device.Id + "/" + device.FriendlyName + ", ";
         }
         Console.WriteLine(subMessage);
+        var dev = JsonConvert.SerializeObject(devices);
+
         return devices;
     }
 
-    public void Unsubscribe(IEnumerable<long> DeviceIds)
+    public void Unsubscribe(List<long> DeviceIds)
     {
         FieldInfo? proxyFieldInfo = Clients
             .Caller
@@ -168,14 +201,18 @@ public class SmartHome : Hub<ISmartHomeClient>
 
             if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device))
             {
-                _ = device.Subscribers.RemoveAll(x => x.ConnectionId == connectionId);
+
+                _ = device.Subscribers.RemoveWhere(x => x.ConnectionId == connectionId);
                 subMessage += device.Id + "/" + device.FriendlyName + ", ";
             }
         }
         Console.WriteLine(subMessage);
     }
 
-    public void UpdateTime() => InstanceContainer.Instance.MeshManager.UpdateTime();
+    public void UpdateTime()
+    {
+        //TODO How to call smarthome mesh manager update time, without knowing the existence of said manager?
+    }
 
     public string GetHashCodeByTypeName(string typeName) => InstanceContainer.Instance.IconService.GetBestFitIcon(typeName).Hash;
     public string GetHashCodeByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName).Hash;
@@ -187,6 +224,7 @@ public class SmartHome : Hub<ISmartHomeClient>
     public void ReloadDeviceLayouts() => DeviceLayoutService.ReloadLayouts();
     public DeviceLayout? GetDeviceLayoutByName(string typename) => DeviceLayoutService.GetDeviceLayout(typename)?.layout;
     public DeviceLayout? GetDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDeviceLayout(id)?.layout;
+    public List<DeviceLayout> GetAllDeviceLayouts() => DeviceLayoutService.GetAllLayouts();
 
 
     public record LayoutNameWithHash(string Name, string Hash);

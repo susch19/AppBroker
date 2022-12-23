@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
+using AppBroker.Core;
+
 using Elsa.Scripting.JavaScript.Services;
 
 using MediatR;

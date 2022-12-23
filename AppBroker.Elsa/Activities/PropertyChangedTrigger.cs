@@ -11,8 +11,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Elsa.Metadata;
 using System.Reflection;
-using AppBrokerASP;
 using Elsa.Providers.WorkflowStorage;
+using AppBroker.Core;
 
 namespace AppBroker.Activities;
 
@@ -43,6 +43,6 @@ public class PropertyChangedTrigger : Activity, IActivityPropertyOptionsProvider
         return Done(Output);
     }
 
-    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DevicePropertyManager.PropertyNames;
+    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DeviceTypeMetaDataManager.PropertyNames;
 }
 

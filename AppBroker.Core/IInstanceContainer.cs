@@ -1,14 +1,19 @@
-﻿using AppBroker.Core;
+﻿using AppBroker.Core.Javascript;
+using AppBroker.Core.Managers;
 
-using AppBrokerASP.Devices.Elsa;
-
-
-namespace AppBrokerASP;
+namespace AppBroker.Core;
 
 public interface IInstanceContainer
 {
     public static IInstanceContainer Instance { get; set; } = null!;
     IDeviceManager DeviceManager { get; }
-    IDeviceTypeMetaDataManager DevicePropertyManager { get; }
+    IDeviceTypeMetaDataManager DeviceTypeMetaDataManager { get; }
     IconService IconService { get; }
+    IHistoryManager HistoryManager { get; }
+    IDeviceStateManager DeviceStateManager { get; }
+    JavaScriptEngineManager JavaScriptEngineManager { get; }
+
+    T GetDynamic<T>() where T : class;
+    void RegisterDynamic<T>(T instance) where T : class;
+    bool TryGetDynamic<T>(out T? instance) where T : class;
 }

@@ -1,7 +1,5 @@
 ﻿using Microsoft.AspNetCore.Connections;
-using Microsoft.AspNetCore.Internal;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.AspNetCore.SignalR.Internal;
 using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.Options;
 
@@ -19,6 +17,7 @@ using System.Linq;
 using System;
 using Elsa.Activities.Signaling.Models;
 using System.IO.Compression;
+using AppBroker.Core;
 
 namespace AppBrokerASP.SignalR;
 
@@ -64,7 +63,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
     public NewtonsoftJsonSmarthomeHubProtocol(IOptions<NewtonsoftJsonHubProtocolOptions> options)
     {
         PayloadSerializer = JsonSerializer.Create(options.Value.PayloadSerializerSettings);
-        key = SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(InstanceContainer.Instance.ConfigManager.ServerConfig.EncryptionPassword));
+        key = SHA256.HashData(Encoding.UTF8.GetBytes(InstanceContainer.Instance.ConfigManager.ServerConfig.EncryptionPassword));
     }
 
     /// <inheritdoc />
@@ -95,7 +94,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         public override bool CanRead => true;
         public override bool CanSeek => true;
         public override bool CanWrite => false;
-        public override long Length => Math.Min( _data.Length, MaxLength);
+        public override long Length => Math.Min(_data.Length, MaxLength);
         public override long Position { get; set; }
 
         internal long MaxLength { get; set; } = long.MaxValue;
@@ -143,7 +142,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
 
 
         var len = GetLengthOfBytes(lenSpan);
-        ms.MaxLength = len+20;
+        ms.MaxLength = len + 20;
 
         //using var gzip = new GZipStream(ms, CompressionMode.Decompress);
         //Span<byte> dataSpan = stackalloc byte[32684];
@@ -575,10 +574,11 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         }
 
         TextMessageFormatter.WriteRecordSeparator(bfw);
+        var arrPool = ArrayPool<byte>.Shared.Rent((bfw.WrittenSpan.Length + sizeof(int) + 16) * 64);
+        var enc = EncryptStringToBytes_Aes(bfw.WrittenSpan, arrPool);
 
-        var enc = EncryptStringToBytes_Aes(bfw.WrittenSpan);
-
-        stream.Write(enc);
+        stream.Write(arrPool.AsSpan(..enc));
+        ArrayPool<byte>.Shared.Return(arrPool);
     }
 
 
@@ -864,18 +864,12 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         return message;
     }
 
-    internal static JsonSerializerSettings CreateDefaultSerializerSettings()
-    {
-        return new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
-    }
-
-    byte[] EncryptStringToBytes_Aes(ReadOnlySpan<byte> input)
+    int EncryptStringToBytes_Aes(ReadOnlySpan<byte> input, byte[] output)
     {
         if (key == null || key.Length <= 0)
             throw new ArgumentNullException(nameof(key));
 
 
-        byte[] encrypted;
 
         // Create an Aes object
         // with the specified key and IV.
@@ -889,25 +883,33 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
             ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
 
             // Create the streams used for encryption.
-            
-            using (MemoryStream msEncrypt = new MemoryStream())
-
-            using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write, true))
-
-            using (var zip = new GZipStream(csEncrypt, CompressionMode.Compress))
-            using (var buffered = new BufferedStream(zip))
-
+            int length;
+            int lenOfArray = 0;
+            int offset = sizeof(int) + aesAlg.IV.Length;
+            using (var msEncrypt = new MemoryStream())
             {
-                buffered.WriteSpan(input, input.Length, false);
-                buffered.Flush();
-                zip.Flush();
-                csEncrypt.FlushFinalBlock();
+                msEncrypt.Position = offset;
+                using (var csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write, true))
+                using (var zip = new GZipStream(csEncrypt, CompressionMode.Compress, true))
+                using (var buffered = new BufferedStream(zip))
+                {
+                    buffered.WriteSpan(input, input.Length, false);
 
-                encrypted = msEncrypt.ToArray();
+                }
+                length = (int)msEncrypt.Length;
+                msEncrypt.Position = 0;
+                
+                GetBytesOfInt(length - 20, msEncrypt);
+                msEncrypt.Write(aesAlg.IV);
+                msEncrypt.Position = 0;
+                using (var ms = new MemoryStream(output))
+                {
+                    ms.Position = 0;
+                    msEncrypt.WriteTo(ms);
+                }
             }
-            Console.WriteLine($"Encrypted: {input.Length} to {encrypted.Length}");
             // Return the encrypted bytes from the memory stream.
-            return GetBytesOfInt(encrypted.Length).Concat(aesAlg.IV).Concat(encrypted).ToArray();
+            return length;
         }
 
     }
@@ -918,15 +920,13 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
         return (list[0] << 24) | (list[1] << 16) | (list[2] << 8) | (list[3] << 0);
     }
 
-    private static byte[] GetBytesOfInt(int l)
+    private static void GetBytesOfInt(int length, Stream s)
     {
-        byte a = (byte)((l >> 24) & 0xFF);
-        byte b = (byte)((l >> 16) & 0xFF);
-        byte c = (byte)((l >> 8) & 0xFF);
-        byte d = (byte)((l >> 0) & 0xFF);
-        return new byte[] { a, b, c, d };
+        s.WriteByte((byte)((length >> 24) & 0xFF));
+        s.WriteByte((byte)((length >> 16) & 0xFF));
+        s.WriteByte((byte)((length >> 8) & 0xFF));
+        s.WriteByte((byte)((length >> 0) & 0xFF));
     }
-
     ReadOnlySequence<byte> DecryptStringFromBytes_Aes(Stream cipherText, byte[] iv, int len)
     {
         // Check arguments.
@@ -969,8 +969,4 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
 
     }
 
-    class TestSegment : ReadOnlySequenceSegment<byte>
-    {
-
-    }
 }

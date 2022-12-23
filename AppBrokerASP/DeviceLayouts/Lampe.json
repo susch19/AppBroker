@@ -1,0 +1,168 @@
+{
+  "Version": 9,
+  "UniqueName": "Ikea Lampe1",
+  "TypeNames": [ "LED1624G9", "LED1723G11" ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "id",
+        "Order": 2,
+        "RowNr": 2,
+        "ShowOnlyInDeveloperMode": true
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 1,
+        "EditInfo": {
+          "EditType": "toggle",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "zigbee",
+              "Value": true,
+              "Parameters": [ "Light.state", "ON" ]
+            },
+            {
+              "Command": "zigbee",
+              "Value": false,
+              "Parameters": [ "Light.state", "OFF" ]
+            }
+          ],
+          "Display": "Status",
+          "ActiveValue": true
+        }
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "friendlyName",
+        "RowNr": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "SpecialType": "none"
+      },
+      {
+        "Name": "id",
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true
+      },
+      {
+        "Name": "state",
+        "RowNr": 2,
+        "DisplayName": "Status: ",
+        "UnitOfMeasurement": "",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "SpecialType": "none"
+      },
+      {
+        "Name": "powerOnBehavior",
+        "RowNr": 3,
+        "DisplayName": "Status beim Start: ",
+        "UnitOfMeasurement": "",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "SpecialType": "none"
+      },
+      {
+        "Name": "lastReceived",
+        "RowNr": 4,
+        "DisplayName": "Zuletzt empfangen: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "SpecialType": "none",
+        "Format": "dd"
+      },
+      {
+        "Name": "linkQuality",
+        "RowNr": 5,
+        "DisplayName": "Verbindungsqualität: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "SpecialType": "none"
+      },
+      {
+        "Name": "effect",
+        "RowNr": 6,
+        "EditInfo": {
+          "EditType": "dropdown",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": 404,
+              "Value": "",
+              "DisplayName": "---"
+            },
+            {
+              "Command": 400,
+              "Value": "blink",
+              "DisplayName": "Blinken",
+              "Parameters": [ "blink" ]
+            },
+            {
+              "Command": 400,
+              "Value": "breathe",
+              "DisplayName": "Atmen",
+              "Parameters": [ "breathe" ]
+            },
+            {
+              "Command": 400,
+              "Value": "okay",
+              "DisplayName": "okay",
+              "Parameters": [ "okay" ]
+            }
+          ],
+          "Display": "Status DropDown"
+        }
+      }
+    ],
+    "HistoryProperties": [
+      {
+        "PropertyName": "state",
+        "XAxisName": "Status",
+        "UnitOfMeasurement": " ",
+        "IconName": "flash-59419",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      },
+      {
+        "PropertyName": "brightness",
+        "XAxisName": "Helligkeit",
+        "UnitOfMeasurement": "hell",
+        "IconName": "sun-59423",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078
+      }
+    ]
+  }
+}

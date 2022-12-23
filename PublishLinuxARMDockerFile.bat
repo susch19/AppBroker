@@ -1,0 +1,1 @@
+docker buildx build --platform linux/arm/v7 -f "AppBrokerASP\Dockerfile" --force-rm -t appbroker:latest --load .

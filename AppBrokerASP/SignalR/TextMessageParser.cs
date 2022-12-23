@@ -5,7 +5,7 @@ using System;
 using System.Buffers;
 using System.Runtime.CompilerServices;
 
-namespace Microsoft.AspNetCore.Internal;
+namespace AppBrokerASP.SignalR;
 
 internal static class TextMessageParser
 {

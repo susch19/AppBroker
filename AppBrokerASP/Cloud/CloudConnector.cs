@@ -1,4 +1,6 @@
-﻿using AppBrokerASP.Configuration;
+﻿using AppBroker.Core;
+
+using AppBrokerASP.Configuration;
 
 using NLog;
 

@@ -1,5 +1,5 @@
 ﻿
-using AppBrokerASP;
+using AppBroker.Core;
 
 using Elsa.Metadata;
 
@@ -9,6 +9,6 @@ namespace AppBroker.ValueProvider;
 
 public class DeviceNameProvider : IActivityPropertyOptionsProvider
 {
-    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DevicePropertyManager.DeviceNames;
+    public object? GetOptions(PropertyInfo property) => IInstanceContainer.Instance.DeviceTypeMetaDataManager.DeviceNames;
 
 }

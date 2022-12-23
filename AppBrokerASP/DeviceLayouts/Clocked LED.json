@@ -1,0 +1,69 @@
+{
+  "UniqueName": "Clocked LED",
+  "TypeName": "Clocked LED",
+  "Ids": [],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "clock",
+        "Order": 0,
+        "TextStyle": {
+          "FontSize": 24.0,
+          "FontWeight": "bold"
+        },
+        "RowNr": 0,
+        "UnitOfMeasurement": " Uhr"
+      },
+      {
+        "Name": "state",
+        "Order": 1,
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 14.0,
+          "FontWeight": "normal"
+        },
+        "EditInfo": {
+          "EditType": "iconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": "OFF",
+              "CodePoint": 59411,
+              "Parameters": [ false ]
+            },
+
+            {
+              "Command": "Off",
+              "Value": "ON",
+              "CodePoint": 59411,
+              "FontFamily": "Smarthome",
+              "Parameters": [ true ]
+            }
+          ]
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 1,
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 14.0,
+          "FontWeight": "normal"
+        },
+        "EditInfo": {
+          "EditType": "iconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": 222,
+              "Value": "OFF",
+              "CodePoint": 59411,
+              "Parameters": [ false ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+}

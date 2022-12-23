@@ -2,9 +2,7 @@
 
 using Makaretu.Dns;
 
-using MQTTnet.Client;
-using MQTTnet.Extensions.ManagedClient;
-using MQTTnet;
+using MQTTnet.AspNetCore;
 
 using NLog;
 using NLog.Extensions.Logging;
@@ -13,19 +11,8 @@ using NLog.Web;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
-using MQTTnet.Channel;
-using System.Security.Cryptography.X509Certificates;
-using MQTTnet.Adapter;
-using MQTTnet.Diagnostics;
-using System.IdentityModel.Tokens.Jwt;
-using System.Threading.Channels;
-using MQTTnet.Formatter;
-using Org.BouncyCastle.Bcpg;
-using MQTTnet.Packets;
-using MQTTnet.Implementations;
-using NLog.Fluent;
-using MQTTnet.Server;
-using Microsoft.AspNetCore.Connections;
+using System.Globalization;
+using AppBrokerASP.Plugins;
 
 namespace AppBrokerASP;
 
@@ -56,8 +43,6 @@ public class Program
 
         try
         {
-            if (InstanceContainer.Instance.ConfigManager.PainlessMeshConfig.Enabled)
-                InstanceContainer.Instance.MeshManager.Start();
 
             UsedPortForSignalR = port;
             if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
@@ -98,21 +83,37 @@ public class Program
 
             mainLogger.Info($"Listening on urls {string.Join(",", listenUrls)}");
 
-            WebApplicationBuilder? webBuilder = WebApplication.CreateBuilder(new WebApplicationOptions() { /*Args = args,*/ WebRootPath = "wwwroot", });
+            WebApplicationBuilder? webBuilder = WebApplication
+                .CreateBuilder(new WebApplicationOptions() { Args = args, WebRootPath = "wwwroot" });
+
+            _ = webBuilder.Host.ConfigureAppConfiguration((hostingContext, config) =>
+            {
+                config.Sources.Clear();
+                _ = config.AddConfiguration(InstanceContainer.Instance.ConfigManager.Configuration);
+            });
+
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
-                ks.ListenAnyIP(UsedPortForSignalR);
+                foreach (var url in listenUrls)
+                {
+                    var uri = new Uri(url);
+                    ks.Listen(CreateIPEndPoint(uri.Host + ":" + uri.Port));
+                }
+
+                if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+                {
+                    ks.ListenAnyIP(InstanceContainer.Instance.ConfigManager.MqttConfig.Port, x => x.UseMqtt());
+                }
             });
 
             _ = webBuilder.Host.ConfigureLogging(logging =>
-                       {
-                           _ = logging.ClearProviders();
-                           _ = logging.AddNLog();
-                       });
+            {
+                _ = logging.ClearProviders();
+                _ = logging.AddNLog();
+            });
 
             var startup = new Startup(webBuilder.Configuration);
             startup.ConfigureServices(webBuilder.Services);
-            
 
             WebApplication? app = webBuilder.Build();
             _ = app.UseWebSockets();
@@ -127,8 +128,33 @@ public class Program
                 _ = e.MapHub<SmartHome>(pattern: "/SmartHome");
                 _ = e.MapControllers();
 
+                if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+                {
+                    _ = e.MapConnectionHandler<MqttConnectionHandler>(
+                        "/MQTTClient",
+                        httpConnectionDispatcherOptions => httpConnectionDispatcherOptions.WebSockets.SubProtocolSelector =
+                        protocolList => protocolList.FirstOrDefault() ?? string.Empty);
+                }
             });
 
+
+            if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+            {
+                _ = app.UseMqttServer(server =>
+                {
+                    // Todo: Do something with the server
+                    // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
+                });
+            }
+            if (InstanceContainer.Instance.ConfigManager.ServerConfig.EnableJavaScript)
+            {
+                InstanceContainer.Instance.JavaScriptEngineManager.Initialize();
+            }
+
+            var pluginLoader = new PluginLoader(LogManager.LogFactory);
+
+            pluginLoader.LoadAssemblies();
+            pluginLoader.InitializePlugins(LogManager.LogFactory);
 
             app.Run();
         }
@@ -143,7 +169,29 @@ public class Program
         }
     }
 
+    private static IPEndPoint CreateIPEndPoint(string endPoint)
+    {
+        string[] ep = endPoint.Split(':');
+        if (ep.Length < 2)
+            throw new FormatException("Invalid endpoint format");
 
+        IPAddress? ip;
+        if (ep.Length > 2)
+        {
+            if (!IPAddress.TryParse(string.Join(":", ep, 0, ep.Length - 1), out ip))
+                throw new FormatException("Invalid ip-adress");
+        }
+        else
+        {
+            if (!IPAddress.TryParse(ep[0], out ip))
+                throw new FormatException("Invalid ip-adress");
+        }
+
+        if (!int.TryParse(ep[^1], NumberStyles.None, NumberFormatInfo.CurrentInfo, out int port))
+            throw new FormatException("Invalid port");
+
+        return new IPEndPoint(ip, port);
+    }
     private static void AdvertiseServerPortsViaMDNS(ushort port)
     {
         MulticastService mdns = new();

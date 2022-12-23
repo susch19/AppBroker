@@ -2,8 +2,7 @@
 using Newtonsoft.Json.Converters;
 
 namespace AppBroker.Core;
-[JsonConverter(typeof(StringEnumConverter))]
-public enum Command
+public enum Command : int
 {
     None,
     Off,
@@ -30,6 +29,8 @@ public enum Command
     DeviceMapping,
     Calibration,
     Ota,
-    OtaPart
+    OtaPart,
+    Log,
+    Zigbee = 100
 
 };

@@ -10,7 +10,10 @@ public enum DasboardSpecialType
 {
     None = 0,
     Right = 1,
-    //Disabled = 2,
-    //Color = 3,
-    //Availability = 3,
+
+    //Only for backwards compatibility
+    Battery = -1,
+    Disabled = -2,
+    Color = -3,
+    Availability = -4,
 }

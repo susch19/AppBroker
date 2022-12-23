@@ -1,1 +1,0 @@
-﻿namespace AppBrokerASP.Database.Model;

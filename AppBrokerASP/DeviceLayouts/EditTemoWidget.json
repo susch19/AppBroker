@@ -1,0 +1,487 @@
+{
+  "UniqueName": "DemoEdit",
+  "TypeNames": [ "DemoEdit" ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "state",
+        "Order": 0,
+        "RowNr": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            }
+          ],
+          "Display": "AN",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "AUS",
+          "ActiveValue": false
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 1,
+        "EditInfo": {
+          "EditType": "toggle",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            },
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "Status",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 2,
+        "EditInfo": {
+          "EditType": "dropdown",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true,
+              "DisplayName": "AN"
+            },
+            {
+              "Command": "Off",
+              "Value": false,
+              "DisplayName": "AUS"
+            },
+            {
+              "Command": "None",
+              "Value": "Custom",
+              "DisplayName": "Just for testing",
+              "Parameters": [ { "PropertyName": "CustomProperty" } ]
+            }
+          ],
+          "Display": "Status DropDown"
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "DeviceId": -6574912042886067214,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": -25.0,
+                "Max": 40.0,
+                "Divisions": 5
+              }
+            }
+          ],
+          "Display": "Current",
+          "ActiveValue": true,
+          "GradientColors": [
+
+            [ 255, 0, 0, 255 ],
+            [ 255, 0, 255, 0 ],
+            [ 255, 255, 0, 0 ],
+            [ 255, 66, 66, 66 ],
+
+            4294967296
+          ]
+        },
+        "Precision": 0
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 4,
+        "EditInfo": {
+          "EditType": "input",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": -25.0,
+                "Max": 40.0,
+                "Divisions": 5
+              }
+            }
+          ],
+          "Display": "Ein tolles Label",
+          "ActiveValue": true,
+          "HintText": "Toller Hint",
+          "KeyboardType": "number"
+        }
+      },
+
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 4,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": 0.0,
+                "Max": 2.0,
+                "Divisions": 100,
+                "Values": [
+                  {
+                    "Test": "TestFirst"
+                  },
+                  {
+                    "Other": 12
+                  },
+                  {
+                    "CompletelyDifferent": 12.6
+                  }
+                ]
+              }
+            }
+          ],
+          "Display": "Current",
+          "ActiveValue": true
+        }
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "state",
+        "Order": 1,
+        "RowNr": 0,
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            }
+          ],
+          "Display": "AN",
+          "ActiveValue": true
+        },
+        "DisplayName": "Status: "
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 0,
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "Button",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "AUS",
+          "ActiveValue": false
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 1,
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "toggle",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true
+            },
+            {
+              "Command": "Off",
+              "Value": false
+            }
+          ],
+          "Display": "Status",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 2,
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "dropdown",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "On",
+              "Value": true,
+              "DisplayName": "AN"
+            },
+            {
+              "Command": "Off",
+              "Value": false,
+              "DisplayName": "AUS"
+            },
+            {
+              "Command": "None",
+              "Value": "Custom",
+              "DisplayName": "Just for testing",
+              "Parameters": [ { "PropertyName": "CustomProperty" } ]
+            }
+          ],
+          "Display": "Status DropDown"
+        }
+      },
+      {
+        "Name": "state",
+        "Order": 2,
+        "RowNr": 8,
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "IconButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "Off",
+              "Value": true,
+              "DisplayName": "AnIcon",
+              "CodePoint": 57460
+            },
+            {
+              "Command": "On",
+              "Value": false,
+              "DisplayName": "AusIcon",
+              "CodePoint": 57461
+            }
+          ],
+          "Display": "Status DropDown"
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "TabInfoId": 0,
+        "Expanded": true,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": -25.0,
+                "Max": 40.0
+                //"Divisions": 5
+              }
+            }
+          ],
+          //"Display": "Current",
+          "ActiveValue": true,
+          "GradientColors": [
+
+            [ 255, 66, 66, 66 ],
+            [ 255, 255, 255, 255 ]
+          ]
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "TabInfoId": 0,
+        "DeviceId": -6574912042886067214,
+        "EditInfo": {
+          "EditType": "icon",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 20.0,
+              "Max": 40.0,
+              "CodePoint": 57460
+            },
+            {
+              "Command": "None",
+              "Value": 150.0,
+              "Min": 10.0,
+              "Max": 20.0,
+              "CodePoint": 57461
+            },
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 0.0,
+              "Max": 10.0,
+              "CodePoint": 57462
+            },
+            {
+              "Command": "None",
+              "Value": -50.0,
+              "Min": -100.0,
+              "Max": 0.0,
+              "CodePoint": 57463
+            }
+          ],
+          //"Display": "Current",
+          "ActiveValue": true
+        }
+      },
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 3,
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "FloatingActionButton",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 20.0,
+              "Max": 40.0,
+              "CodePoint": 57460,
+              "Parameters": [ "Current" ]
+            },
+            {
+              "Command": "None",
+              "Value": 150.0,
+              "Min": 10.0,
+              "Max": 20.0,
+              "CodePoint": 57461,
+              "Parameters": [ "Current2" ]
+            },
+            {
+              "Command": "None",
+              "Value": 30.0,
+              "Min": 0.0,
+              "Max": 10.0,
+              "CodePoint": 57462,
+              "Parameters": [ "Current3" ]
+            },
+            {
+              "Command": "None",
+              "Value": -50.0,
+              "Min": -100.0,
+              "Max": 0.0,
+              "CodePoint": 57463,
+              "Parameters": [ "Current4" ]
+            }
+          ],
+          //"Display": "Current",
+          "ActiveValue": true
+        }
+      },
+      {
+       "Name": "current",
+       "Order": 2,
+       "RowNr": 4,
+       "EditInfo": {
+         "EditType": "input",
+         "EditCommand": "Update",
+         "EditParameter": [
+           {
+             "Command": "None",
+             "Parameters": [ "Current" ],
+             "Value": {
+               "Min": -25.0,
+               "Max": 40.0,
+               "Divisions": 5
+             }
+           }
+         ],
+         "Display": "Ein tolles Label",
+         "ActiveValue": true,
+         "HintText": "Toller Hint",
+         "KeyboardType": "number"
+       }
+      },
+
+      {
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 4,
+        "TabInfoId": 0,
+        "EditInfo": {
+          "EditType": "slider",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": 0.0,
+                "Max": 2.0,
+                "Divisions": 2,
+                "Values": [
+                  {
+                    "Test": "TestFirst"
+                  },
+                  {
+                    "Other": 12
+                  },
+                  {
+                    "CompletelyDifferent": 12.6
+                  }
+                ]
+              }
+            }
+          ],
+          "GradientColors": [
+
+            [ 255, 66, 66, 66 ],
+            [ 255, 255, 0, 0 ],
+            [ 255, 0, 255, 0 ],
+            [ 255, 0, 0, 255 ],
+
+            4294967296
+          ],
+
+
+          "Display": "Current"
+        }
+      }
+    ]
+
+  }
+}

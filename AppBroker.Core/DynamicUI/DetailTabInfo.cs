@@ -6,5 +6,6 @@ public class DetailTabInfo
     public string IconName { get; set; } = "";
     public int Order { get; set; }
     public LinkedDeviceTab? LinkedDevice { get; set; } // Have another device in a tab, like Heater and Temperature Sensor
+    public bool ShowOnlyInDeveloperMode { get; set; }
 }
 

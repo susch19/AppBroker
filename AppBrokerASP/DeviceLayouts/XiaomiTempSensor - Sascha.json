@@ -1,7 +1,7 @@
 {
-  "UniqueName": "TempSensorLayout",
-  "TypeName": "XiaomiTempSensor",
-  "Ids": [],
+  "UniqueName": "SaschaTempSensorLayout",
+  "Ids": [ 6066005697233659 ],
+"ShowOnlyInDeveloperMode":false,
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
@@ -79,7 +79,7 @@
           "EditCommand": "Update",
           "EditParameter": [
             {
-              "Command": "None",
+              "Command": "222",
               "Value": 0,
               "Min": 0,
               "Max": 20,
@@ -87,7 +87,7 @@
               "FontFamily": "Smarthome"
             },
             {
-              "Command": "None",
+              "Command": "222",
               "Value": 0,
               "Min": 20,
               "Max": 40,
@@ -95,7 +95,7 @@
               "FontFamily": "Smarthome"
             },
             {
-              "Command": "None",
+              "Command": "222",
               "Value": 0,
               "Min": 40,
               "Max": 60,
@@ -103,7 +103,7 @@
               "FontFamily": "Smarthome"
             },
             {
-              "Command": "None",
+              "Command": "222",
               "Value": 0,
               "Min": 60,
               "Max": 80,
@@ -111,7 +111,7 @@
               "FontFamily": "Smarthome"
             },
             {
-              "Command": "None",
+              "Command": "222",
               "Value": 100,
               "Min": 80,
               "Max": 101,
@@ -130,14 +130,14 @@
           "EditCommand": "Update",
           "EditParameter": [
             {
-              "Command": "None",
+              "Command": "231",
               "Value": true,
               "CodePoint": 59411,
               "Parameters": [ false ]
             },
 
             {
-              "Command": "None",
+              "Command": "231",
               "Value": false,
               "CodePoint": 59411,
               "FontFamily": "Smarthome",

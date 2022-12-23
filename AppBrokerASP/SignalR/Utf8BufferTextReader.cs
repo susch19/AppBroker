@@ -7,7 +7,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace Microsoft.AspNetCore.SignalR.Internal;
+namespace AppBrokerASP.SignalR;
 
 internal sealed class Utf8BufferTextReader : TextReader
 {
@@ -30,17 +30,13 @@ internal sealed class Utf8BufferTextReader : TextReader
     {
         var reader = _cachedInstance;
         if (reader == null)
-        {
             reader = new Utf8BufferTextReader();
-        }
 
         // Taken off the thread static
         _cachedInstance = null;
 #if DEBUG
         if (reader._inUse)
-        {
             throw new InvalidOperationException("The reader wasn't returned!");
-        }
 
         reader._inUse = true;
 #endif
@@ -65,9 +61,7 @@ internal sealed class Utf8BufferTextReader : TextReader
     public override int Read(char[] buffer, int index, int count)
     {
         if (_utf8Buffer.IsEmpty)
-        {
             return 0;
-        }
 
         var source = _utf8Buffer.First.Span;
         var bytesUsed = 0;

@@ -3,7 +3,7 @@
 
 using System.Buffers;
 
-namespace Microsoft.AspNetCore.Internal;
+namespace AppBrokerASP.SignalR;
 
 internal static class TextMessageFormatter
 {

@@ -12,6 +12,7 @@ public class PropertyEditInformation
     public string? HubMethod { get; set; }
     public string? ValueName { get; set; }
     public object? ActiveValue { get; set; }
+    public string? Dialog { get; set; }
     [JsonExtensionData]
     public Dictionary<string, JToken>? ExtensionData { get; set; }
 }
