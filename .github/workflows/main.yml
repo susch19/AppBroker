@@ -47,15 +47,6 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.REPO_NAME }}
           
-      - name: Build TCPProxy and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
-        with:
-          context: .
-          file: TcpProxy/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: susch19/appbroker-tcpproxy:latest
-          labels: ${{ steps.meta.outputs.labels }}
-          
       - name: Build AppBroker and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
@@ -64,3 +55,13 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: susch19/appbroker:latest
           labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: Build TCPProxy and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          file: TcpProxy/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: susch19/tcpproxy:latest
+          labels: ${{ steps.meta.outputs.labels }}
+          
