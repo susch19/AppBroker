@@ -27,7 +27,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
         with:
-          platforms: 'amd64,arm64,arm'
+          platforms: 'amd64,arm'
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
       - name: Get Git Submodules
@@ -51,7 +51,7 @@ jobs:
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
-          platforms: linux/amd64,linx/arm64,linux/arm/v7
+          platforms: linux/amd64,linux/arm/v7
           file: AppBrokerASP/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/susch19/appbroker:latest
@@ -61,7 +61,7 @@ jobs:
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
-          platforms: linux/amd64,linx/arm64,linux/arm/v7
+          platforms: linux/amd64,linux/arm/v7
           file: TcpProxy/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           tags: ghcr.io/susch19/appbroker-tcpproxy:latest
