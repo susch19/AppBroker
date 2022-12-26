@@ -4,14 +4,13 @@ on:
   push:
     branches: [ "master", "develop" ]
   pull_request:
-    branches: [ "master", "develop", "feature/zigbee2mqtt" ]
+    branches: [ "master", "develop" ]
   workflow_dispatch:
     # Enable manual run
     
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: tcpproxy
   REPO_NAME: ${{ github.repository }}
 
 jobs:
