@@ -4,14 +4,13 @@ on:
   push:
     branches: [ "master", "develop" ]
   pull_request:
-    branches: [ "master", "develop", "feature/zigbee2mqtt" ]
+    branches: [ "master", "develop" ]
   workflow_dispatch:
     # Enable manual run
     
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: tcpproxy
   REPO_NAME: ${{ github.repository }}
 
 jobs:
@@ -24,12 +23,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
         with:
-          platforms: 'arm64,arm'
+          platforms: 'amd64,arm'
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
       - name: Get Git Submodules
         run: git submodule update --init --recursive
       
@@ -47,20 +46,23 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.REPO_NAME }}
           
-      - name: Build TCPProxy and push Docker image
-        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
-        with:
-          context: .
-          file: TcpProxy/Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          tags: susch19/appbroker-tcpproxy:latest
-          labels: ${{ steps.meta.outputs.labels }}
-          
       - name: Build AppBroker and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
+          platforms: linux/amd64,linux/arm/v7
           file: AppBrokerASP/Dockerfile
-          push: ${{ github.event_name == 'push' }}
-          tags: susch19/appbroker:latest
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/susch19/appbroker:latest
           labels: ${{ steps.meta.outputs.labels }}
+          
+      - name: Build TCPProxy and push Docker image
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm/v7
+          file: TcpProxy/Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ghcr.io/susch19/appbroker-tcpproxy:latest
+          labels: ${{ steps.meta.outputs.labels }}
+          
