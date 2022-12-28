@@ -34,7 +34,20 @@ public class CoordinatorDevice : Zigbee2MqttDevice
                 await client.EnqueueAsync("zigbee2mqtt/bridge/request/permit_join", $$"""{"value": {{enable}}, "time": {{time}}}""");
                 
                 break;
-            
+            case 171:
+                if (parameters.Count < 1)
+                    break;
+                //https://www.zigbee2mqtt.io/guide/usage/mqtt_topics_and_messages.html#zigbee2mqtt-bridge-request
+                // implement remove, remove force and remove block variants
+                await client.EnqueueAsync("zigbee2mqtt/bridge/request/device/remove", $$"""{}""");
+                break;
+            case 173:
+                await client.EnqueueAsync("zigbee2mqtt/bridge/request/restart");
+                break;
+            case 174:
+                await client.EnqueueAsync("zigbee2mqtt/bridge/request/backup");
+                break;
+
             default:
                 break;
         }

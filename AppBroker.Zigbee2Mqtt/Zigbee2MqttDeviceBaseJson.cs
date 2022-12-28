@@ -14,6 +14,18 @@ public abstract class Zigbee2MqttDeviceBaseJson
     public IDictionary<string, JToken> AdditionalData { get; set; }
 }
 
+public class Zigbee2MqttBackup : Zigbee2MqttDeviceBaseJson
+{
+    [JsonProperty("status")]
+    public string Status { get; set; }
+
+    /// <summary>
+    /// a zip file encoded via Base64
+    /// </summary>
+    [JsonProperty("zip")]
+    public string Zip { get; set; }
+}
+
 public class Zigbee2MqttClusters : Zigbee2MqttDeviceBaseJson
 {
     [JsonProperty("input")]

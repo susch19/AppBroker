@@ -20,10 +20,10 @@ namespace AppBroker.Zigbee2Mqtt;
 public class Zigbee2MqttManager : IAsyncDisposable
 {
     public IManagedMqttClient? MQTTClient { get; set; }
-    Zigbee2MqttDeviceJson[]? devices;
+    internal readonly Dictionary<string, long> friendlyNameToIdMapping = new();
+    private Zigbee2MqttDeviceJson[]? devices;
     private readonly ZigbeeConfig config;
     private readonly Logger logger;
-    private readonly Dictionary<string, long> friendlyNameToIdMapping = new();
     private readonly Stack<(string, string, string)> cachedBeforeConnect = new();
 
     public Zigbee2MqttManager(ZigbeeConfig zigbee2MqttConfig)
@@ -120,11 +120,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
     private async Task Mqtt_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
-        if (e.ApplicationMessage.Retain)
-        { 
-            //Store in DB oder File with QoS and load at start
-        }
-
         var topic = e.ApplicationMessage.Topic;
         if (!topic.StartsWith("zigbee2mqtt/"))
         {
@@ -141,11 +136,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
             Console.WriteLine($"[{topic}] {payload}");
             if (devices is null)
             {
-                //if (config.RestartOnMissingDevice)
-                //    await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/restart");
-                //else
-                //    await MQTTClient.SubscribeAsync("zigbee2mqtt/#");
-
                 logger.Trace($"Got state before device {deviceName}, is something wrong with the retained messages of the mqtt broker?");
                 cachedBeforeConnect.Push((topic, deviceName, payload));
                 return;
@@ -154,7 +144,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
             return;
 
         }
-
+        //zigbee2mqtt/bridge/request/backup
 
         var method = splitted[2];
         switch (method)
@@ -231,10 +221,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
             case "groups":
                 //var d = JsonConvert.DeserializeObject<Zigbee2MqttGroup[]>(payload);
                 break;
-            //case "state":
-            //    _ = Enum.TryParse<Zigbee2MqttAvailabilityState>(payload, out var f);
-            //    ;
-            //    break;
             case "logging":
                 var g = JsonConvert.DeserializeObject<Zigbee2MqttLogMessage>(payload);
                 var lvl = g!.Level switch
@@ -247,7 +233,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 _ = logger.ForLogEvent(lvl).Message(g.Message).Callsite();
 
                 break;
-            //"zigbee2mqtt/MY_DEVICE/availability"
             case "availability":
                 if (friendlyNameToIdMapping.TryGetValue(deviceName, out var deviceId))
                 {
@@ -260,6 +245,10 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 {
                     logger.Warn($"Couldn't set availability ({payload}) on {deviceName}");
                 }
+                break;
+            case "request/backup":
+                var backup = JsonConvert.DeserializeObject<Zigbee2MqttBackup>(payload);
+                //TODO: Store Backup somewhere
                 break;
             case "extensions":
             default:

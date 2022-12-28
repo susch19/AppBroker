@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Devices;
 using AppBroker.Core.Javascript;
 
 using AppBrokerASP;
@@ -45,7 +46,7 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
             var stateFromManager =
                 IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(Id, "lastReceived");
             if (stateFromManager is DateTime dt)
-                 return dt.ToString("dd.MM.yyyy HH:mm:ss");
+                return dt.ToString("dd.MM.yyyy HH:mm:ss");
 
             return "No Data";
         }
@@ -165,7 +166,7 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
             if (lastFound is null)
             {
                 logger.Warn($"Couldn't find {property} on {FriendlyName}");
-                return; 
+                return;
             }
 
             lastFound = lastFound.Features.FirstOrDefault(x => x.Name == toFind[index])
@@ -212,5 +213,21 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
         engine.DefineFunction("invokeOnDevice", (string name, object value) => InvokeOnDevice(name, (x) => SetValue(new SetFeatureValue(x, value))));
 
         return base.ExtendEngine(engine);
+    }
+
+    protected override bool FriendlyNameChanging(string oldName, string newName)
+    {
+        client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
+        if (zigbeeManager.friendlyNameToIdMapping.TryGetValue(oldName, out var id)
+            && id == Id
+            && !zigbeeManager.friendlyNameToIdMapping.ContainsKey(newName)
+            && zigbeeManager.friendlyNameToIdMapping.Remove(oldName, out _))
+        {
+            zigbeeManager.friendlyNameToIdMapping[newName] = id;
+            return true;
+        }
+
+        logger.Error($"Couldn't rename {oldName} to {newName} for zigbee2mqtt, because the old name was incorrect, it couldn't be removed from the mapping or the new name was already used");
+        return false;
     }
 }
