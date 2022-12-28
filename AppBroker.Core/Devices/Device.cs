@@ -46,7 +46,14 @@ public abstract class Device : IDisposable
     [JsonIgnore]
     public virtual bool ShowInApp { get; set; }
 
-    public virtual string FriendlyName { get; set; }
+    public virtual string FriendlyName
+    {
+        get => friendlyName; set
+        {
+            if (FriendlyNameChanging(friendlyName, value))
+                friendlyName = value;
+        }
+    }
 
     [JsonIgnore]
     public bool Initialized { get; set; }
@@ -54,14 +61,14 @@ public abstract class Device : IDisposable
     [JsonIgnore]
     protected NLog.Logger Logger { get; set; }
 
-    public bool StartAutomatically { get; set; } = false;
+    public bool StartAutomatically { get; set; }
 
 
     [JsonExtensionData]
     public Dictionary<string, JToken>? DynamicStateData => IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id);
     private readonly Timer sendLastDataTimer;
     private readonly List<Subscriber> toRemove = new();
-
+    private string friendlyName;
 
     public Device(long nodeId, string? typeName) : this(nodeId)
     {
@@ -232,6 +239,8 @@ public abstract class Device : IDisposable
 
         ctx.SaveChanges();
     }
+
+    protected virtual bool FriendlyNameChanging(string oldName, string newName) => true;
     public void Dispose()
     {
         sendLastDataTimer?.Dispose();
