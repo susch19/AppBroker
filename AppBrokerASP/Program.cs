@@ -13,6 +13,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Globalization;
 using AppBrokerASP.Plugins;
+using AppBroker.Core;
+using MQTTnet.Server;
+using MQTTnet;
+using Newtonsoft.Json;
+using Esprima;
 
 namespace AppBrokerASP;
 
@@ -90,7 +95,9 @@ public class Program
             {
                 config.Sources.Clear();
                 _ = config.AddConfiguration(InstanceContainer.Instance.ConfigManager.Configuration);
-            });
+            })
+            ;
+
 
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
@@ -111,6 +118,7 @@ public class Program
                 _ = logging.ClearProviders();
                 _ = logging.AddNLog();
             });
+            var mqttConfig = InstanceContainer.Instance.ConfigManager.MqttConfig;
 
             var startup = new Startup(webBuilder.Configuration);
             startup.ConfigureServices(webBuilder.Services);
@@ -128,7 +136,7 @@ public class Program
                 _ = e.MapHub<SmartHome>(pattern: "/SmartHome");
                 _ = e.MapControllers();
 
-                if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+                if (mqttConfig.Enabled)
                 {
                     _ = e.MapConnectionHandler<MqttConnectionHandler>(
                         "/MQTTClient",
@@ -137,11 +145,34 @@ public class Program
                 }
             });
 
-
-            if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+            if (mqttConfig.Enabled)
             {
                 _ = app.UseMqttServer(server =>
                 {
+
+
+                    static async Task Server_RetainedMessagesClearedAsync(EventArgs arg) => File.Delete(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath);
+                    static Task Server_LoadingRetainedMessageAsync(LoadingRetainedMessagesEventArgs arg)
+                    {
+                        if (File.Exists(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath))
+                        {
+                            var json = File.ReadAllText(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath);
+                            arg.LoadedRetainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                        }
+                        else
+                        {
+                            arg.LoadedRetainedMessages = new List<MqttApplicationMessage>();
+                        }
+                        return Task.CompletedTask;
+                    }
+
+                    static async Task Server_RetainedMessageChangedAsync(RetainedMessageChangedEventArgs arg) => File.WriteAllText(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath, JsonConvert.SerializeObject(arg.StoredRetainedMessages));
+                    ;
+
+
+                    server.RetainedMessageChangedAsync += Server_RetainedMessageChangedAsync;
+                    server.LoadingRetainedMessageAsync += Server_LoadingRetainedMessageAsync;
+                    server.RetainedMessagesClearedAsync += Server_RetainedMessagesClearedAsync;
                     // Todo: Do something with the server
                     // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
                 });
@@ -152,9 +183,13 @@ public class Program
             }
 
             var pluginLoader = new PluginLoader(LogManager.LogFactory);
+            IInstanceContainer.Instance.RegisterDynamic(pluginLoader);
 
             pluginLoader.LoadAssemblies();
             pluginLoader.InitializePlugins(LogManager.LogFactory);
+
+
+
 
             app.Run();
         }

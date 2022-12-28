@@ -21,7 +21,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
-		<ProjectReference Include="..\PainlessMesh\AppBroker.PainlessMesh.csproj" />
+		<ProjectReference Include="..\AppBroker.PainlessMesh\AppBroker.PainlessMesh.csproj" />
 	</ItemGroup>
 
 </Project>

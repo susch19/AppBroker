@@ -1,13 +1,8 @@
 {
-  "Version": 13,
-  "UniqueName": "Ikea Lampe1",
+  "Version": 1,
+  "UniqueName": "Osram Lampe Lightify",
   "TypeNames": [
-    "LED1624G9",
-    "LED1723G11",
-    "T2011",
-    "L1529",
-    "FloaltPanel",
-    "ZigbeeLamp"
+    "AB32840"
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
@@ -116,9 +111,9 @@
                 "color_temp"
               ],
               "Value": {
-                "Min": 250.0,
-                "Max": 454.0,
-                "Divisions": 204
+                "Min": 150.0,
+                "Max": 370.0,
+                "Divisions": 220
               }
             }
           ],
@@ -248,18 +243,6 @@
           ]
         }
       },
-      // {
-      //   "Name": "lastReceived",
-      //   "RowNr": 10,
-      //   "DisplayName": "Zuletzt empfangen: ",
-      //   "TextStyle": {
-      //     "FontSize": 16.0,
-      //     "FontFamily": "FontName",
-      //     "FontWeight": "normal",
-      //     "FontStyle": "normal"
-      //   },
-      //   "SpecialType": "none"
-      // },
       {
         "Name": "linkQuality",
         "RowNr": 11,
@@ -372,6 +355,7 @@
       }
     ],
     "HistoryProperties": [
+      
     ]
   }
 }

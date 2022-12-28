@@ -20,6 +20,9 @@ namespace AppBrokerASP.Plugins
 {
     public class PluginLoader
     {
+
+        public List<Type> ControllerTypes { get; } = new List<Type>();
+
         private List<IPlugin> plugins = new();
         private readonly ILogger logger;
 

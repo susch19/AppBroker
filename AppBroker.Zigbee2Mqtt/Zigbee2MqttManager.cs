@@ -13,6 +13,7 @@ using AppBrokerASP;
 using ZigbeeConfig = AppBroker.Zigbee2Mqtt.Zigbee2MqttConfig;
 using AppBroker.Zigbee2Mqtt.Devices;
 using System.Diagnostics.CodeAnalysis;
+using AppBroker.Core.Devices;
 
 namespace AppBroker.Zigbee2Mqtt;
 
@@ -99,6 +100,11 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
     private async Task Mqtt_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
+        if (e.ApplicationMessage.Retain)
+        { 
+            //Store in DB oder File with QoS and load at start
+        }
+
         var topic = e.ApplicationMessage.Topic;
         if (!topic.StartsWith("zigbee2mqtt/"))
         {
@@ -115,12 +121,12 @@ public class Zigbee2MqttManager : IAsyncDisposable
             Console.WriteLine($"[{topic}] {payload}");
             if (devices is null)
             {
-                if (config.RestartOnMissingDevice)
-                    await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/restart");
-                else
-                    await MQTTClient.SubscribeAsync("zigbee2mqtt/#");
+                //if (config.RestartOnMissingDevice)
+                //    await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/restart");
+                //else
+                //    await MQTTClient.SubscribeAsync("zigbee2mqtt/#");
 
-                logger.Trace($"Got state before device {deviceName}");
+                logger.Trace($"Got state before device {deviceName}, is something wrong with the retained messages of the mqtt broker?");
                 cachedBeforeConnect.Push((topic, deviceName, payload));
                 return;
             }
@@ -128,6 +134,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
             return;
 
         }
+
 
         var method = splitted[2];
         switch (method)
@@ -150,14 +157,20 @@ public class Zigbee2MqttManager : IAsyncDisposable
                         }
 
                         friendlyNameToIdMapping[item.FriendlyName] = id;
-                        if (item.Type == Zigbee2MqttDeviceType.Coordinator ||
-                            IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
+                        if (IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
                         {
-                            logger.Debug($"Already having device {id} or is coordinator");
+                            logger.Debug($"Already having device {id} ");
                             continue;
                         }
 
-                        var dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromNameWithBaseType(Zigbee2MqttDevice.GetTypeName(item), typeof(Zigbee2MqttDevice), typeof(Zigbee2MqttDevice), item!, id);
+
+
+                        Device? dev;
+
+                        if (item.Type == Zigbee2MqttDeviceType.Coordinator)
+                            dev = new CoordinatorDevice(item, id);
+                        else
+                            dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromNameWithBaseType(Zigbee2MqttDevice.GetTypeName(item), typeof(Zigbee2MqttDevice), typeof(Zigbee2MqttDevice), item!, id);
 
                         if (dev is not null)
                         {
@@ -185,7 +198,13 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 break;
 
             case "info":
-                //var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
+                var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
+                var manager = IInstanceContainer.Instance.DeviceStateManager;
+                if (!long.TryParse(c.Coordinator.IEEEAddress, out var coordinatorId))
+                    return;
+                manager.SetSingleState(coordinatorId, nameof(c.PermitJoin), c.PermitJoin);
+                manager.SetSingleState(coordinatorId, nameof(c.PermitJoinTimeout), c.PermitJoinTimeout);
+                manager.SetSingleState(coordinatorId, nameof(c.RestartRequired), c.RestartRequired);
                 ;
                 break;
 
@@ -220,35 +239,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 else
                 {
                     logger.Warn($"Couldn't set availability ({payload}) on {deviceName}");
-                    /*
-                     *
-2022-12-20 20:29:35.9043|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Katzenfütterstelle 💡
-2022-12-20 20:29:35.9058|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Wohnzimmer FLOALT panel 💡
-2022-12-20 20:29:35.9058|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Büro FLOALT panel  💡
-2022-12-20 20:29:35.9058|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Esszimmer Switch
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Wohnzimmer Fernbedienung
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Esszimmer Fensterbank 💡
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Büro Fernbedienung
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Badezimmer 🛀
-2022-12-20 20:29:35.9134|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Wohnzimmer 🛋️
-2022-12-20 20:29:35.9134|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Schlafzimmer 🌡
-2022-12-20 20:29:35.9179|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Zimmer
-2022-12-20 20:29:35.9179|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Küche | Esszimmer 🍽️
-2022-12-20 20:29:35.9179|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Büro ☎️
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Papa Schlafzimmer 🛌
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Eingangsbereich 🥾
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Papa Badezimmer 🚿
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Patrick ♒ Zimmer
-2022-12-20 20:29:35.9257|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (offline) on Papa Schlafzimmer
-2022-12-20 20:29:35.9257|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (offline) on Esszimmer Deckenleuchte
-2022-12-20 20:29:35.9257|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Schlafzimmer 💡
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Zimmer Strom
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Kühlschrank
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Waschraum Trockner
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Waschraum Waschmaschine
-2022-12-20 20:29:35.9335|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on 901
-                     *
-                     */
                 }
                 break;
             case "extensions":
