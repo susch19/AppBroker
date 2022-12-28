@@ -120,6 +120,11 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
     private async Task Mqtt_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
+        if (e.ApplicationMessage.Retain)
+        { 
+            //Store in DB oder File with QoS and load at start
+        }
+
         var topic = e.ApplicationMessage.Topic;
         if (!topic.StartsWith("zigbee2mqtt/"))
         {
@@ -136,12 +141,12 @@ public class Zigbee2MqttManager : IAsyncDisposable
             Console.WriteLine($"[{topic}] {payload}");
             if (devices is null)
             {
-                if (config.RestartOnMissingDevice)
-                    await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/restart");
-                else
-                    await MQTTClient.SubscribeAsync("zigbee2mqtt/#");
+                //if (config.RestartOnMissingDevice)
+                //    await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/restart");
+                //else
+                //    await MQTTClient.SubscribeAsync("zigbee2mqtt/#");
 
-                logger.Trace($"Got state before device {deviceName}");
+                logger.Trace($"Got state before device {deviceName}, is something wrong with the retained messages of the mqtt broker?");
                 cachedBeforeConnect.Push((topic, deviceName, payload));
                 return;
             }
@@ -149,6 +154,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
             return;
 
         }
+
 
         var method = splitted[2];
         switch (method)
@@ -171,14 +177,20 @@ public class Zigbee2MqttManager : IAsyncDisposable
                         }
 
                         friendlyNameToIdMapping[item.FriendlyName] = id;
-                        if (item.Type == Zigbee2MqttDeviceType.Coordinator ||
-                            IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
+                        if (IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
                         {
-                            logger.Debug($"Already having device {id} or is coordinator");
+                            logger.Debug($"Already having device {id} ");
                             continue;
                         }
 
-                        var dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromNameWithBaseType(Zigbee2MqttDevice.GetTypeName(item), typeof(Zigbee2MqttDevice), typeof(Zigbee2MqttDevice), item!, id);
+
+
+                        Device? dev;
+
+                        if (item.Type == Zigbee2MqttDeviceType.Coordinator)
+                            dev = new CoordinatorDevice(item, id);
+                        else
+                            dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromNameWithBaseType(Zigbee2MqttDevice.GetTypeName(item), typeof(Zigbee2MqttDevice), typeof(Zigbee2MqttDevice), item!, id);
 
                         if (dev is not null)
                         {
@@ -206,7 +218,13 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 break;
 
             case "info":
-                //var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
+                var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
+                var manager = IInstanceContainer.Instance.DeviceStateManager;
+                if (!long.TryParse(c.Coordinator.IEEEAddress, out var coordinatorId))
+                    return;
+                manager.SetSingleState(coordinatorId, nameof(c.PermitJoin), c.PermitJoin);
+                manager.SetSingleState(coordinatorId, nameof(c.PermitJoinTimeout), c.PermitJoinTimeout);
+                manager.SetSingleState(coordinatorId, nameof(c.RestartRequired), c.RestartRequired);
                 ;
                 break;
 

@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AppBroker.Core.Javascript;
 using AppBroker.Core;
+using AppBrokerASP.Plugins;
+using MQTTnet.Server;
+using MQTTnet;
+using Newtonsoft.Json;
 
 namespace AppBrokerASP;
 
@@ -33,6 +37,13 @@ public class Startup
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowAnyOrigin()));
+
+        services
+            .AddControllers()
+            .ConfigureApplicationPartManager(manager =>
+            {
+                manager.FeatureProviders.Add(new GenericControllerFeatureProvider());
+            });
 
         var signalRBuilder = services.AddSignalR(
             opt => opt.EnableDetailedErrors = true

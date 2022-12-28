@@ -1,14 +1,7 @@
 {
-  "Version": 13,
-  "UniqueName": "Ikea Lampe1",
-  "TypeNames": [
-    "LED1624G9",
-    "LED1723G11",
-    "T2011",
-    "L1529",
-    "FloaltPanel",
-    "ZigbeeLamp"
-  ],
+  "Version": 2,
+  "UniqueName": "Sascha Schlafzimmer Lampe",
+  "Ids": [ -4885370955287228666 ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
@@ -103,7 +96,7 @@
     
       {
         "Name": "color_temp",
-        "RowNr": 3,
+        "RowNr": 4,
         "Order": 0,
         "Expanded":true,
         "EditInfo": {
@@ -157,7 +150,7 @@
       },
       {
         "Name": "brightness",
-        "RowNr": 5,
+        "RowNr": 6,
         "Order": 0,
         "Expanded":true,
         "EditInfo": {
@@ -198,12 +191,12 @@
       {
         "Name": "123_Invalid",
         "DisplayName": "Verhalten beim Start: ",
-        "RowNr": 6
+        "RowNr": 7
       },
       {
         "Name": "power_on_behavior",
         "DisplayName": "Status beim Start: ",
-        "RowNr": 6,
+        "RowNr": 7,
         "Order": 2,
         "EditInfo": {
           "EditType": "dropdown",
@@ -372,6 +365,15 @@
       }
     ],
     "HistoryProperties": [
+      {
+        "PropertyName": "state",
+        "XAxisName": "Status",
+        "UnitOfMeasurement": " ",
+        "IconName": "flash-59419",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
+        "ChartType": "step"
+      }
     ]
   }
 }

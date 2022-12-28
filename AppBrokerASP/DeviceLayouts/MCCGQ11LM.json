@@ -1,0 +1,24 @@
+{
+  "UniqueName": "MCCGQ11LM",
+  "TypeName": "MCCGQ11LM",
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+     
+      {
+        "Name": "opened",
+        "RowNr": 2
+      },
+      {
+        "Name": "temperature",
+        "RowNr": 3,
+        "UnitOfMeasurement": " %"
+      },
+      {
+        "Name": "id",
+        "Order": 5,
+        "RowNr": 5,
+        "ShowOnlyInDeveloperMode": true
+      }
+    ]
+  }
+}

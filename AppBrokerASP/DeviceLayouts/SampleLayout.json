@@ -1,5 +1,5 @@
 {
-  "UniqueName" :  "DemoLayout",
+  "UniqueName": "DemoLayout",
   "TypeName": "Demo",
   "Ids": [
     -1,
@@ -10,6 +10,8 @@
       {
         "Name": "PropName",
         "Order": 0,
+        "Format": "",
+        "EditInfo": null,
         "TextStyle": {
           "FontSize": 22.0,
           "FontFamily": "FontName",
@@ -18,66 +20,13 @@
         },
         "RowNr": null,
         "UnitOfMeasurement": "",
-        "SpecialType": "none"
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": null
       }
     ]
   },
   "DetailDeviceLayout": {
-    "PropertyInfos": [
-      {
-        "Name": "PropNameUpdateable",
-        "Order": 0,
-        //"EditInfo": {
-        //  "EditType": "Update",
-        //  "EditCommand": 14
-        //},
-        "TextStyle": {
-          "FontSize": 12.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
-      },
-      {
-        "Name": "PropNameNotUpdable",
-        "Order": 1,
-        "EditInfo": null,
-        "TextStyle": null,
-        "TabInfoId": 0,
-        "SpecialType": "none"
-      },
-      {
-        "Name": "PropNameTempCurrent",
-        "Order": 2,
-        "EditInfo": null,
-        "TextStyle": {
-          "FontSize": 12.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 1,
-        "SpecialType": "current"
-      },
-      {
-        "Name": "PropNameTempTarget",
-        "Order": 3,
-        //"EditInfo": {
-        //  "EditType": "Update",
-        //  "EditCommand": 6
-        //},
-        "TextStyle": {
-          "FontSize": 12.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 1,
-        "SpecialType": "target"
-      }
-    ],
+    "PropertyInfos": [],
     "TabInfos": [
       {
         "Id": 0,
@@ -100,6 +49,7 @@
           "DeviceType": "DeviceTypeName"
         }
       }
-    ]
+    ],
+    "HistoryProperties": []
   }
 }

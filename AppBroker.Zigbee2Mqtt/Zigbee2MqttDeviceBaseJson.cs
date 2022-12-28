@@ -226,6 +226,8 @@ public class Zigbee2MqttCoordinator : Zigbee2MqttDeviceBaseJson
 
     [JsonProperty("extended_pan_id")]
     public float[] ExtendedPanId { get; set; }
+    [JsonProperty("ieee_address")]
+    public string IEEEAddress{ get; set; }
 }
 
 public class Zigbee2MqttConfigJson : Zigbee2MqttDeviceBaseJson
