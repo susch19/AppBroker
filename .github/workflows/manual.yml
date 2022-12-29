@@ -1,10 +1,12 @@
-name: Docker Image CI
+name: Manual Docker Image Push
 
 on:
-  push:
-    branches: [ "master", "develop" ]
-  pull_request:
-    branches: [ "master", "develop" ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Image Tag Name
+        default: test
+        required: true
 
 env:
   REGISTRY: ghcr.io
@@ -43,14 +45,15 @@ jobs:
           images: |
             ${{ env.REGISTRY }}/${{ env.REPO_NAME }}
           
+      
       - name: Build AppBroker and push Docker image
         uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
           platforms: linux/amd64,linux/arm/v7
           file: AppBrokerASP/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/susch19/appbroker:latest
+          push: true
+          tags: ghcr.io/susch19/appbroker:${{ github.event.inputs.tag }}
           labels: ${{ steps.meta.outputs.labels }}
           
       - name: Build TCPProxy and push Docker image
@@ -59,7 +62,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm/v7
           file: TcpProxy/Dockerfile
-          push: ${{ github.event_name != 'pull_request' }}
-          tags: ghcr.io/susch19/appbroker-tcpproxy:latest
+          push: true
+          tags: ghcr.io/susch19/appbroker-tcpproxy:${{ github.event.inputs.tag }}
           labels: ${{ steps.meta.outputs.labels }}
           
