@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using ILogger = NLog.ILogger;
 using AppBroker.Core.Devices;
 using AppBroker.Core;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AppBrokerASP.Plugins
 {
@@ -37,14 +38,21 @@ namespace AppBrokerASP.Plugins
 
             foreach (var type in allOfThemTypes)
             {
-                if (typeof(IPlugin).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
+                if (!type.IsInterface && !type.IsAbstract)
                 {
-                    logger.Info($"Loading Plugin {type.Name} from Assembly {ass.FullName}");
-                    plugins.Add(PluginCreator<IPlugin>.GetInstance(type));
-                }
-                else if (typeof(Device).IsAssignableFrom(type) && !type.IsInterface && !type.IsAbstract)
-                {
-                    IInstanceContainer.Instance.DeviceTypeMetaDataManager.RegisterDeviceType(type);
+                    if (typeof(IPlugin).IsAssignableFrom(type))
+                    {
+                        logger.Info($"Loading Plugin {type.Name} from Assembly {ass.FullName}");
+                        plugins.Add(PluginCreator<IPlugin>.GetInstance(type));
+                    }
+                    else if (typeof(Device).IsAssignableFrom(type))
+                    {
+                        IInstanceContainer.Instance.DeviceTypeMetaDataManager.RegisterDeviceType(type);
+                    }
+                    else if (typeof(ControllerBase).IsAssignableFrom(type))
+                    {
+                        ControllerTypes.Add(type);
+                    }
                 }
             }
         }

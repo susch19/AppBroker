@@ -39,6 +39,11 @@ public class Program
 
         _ = new InstanceContainer();
 
+        var pluginLoader = new PluginLoader(LogManager.LogFactory);
+        IInstanceContainer.Instance.RegisterDynamic(pluginLoader);
+
+        pluginLoader.LoadAssemblies();
+
         _ = DeviceLayoutService.InstanceDeviceLayouts;
 
         Logger? mainLogger = LogManager
@@ -182,14 +187,7 @@ public class Program
                 InstanceContainer.Instance.JavaScriptEngineManager.Initialize();
             }
 
-            var pluginLoader = new PluginLoader(LogManager.LogFactory);
-            IInstanceContainer.Instance.RegisterDynamic(pluginLoader);
-
-            pluginLoader.LoadAssemblies();
             pluginLoader.InitializePlugins(LogManager.LogFactory);
-
-
-
 
             app.Run();
         }
