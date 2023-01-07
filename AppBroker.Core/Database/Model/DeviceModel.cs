@@ -14,6 +14,10 @@ public class DeviceModel
     public bool StartAutomatically { get; set; }
     public string? DeserializationData { get; set; }
 
+
+    [InverseProperty(nameof(GroupDeviceMappingModel.DeviceId))]
+    public ICollection<GroupDeviceMappingModel> DeviceGroupMappings { get; set; }
+
     [InverseProperty(nameof(HeaterConfigModel.Device))]
     public virtual ICollection<HeaterConfigModel>? HeaterConfigs { get; set; }
 }

@@ -7,7 +7,6 @@ namespace AppBroker.Core.Database;
 
 public class BaseDbContext : DbContext
 {
-
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder
@@ -25,8 +24,9 @@ public class BrokerDbContext : BaseDbContext
     //public DbSet<HeaterConfigModel> HeaterCalibrations { get; set; }
     public DbSet<DeviceModel> Devices => Set<DeviceModel>();
     public DbSet<DeviceMappingModel> DeviceToDeviceMappings => Set<DeviceMappingModel>();
-    //public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
-
+    public DbSet<HeatingPlanModel> HeatingPlanModels => Set<HeatingPlanModel>();
+    public DbSet<GroupDeviceMappingModel> GroupDeviceMappingModels => Set<GroupDeviceMappingModel>();
+    public DbSet<GroupModel> GroupModels => Set<GroupModel>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder
         .UseSqlite(IInstanceContainer.Instance.ConfigManager.DatabaseConfig.BrokerDBConnectionString)

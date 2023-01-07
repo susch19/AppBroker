@@ -84,7 +84,7 @@ public class JavaScriptDevice : Device
 
         public JSFileAndEngine()
         {
-            
+
         }
 
         public JSFileAndEngine(JavaScriptFile jS)
@@ -127,7 +127,7 @@ public class JavaScriptDevice : Device
         Id = id;
 
         fileInfos = info
-            .Where(info=> info.Exists)
+            .Where(info => info.Exists)
             .Select(info => new JSFileAndEngine(new JavaScriptFile() with { Content = File.ReadAllText(info.FullName) }))
             .ToList();
 
@@ -312,11 +312,12 @@ public class JavaScriptDevice : Device
 
     //}
 
-    private IHeaterConfigModel? CurrentHeaterConfig()
+    public IHeaterConfigModel? CurrentHeaterConfig()
     {
         using BrokerDbContext? cont = DbProvider.BrokerDbContext;
         DeviceModel? d = cont.Devices
             .Include(x => x.HeaterConfigs)
+            .ThenInclude(x => x.HeatingPlan)
             .FirstOrDefault(x => x.Id == Id);
 
         if (d is null || d.HeaterConfigs is null || d.HeaterConfigs.Count < 1)
@@ -325,7 +326,10 @@ public class JavaScriptDevice : Device
 
         var curDow = (DayOfWeek)((int)(DateTime.Now.DayOfWeek + 6) % 7);
         var curTimeOfDay = DateTime.Now.TimeOfDay;
-        foreach (var item in d.HeaterConfigs.OrderByDescending(x => x.DayOfWeek).ThenByDescending(x => x.TimeOfDay))
+        foreach (var item in d.HeaterConfigs
+            .Where(x => x.HeatingPlan is null || x.HeatingPlan.Active)
+            .OrderByDescending(x => x.DayOfWeek)
+            .ThenByDescending(x => x.TimeOfDay))
         {
             bestFit = item;
 
