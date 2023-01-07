@@ -18,6 +18,11 @@ namespace AppBroker.Zigbee2Mqtt;
 
 public class Zigbee2MqttManager : IAsyncDisposable
 {
+    public event EventHandler<MqttClientConnectResult> Connected;
+    public event EventHandler<MqttClientConnectResult> Disconnected;
+
+    public event EventHandler DevicesReceived;
+
     public IManagedMqttClient? MQTTClient { get; set; }
     Zigbee2MqttDeviceJson[]? devices;
     private readonly ZigbeeConfig config;
@@ -71,31 +76,50 @@ public class Zigbee2MqttManager : IAsyncDisposable
         logger.Debug("Connecting to mqtt");
         if (MQTTClient is not null)
         {
-
             logger.Debug("Already connected to mqtt, returing existing instance");
             return MQTTClient;
         }
+
+        var randomId = Guid.NewGuid().ToString("N")[..8];
 
         var mqttFactory = new MqttFactory();
         var managedMqttClient = mqttFactory.CreateManagedMqttClient();
         var mqttClientOptions = new MqttClientOptionsBuilder()
                         .WithTcpServer(config.Address, config.Port)
-                        .Build();
+                        .WithClientId($"appbroker_{randomId}");
+
         logger.Debug("Builded new mqtt tcp server options");
 
         var managedMqttClientOptions = new ManagedMqttClientOptionsBuilder()
             .WithClientOptions(mqttClientOptions)
             .Build();
+
         logger.Debug("Builded new mqtt tcp client options");
 
         MQTTClient = managedMqttClient;
         MQTTClient.ApplicationMessageReceivedAsync += Mqtt_ApplicationMessageReceivedAsync;
+
+        MQTTClient.ConnectedAsync
+            += (args) =>
+            {
+                Connected?.Invoke(this, args.ConnectResult);
+                return Task.CompletedTask;
+            };
+
+        MQTTClient.DisconnectedAsync 
+            += (args) => {
+
+                Disconnected?.Invoke(this, args.ConnectResult);
+                return Task.CompletedTask;
+            };
+
         logger.Debug("Subscribed the incomming mqtt messages");
         await managedMqttClient.StartAsync(managedMqttClientOptions);
         logger.Debug("Started the mqtt client");
 
         return MQTTClient;
     }
+
 
     private async Task Mqtt_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
@@ -177,6 +201,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
                     TryInterpretTopicAsStateUpdate(item.Item1, item.Item2, item.Item3);
                 }
 
+                DevicesReceived?.Invoke(this, EventArgs.Empty);
                 break;
 
             case "config":
@@ -286,7 +311,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
         foreach (var item in GetFeatures<Zigbee2MqttBinaryFeature>(zdev.device.Definition.Exposes))
         {
-            if (customStates.TryGetValue(item.Property, out var token))
+            if (customStates.TryGetValue(item.Property, out var token) && token.Type != JTokenType.Boolean)
             {
                 customStates[item.Name] = item.ConvertToBool(token.ToOObject());
             }
