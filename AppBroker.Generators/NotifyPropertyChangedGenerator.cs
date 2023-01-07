@@ -1,7 +1,8 @@
-﻿using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis;
-using System.Text;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
+
+using System.Text;
 
 namespace AppBroker.Generators
 {
@@ -118,24 +119,24 @@ namespace AppBroker
 
         public void Execute(GeneratorExecutionContext context)
         {
-                // retrieve the populated receiver 
-                if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
-                    return;
+            // retrieve the populated receiver 
+            if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
+                return;
 
-                //Debugger.Launch();
+            //Debugger.Launch();
 
-                // get the added attribute, and INotifyPropertyChanged
-                INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
-                INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
-                INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
-                INamedTypeSymbol overrideFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.AddOverrideAttribute");
+            // get the added attribute, and INotifyPropertyChanged
+            INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
+            INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
+            INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
+            INamedTypeSymbol overrideFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.AddOverrideAttribute");
 
-                foreach (var group in receiver.Classes)
-                {
-                    string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, overrideFieldSymbol, context);
-                    context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
-                }
+            foreach (var group in receiver.Classes)
+            {
+                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, overrideFieldSymbol, context);
+                context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
             }
+        }
 
         private bool BaseClassAlreadyHasAttribute(INamedTypeSymbol parent, string attributeName)
         {
@@ -143,7 +144,8 @@ namespace AppBroker
                 return false;
             var attr = parent.BaseType.GetAttributes();
 
-            return attr.Any(x => $"{x.AttributeClass.ContainingNamespace}.{x.AttributeClass.Name}" == attributeName) || BaseClassAlreadyHasAttribute(parent.BaseType, attributeName);
+
+            return attr.Any(x => $"{x.AttributeClass?.ContainingNamespace}.{x.AttributeClass?.Name}" == attributeName) || BaseClassAlreadyHasAttribute(parent.BaseType, attributeName);
         }
 
         private string ProcessClass(INamedTypeSymbol classSymbol, SyntaxReceiver.ClassThingy thingy, INamedTypeSymbol attributeSymbol, INamedTypeSymbol ignoreAttributeSymbol, INamedTypeSymbol ignoreFieldSymbol, INamedTypeSymbol overrideFieldSymbol, GeneratorExecutionContext context)
@@ -205,12 +207,14 @@ namespace {namespaceName}
             // get the AutoNotify attribute from the field, and any associated data
             var fieldAttrs = fieldSymbol.GetAttributes();
 
-            var ignore = fieldAttrs.Any(ad => ad.AttributeClass.Equals(ignoreFieldSymbol, SymbolEqualityComparer.Default));
-            if (ignore == true)
-                return;
-            ignore = fieldAttrs.Any(ad => ad.AttributeClass.Equals(ignoreAttributeSymbol, SymbolEqualityComparer.Default));
+            var ignore = fieldAttrs.Any(ad => ad.AttributeClass?.Equals(ignoreFieldSymbol, SymbolEqualityComparer.Default) ?? false);
 
-            AttributeData attributeData = fieldAttrs.FirstOrDefault(ad => ad.AttributeClass.Equals(attributeSymbol, SymbolEqualityComparer.Default));
+            if (ignore)
+                return;
+
+            ignore = fieldAttrs.Any(ad => ad.AttributeClass?.Equals(ignoreAttributeSymbol, SymbolEqualityComparer.Default) ?? false);
+
+            AttributeData attributeData = fieldAttrs.FirstOrDefault(ad => ad.AttributeClass?.Equals(attributeSymbol, SymbolEqualityComparer.Default) ?? false);
             TypedConstant? overridenNameOpt = attributeData?.NamedArguments.SingleOrDefault(kvp => kvp.Key == "PropertyName").Value;
 
             string propertyName = chooseName(fieldName, overridenNameOpt);
@@ -252,13 +256,13 @@ namespace {namespaceName}
                         }
                         else
                         {
-                            _ = source.AppendLine($"        [{candidate.ContainingType.ToDisplayString()}{addAttr.ArgumentList.ToFullString()}]");
+                            _ = source.AppendLine($"        [{candidate.ContainingType.ToDisplayString()}{addAttr.ArgumentList?.ToFullString()}]");
                         }
                     }
                 }
             }
 
-            var @override = fieldAttrs.Any(ad => ad.AttributeClass.Equals(overrideFieldSymbol, SymbolEqualityComparer.Default));
+            var @override = fieldAttrs.Any(ad => ad.AttributeClass?.Equals(overrideFieldSymbol, SymbolEqualityComparer.Default) ?? false);
 
             _ = source.Append($@"
         public {(@override ? "override " : "")}{fieldType} {propertyName} 
@@ -272,7 +276,7 @@ namespace {namespaceName}
             {
                 if (overridenNameOpt is not null && !overridenNameOpt.Value.IsNull)
                 {
-                    return overridenNameOpt.Value.Value.ToString();
+                    return overridenNameOpt.Value.Value?.ToString();
                 }
 
                 fieldName = fieldName.TrimStart('_');
@@ -317,7 +321,11 @@ namespace {namespaceName}
                     {
                         // Get the symbol being declared by the field, and keep it if its annotated
                         var fieldSymbol = context.SemanticModel.GetDeclaredSymbol(variable) as IFieldSymbol;
-                        if (fieldSymbol.GetAttributes().Any(ad => ad.AttributeClass.ToDisplayString() == "AppBroker.PropertyChangedAppbrokerAttribute"))
+
+                        if (fieldSymbol is null)
+                            continue;
+
+                        if (fieldSymbol.GetAttributes().Any(ad => ad.AttributeClass?.ToDisplayString() == "AppBroker.PropertyChangedAppbrokerAttribute"))
                         {
                             var symbol = fieldSymbol.ContainingType as ISymbol;
                             if (!Classes.TryGetValue(symbol, out var thingy))
@@ -333,7 +341,11 @@ namespace {namespaceName}
                 && classDeclarationSyntax.AttributeLists.Count > 0)
                 {
                     var symbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax);
-                    var symbolAttr = symbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass.ToDisplayString() == "AppBroker.ClassPropertyChangedAppbrokerAttribute");
+
+                    if (symbol is null)
+                        return;
+
+                    var symbolAttr = symbol.GetAttributes().FirstOrDefault(ad => ad.AttributeClass?.ToDisplayString() == "AppBroker.ClassPropertyChangedAppbrokerAttribute");
                     if (symbolAttr is not null)
                     {
                         if (!Classes.TryGetValue(symbol, out var thingy))
@@ -348,29 +360,35 @@ namespace {namespaceName}
                         else
                         {
                             var typeToGenerateFor = symbolAttr.ConstructorArguments.FirstOrDefault().Value as ITypeSymbol;
-                            tmp = (ClassDeclarationSyntax)typeToGenerateFor.DeclaringSyntaxReferences.First().GetSyntax();
+                            tmp = (ClassDeclarationSyntax)typeToGenerateFor?.DeclaringSyntaxReferences.First().GetSyntax();
                         }
 
-                        for (int i = 0; i < symbolAttr.AttributeConstructor.Parameters.Length; i++)
+                        for (int i = 0; i < symbolAttr.AttributeConstructor?.Parameters.Length; i++)
                         {
                             IParameterSymbol item = symbolAttr.AttributeConstructor.Parameters[i];
                             var parameterValue = symbolAttr.ConstructorArguments[i].Value;
 
-                            switch (item.Name)
+                            if (parameterValue is bool boolValue)
                             {
-                                case "callPropertyChanged":
-                                    thingy.CallPropertyChanged = (bool)parameterValue;
-                                    break;
-                                case "callPropertyChanging":
-                                    thingy.CallPropertyChanging = (bool)parameterValue;
-                                    break;
-                                default:
-                                    break;
+                                switch (item.Name)
+                                {
+                                    case "callPropertyChanged":
+                                        thingy.CallPropertyChanged = boolValue;
+                                        break;
+                                    case "callPropertyChanging":
+                                        thingy.CallPropertyChanging = boolValue;
+                                        break;
+                                    default:
+                                        break;
+                                }
                             }
                         }
 
+                        if (tmp is null)
+                            return;
+
                         var symbol2 = context.SemanticModel.GetDeclaredSymbol(tmp) as INamedTypeSymbol;
-                        var allMembers = symbol2.GetMembers();
+                        var allMembers = symbol2?.GetMembers() ?? Enumerable.Empty<ISymbol>();
                         foreach (var p in allMembers)
                         {
                             if (p is IFieldSymbol fieldSymbol && !thingy.Fields.Contains(fieldSymbol))
@@ -388,14 +406,14 @@ namespace {namespaceName}
                                 var attribuesForProp
                                     = declaringSyntax
                                     .GetSyntax()
-                                    .Parent
-                                    .Parent
-                                    .ChildNodes()
+                                    ?.Parent
+                                    ?.Parent
+                                    ?.ChildNodes()
                                     .OfType<AttributeListSyntax>()
                                     .Where(x => x.Target?.Identifier.Text == "property")
                                     .ToList();
 
-                                if (attribuesForProp.Count == 0)
+                                if (attribuesForProp?.Count == 0)
                                     continue;
 
                                 thingy.AdditionalAttributesForGeneratedProp[fieldSymbol] = attribuesForProp;
