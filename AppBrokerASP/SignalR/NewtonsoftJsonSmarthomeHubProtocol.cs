@@ -63,7 +63,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
     public NewtonsoftJsonSmarthomeHubProtocol(IOptions<NewtonsoftJsonHubProtocolOptions> options)
     {
         PayloadSerializer = JsonSerializer.Create(options.Value.PayloadSerializerSettings);
-        key = SHA256.HashData(Encoding.UTF8.GetBytes(InstanceContainer.Instance.ConfigManager.ServerConfig.EncryptionPassword));
+        key = SHA256.HashData(Encoding.UTF8.GetBytes(InstanceContainer.Instance.ServerConfigManager.ServerConfig.EncryptionPassword));
     }
 
     /// <inheritdoc />

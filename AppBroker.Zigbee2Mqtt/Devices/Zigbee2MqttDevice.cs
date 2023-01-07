@@ -196,13 +196,31 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
                 InvokeOnDevice(name, async x => await SetValue(new SetFeatureValue(x, value)));
                 break;
             case (Command)150:
+            {
                 var propName = parameters[0].ToString();
-                zigbeeManager.SetValue(device.FriendlyName, propName, parameters[1]);
+                zigbeeManager.SetValue(this, propName, parameters[1]);
                 break;
+            }
             case (Command)151:
-                var propNameR = parameters[1].ToString();
-                zigbeeManager.SetValue(device.FriendlyName, propNameR, parameters[0]);
+            {
+                var propName = parameters[1].ToString();
+                zigbeeManager.SetValue(this, propName, parameters[0]);
                 break;
+            }
+            case (Command)152:
+            {
+                var propName = parameters[0].ToString();
+                var deviceId = parameters[2].ToObject<long>();
+                zigbeeManager.SetValue(deviceId, propName, parameters[1]);
+                break;
+            }
+            case (Command)153:
+            {
+                var propName = parameters[1].ToString();
+                var deviceId = parameters[2].ToObject<long>();
+                zigbeeManager.SetValue(deviceId, propName, parameters[0]);
+                break;
+            }
         }
         return base.UpdateFromApp(command, parameters);
     }

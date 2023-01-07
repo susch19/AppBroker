@@ -25,7 +25,7 @@ public class HistoryContext : BaseDbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         _ = optionsBuilder
-            .UseSqlite("Data Source=history.db")
+            .UseSqlite(IInstanceContainer.Instance.ConfigManager.DatabaseConfig.HistoryDBConnectionString)
             .UseLazyLoadingProxies();
     }
 }

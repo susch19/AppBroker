@@ -55,18 +55,18 @@ public class Program
         {
 
             UsedPortForSignalR = port;
-            if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
+            if (InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenPort == 0)
                 mainLogger.Info($"ListenPort is not configured in the appsettings serverconfig section and therefore default port {port} will be used, when no port was passed into listen url.");
             else
-                UsedPortForSignalR = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort;
+                UsedPortForSignalR = InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenPort;
 
             string[] listenUrls;
-            if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Any())
+            if (InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls.Any())
             {
-                listenUrls = new string[InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count];
-                for (int i = 0; i < InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count; i++)
+                listenUrls = new string[InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls.Count];
+                for (int i = 0; i < InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls.Count; i++)
                 {
-                    string? item = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls[i];
+                    string? item = InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls[i];
                     try
                     {
                         var builder = new UriBuilder(item)
@@ -182,7 +182,7 @@ public class Program
                     // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
                 });
             }
-            if (InstanceContainer.Instance.ConfigManager.ServerConfig.EnableJavaScript)
+            if (InstanceContainer.Instance.ServerConfigManager.ServerConfig.EnableJavaScript)
             {
                 InstanceContainer.Instance.JavaScriptEngineManager.Initialize();
             }
@@ -241,13 +241,13 @@ public class Program
                     && !x.IsIPv6Teredo))
             .ToArray();
 
-        var serv = new ServiceProfile(InstanceContainer.Instance.ConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
+        var serv = new ServiceProfile(InstanceContainer.Instance.ServerConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
 
         //serv.AddProperty("Min App Version", "0.0.2"); //Currently not needed, but supported by flutter app
         if (IsDebug)
             serv.AddProperty("Debug", IsDebug.ToString());
-        if (string.IsNullOrWhiteSpace(InstanceContainer.Instance.ConfigManager.ServerConfig.ClusterId))
-            serv.AddProperty("ClusterId", InstanceContainer.Instance.ConfigManager.ServerConfig.ClusterId);
+        if (string.IsNullOrWhiteSpace(InstanceContainer.Instance.ServerConfigManager.ServerConfig.ClusterId))
+            serv.AddProperty("ClusterId", InstanceContainer.Instance.ServerConfigManager.ServerConfig.ClusterId);
         sd.Advertise(serv);
 
         mdns.Start();

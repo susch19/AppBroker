@@ -20,6 +20,7 @@ namespace AppBroker.Core.Extension
         public string Name { get; }
 
         bool Initialize(NLog.LogFactory logFactory);
+        void RegisterTypes() { }
 
     }
 }

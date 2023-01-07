@@ -62,8 +62,8 @@ public class Startup
         _ = services.AddSingleton<IInstanceContainer>(container);
         _ = services.AddSingleton(container.IconService);
         _ = services.AddSingleton(container.ConfigManager);
-        _ = services.AddSingleton(container.ConfigManager.CloudConfig);
-        _ = services.AddSingleton(container.ConfigManager.ServerConfig);
+        _ = services.AddSingleton(container.ServerConfigManager.CloudConfig);
+        _ = services.AddSingleton(container.ServerConfigManager.ServerConfig);
         _ = services.AddSingleton(container.DeviceTypeMetaDataManager);
         _ = services.AddSingleton(container.DeviceManager);
         _ = services.AddSingleton(container.DeviceStateManager);

@@ -55,7 +55,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
     public Task SetOption(string name, string propName, JToken value)
     {
-
         return MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/options", $$"""{"id":{{name}}, "options":{"{{propName}}":{{value}}} }""");
     }
 
@@ -114,7 +113,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
         logger.Debug("Subscribed the incomming mqtt messages");
         await managedMqttClient.StartAsync(managedMqttClientOptions);
         logger.Debug("Started the mqtt client");
-
         return MQTTClient;
     }
 

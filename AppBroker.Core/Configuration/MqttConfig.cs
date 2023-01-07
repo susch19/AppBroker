@@ -1,9 +1,9 @@
-﻿namespace AppBrokerASP.Configuration;
+﻿namespace AppBroker.Core.Configuration;
 
 public class MqttConfig
 {
     public const string ConfigName = nameof(MqttConfig);
-    
+
     public bool Enabled { get; set; }
     public int ConnectionBacklog { get; set; }
     public int Port { get; set; }
@@ -14,6 +14,6 @@ public class MqttConfig
         Enabled = false;
         ConnectionBacklog = 10;
         Port = 8999;
-        RetainedMessageFilePath= "Retained.json";
+        RetainedMessageFilePath = "Retained.json";
     }
 }

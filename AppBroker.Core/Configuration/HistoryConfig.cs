@@ -1,4 +1,4 @@
-﻿namespace AppBrokerASP.Configuration;
+﻿namespace AppBroker.Core.Configuration;
 
 
 public class HistoryConfig
