@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <AssemblyName>ZZMaxi</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="dotVariant" Version="0.5.3" />
+    <PackageReference Include="System.Reactive" Version="5.0.0" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
+		<ProjectReference Include="..\AppBroker.Zigbee2Mqtt\AppBroker.Zigbee2Mqtt.csproj" />
+	</ItemGroup>
+	
+</Project>
