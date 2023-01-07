@@ -1,0 +1,49 @@
+{
+    "UniqueName": "SPZB0001",
+    "TypeName": "SPZB0001",
+    "DashboardDeviceLayout": {
+      "DashboardProperties": [
+        {
+          "Name": "id",
+          "EditParameter": [],
+          "EditInfo": {
+            "EditType": "button",
+            "Dialog": "HeaterConfig",
+            "Display": "Heizplan einstellen"
+          }
+        },
+        {
+          "Name": "current_heating_setpoint",
+          "RowNr": 2,
+          "UnitOfMeasurement": " °C Target"
+        },
+        {
+          "Name": "local_temperature",
+          "RowNr": 3,
+          "UnitOfMeasurement": " °C local"
+        },
+        {
+            "Name": "local_temperature_calibration",
+            "RowNr": 4,
+            "UnitOfMeasurement": " °C Calibration"
+          },
+          {
+            "Name": "valve_position",
+            "RowNr": 5,
+            "UnitOfMeasurement": " % Valve"
+          },
+        {
+          "Name": "battery",
+          "RowNr": 6,
+          "UnitOfMeasurement": " %",
+          "SpecialType": "right"
+        },
+        {
+          "Name": "id",
+          "Order": 5,
+          "RowNr": 5,
+          "ShowOnlyInDeveloperMode": true
+        }
+      ]
+    }
+  }

@@ -1,0 +1,24 @@
+{
+  "UniqueName": "MCCGQ11LM",
+  "TypeName": "ZigbeeContactSensor",
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+     
+      {
+        "Name": "contact",
+        "RowNr": 2
+      },
+      {
+        "Name": "device_temperature",
+        "RowNr": 3,
+        "UnitOfMeasurement": " %"
+      },
+      {
+        "Name": "id",
+        "Order": 5,
+        "RowNr": 5,
+        "ShowOnlyInDeveloperMode": true
+      }
+    ]
+  }
+}
