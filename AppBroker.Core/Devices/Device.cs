@@ -55,6 +55,15 @@ public abstract class Device : IDisposable
         }
     }
 
+    public virtual string FriendlyUniqueName
+    {
+        get => friendlyUniqueName; set
+        {
+            if (FriendlyUniqueNameChanging(friendlyUniqueName, value))
+                friendlyUniqueName = value;
+        }
+    }
+
     [JsonIgnore]
     public bool Initialized { get; set; }
 
@@ -69,6 +78,7 @@ public abstract class Device : IDisposable
     private readonly Timer sendLastDataTimer;
     private readonly List<Subscriber> toRemove = new();
     private string friendlyName;
+    private string friendlyUniqueName;
 
     public Device(long nodeId, string? typeName) : this(nodeId)
     {
@@ -252,6 +262,7 @@ public abstract class Device : IDisposable
     }
 
     protected virtual bool FriendlyNameChanging(string oldName, string newName) => true;
+    protected virtual bool FriendlyUniqueNameChanging(string oldName, string newName) => true;
     public void Dispose()
     {
         sendLastDataTimer?.Dispose();

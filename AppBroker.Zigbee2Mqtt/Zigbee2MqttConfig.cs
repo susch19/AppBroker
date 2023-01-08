@@ -8,6 +8,7 @@ public class Zigbee2MqttConfig
     public string Address { get; set; }
     public int Port { get; set; }
     public bool RestartOnMissingDevice{ get; set; } 
+    public bool SyncMissmatchedFriendlyNames { get; set; }
 
     public Zigbee2MqttConfig()
     {
@@ -16,5 +17,6 @@ public class Zigbee2MqttConfig
         Address = "127.0.0.1";
         Port = 8999;
         RestartOnMissingDevice = false;
+        SyncMissmatchedFriendlyNames = false;
     }
 }

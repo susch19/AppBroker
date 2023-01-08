@@ -157,11 +157,14 @@ public class Zigbee2MqttManager : IAsyncDisposable
                         var id = long.Parse(item.IEEEAddress[2..], NumberStyles.HexNumber);
                         logger.Debug($"Trying to create new device {id}");
                         var dbDevice = ctx.Devices.FirstOrDefault(x => x.Id == id);
-                        if (dbDevice is not null && !string.IsNullOrWhiteSpace(dbDevice.FriendlyName) && dbDevice.FriendlyName != item.FriendlyName)
+                        if (config.SyncMissmatchedFriendlyNames
+                            && dbDevice is not null 
+                            && !string.IsNullOrWhiteSpace(dbDevice.FriendlyUniqueName) 
+                            && dbDevice.FriendlyUniqueName != item.FriendlyName)
                         {
-                            logger.Info($"Friendly name of Zigbee2Mqtt Device {item.FriendlyName} does not match saved name {dbDevice.FriendlyName}, updating");
-                            await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyName}\"}}");
-                            item.FriendlyName = dbDevice.FriendlyName;
+                            logger.Info($"Friendly name of Zigbee2Mqtt Device {item.FriendlyName} does not match saved name {dbDevice.FriendlyUniqueName}, updating");
+                            await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyUniqueName}\"}}");
+                            item.FriendlyName = dbDevice.FriendlyUniqueName;
                         }
 
                         friendlyNameToIdMapping[item.FriendlyName] = id;
@@ -170,8 +173,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
                             logger.Debug($"Already having device {id} ");
                             continue;
                         }
-
-
 
                         Device? dev;
 

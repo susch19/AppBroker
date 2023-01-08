@@ -21,7 +21,7 @@ public static class Extensions
         {
             TypeNameHandling = TypeNameHandling.All,
             TypeNameAssemblyFormat = System.Runtime.Serialization.Formatters.FormatterAssemblyStyle.Simple,
-            
+
         };
     }
 
@@ -105,8 +105,8 @@ public static class Extensions
     public static string[] ToStringArray(this ICollection<JToken> elements) => elements.Select(x => x.ToString()).ToArray();
     public static string[] ToRawStringArray(this ICollection<JToken> elements) => elements.Select(x => x.ToString()).ToArray();
 
-    public static DeviceModel GetModel<T>(this T t) where T : Device => new() { Id = t.Id, TypeName = t.TypeName, FriendlyName = t.FriendlyName, StartAutomatically = t.StartAutomatically };
+    public static DeviceModel GetModel<T>(this T t) where T : Device => new() { Id = t.Id, TypeName = t.TypeName, FriendlyName = t.FriendlyName, FriendlyUniqueName = t.FriendlyUniqueName, StartAutomatically = t.StartAutomatically };
 
-    public static T GetDevice<T>(this DeviceModel model) where T : Device, new() => new() { Id = model.Id, TypeName = model.TypeName, FriendlyName = model.FriendlyName ?? "" };
+    public static T GetDevice<T>(this DeviceModel model) where T : Device, new() => new() { Id = model.Id, TypeName = model.TypeName, FriendlyName = model.FriendlyName ?? "", FriendlyUniqueName = model.FriendlyUniqueName ?? "0x" + model.Id.ToString("x2") };
 
 }

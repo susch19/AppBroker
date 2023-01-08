@@ -1,14 +1,21 @@
 ﻿
+using Microsoft.EntityFrameworkCore;
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppBroker.Core.Database.Model;
 
+[PrimaryKey(nameof(DeviceId), nameof(GroupId))]
 public class GroupDeviceMappingModel
 {
-    [Key, Column(Order = 0)]
     public long DeviceId { get; set; }
 
-    [Key, Column(Order = 1)]
     public int GroupId { get; set; }
+
+    [ForeignKey(nameof(DeviceId))]
+    public virtual DeviceModel Device { get; set; }
+
+    [ForeignKey(nameof(GroupId))]
+    public virtual GroupModel Group { get; set; }
 }

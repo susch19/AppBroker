@@ -10,7 +10,7 @@ public class GroupModel
     public string Name { get; set; }
 
 
-    [InverseProperty(nameof(GroupDeviceMappingModel.GroupId))]
-    public ICollection<GroupDeviceMappingModel> DeviceGroupMappings { get; set; }
+    [InverseProperty(nameof(GroupDeviceMappingModel.Group))]
+    public virtual ICollection<GroupDeviceMappingModel> DeviceGroupMappings { get; set; }
 
 }

@@ -43,6 +43,8 @@ public static class DbProvider
         if (dbDevice != default)
         {
             dbDevice.FriendlyName = d.FriendlyName;
+            dbDevice.FriendlyUniqueName = d.FriendlyUniqueName;
+
             _ = cont.SaveChanges();
             return true;
         }
@@ -58,6 +60,7 @@ public static class DbProvider
             if (dbDevice != default)
             {
                 d.FriendlyName = string.IsNullOrWhiteSpace(dbDevice.FriendlyName) ? dbDevice.Id.ToString() : dbDevice.FriendlyName;
+                d.FriendlyUniqueName = string.IsNullOrWhiteSpace(dbDevice.FriendlyUniqueName) ? dbDevice.Id.ToString() : dbDevice.FriendlyUniqueName;
                 return true;
             }
         }

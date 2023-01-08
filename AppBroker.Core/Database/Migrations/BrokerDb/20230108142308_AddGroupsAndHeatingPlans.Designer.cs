@@ -3,6 +3,7 @@ using System;
 using AppBroker.Core.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppBroker.Core.Database.Migrations.BrokerDb
 {
     [DbContext(typeof(BrokerDbContext))]
-    partial class BrokerDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230108142308_AddGroupsAndHeatingPlans")]
+    partial class AddGroupsAndHeatingPlans
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -52,9 +55,6 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
                         .HasColumnType("TEXT");
 
                     b.Property<string>("FriendlyName")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("FriendlyUniqueName")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("LastState")
