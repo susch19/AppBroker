@@ -58,7 +58,7 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     }
 
-    public dynamic? GetConfig(uint deviceId) => IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device) ? device.GetConfig() : null;
+    public dynamic? GetConfig(long deviceId) => IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device) ? device.GetConfig() : null;
 
     public async void SendUpdate(Device device) => await (Clients.All?.Update(device) ?? Task.CompletedTask);
 
