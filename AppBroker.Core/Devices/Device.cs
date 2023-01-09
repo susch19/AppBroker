@@ -186,10 +186,16 @@ public abstract class Device : IDisposable
         return currentState is null || !currentState.TryGetValue(name, out var val) ? null : val;
     }
 
-    public virtual void ReceivedNewState(string name, JToken newValue)
+    /// <summary>
+    /// Used for sending a state to the third party application. This will most likely be triggered from the <see cref="IDeviceStateManager"/>, but can also be called directly. This is not supposed to set the state in the <see cref="IDeviceStateManager"/>!
+    /// </summary>
+    /// <param name="name">the name of the property that was set</param>
+    /// <param name="newValue">The value to send</param>
+    public virtual void ReceivedNewState(string name, JToken newValue, StateFlags stateFlags)
     {
 
     }
+
     public virtual void SetState(string name, JToken newValue)
         => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, name, newValue);
 

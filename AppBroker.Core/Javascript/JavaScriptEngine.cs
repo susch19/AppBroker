@@ -151,7 +151,7 @@ public class JavaScriptEngineManager
             typeof(LogLevel).Assembly).AllowClrWrite()) //TODO add more assemblies, so we can call methods on them?
         .SetValue("log", new Action<object>(logger.Trace))
         .SetValue("logWithLevel", new Action<LogLevel, object>(logger.Log))
-        .SetValue("setState", new Action<long, string, JToken>(IInstanceContainer.Instance.DeviceStateManager.SetSingleState))
+        .SetValue("setState", new Action<long, string, JToken, StateFlags>(IInstanceContainer.Instance.DeviceStateManager.SetSingleState))
         .SetValue("getState", new Func<long, string, object?>(IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue))
 
         ; //Add more easy to use methods

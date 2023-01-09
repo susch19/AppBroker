@@ -93,6 +93,12 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
         return SetValues(values.Where(CanSetValue).ToDictionary(x => x.Feature.Property, x => x.Value));
     }
 
+    /// <inheritdoc/>
+    public override void ReceivedNewState(string name, JToken newValue, StateFlags stateFlags)
+    {
+        zigbeeManager.SetValue(this, name, newValue);
+    }
+
     private bool CanSetValue(SetFeatureValue value)
     {
         if (!value.Feature.Access.HasFlag(Zigbee2MqttFeatureAccessMode.Write))

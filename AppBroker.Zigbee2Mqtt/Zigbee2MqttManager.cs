@@ -13,6 +13,7 @@ using AppBrokerASP;
 using ZigbeeConfig = AppBroker.Zigbee2Mqtt.Zigbee2MqttConfig;
 using AppBroker.Zigbee2Mqtt.Devices;
 using System.Diagnostics.CodeAnalysis;
+using AppBroker.Core.Devices;
 
 namespace AppBroker.Zigbee2Mqtt;
 
@@ -30,7 +31,8 @@ public class Zigbee2MqttManager : IAsyncDisposable
         config = zigbee2MqttConfig;
         logger = LogManager.GetCurrentClassLogger();
 
-        IInstanceContainer.Instance.JavaScriptEngineManager.ExtendedFunctions["setValueZigbee"] = SetValue;
+        IInstanceContainer.Instance.JavaScriptEngineManager.ExtendedFunctions["setValueZigbeeId"] = new Func<long, string, JToken, Task<bool>>(SetValue);
+        IInstanceContainer.Instance.JavaScriptEngineManager.ExtendedFunctions["setValueZigbeeName"] = new Func<string, string, JToken, Task<bool>>(SetValue);
         IInstanceContainer.Instance.JavaScriptEngineManager.ExtendedFunctions["sendToZigbee"] = EnqueueToZigbee;
     }
 
@@ -57,10 +59,29 @@ public class Zigbee2MqttManager : IAsyncDisposable
         return MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/options", $$"""{"id":{{name}}, "options":{"{{propName}}":{{value}}} }""");
     }
 
-    public Task SetValue(string name, string propName, JToken newValue)
+    public async Task<bool> SetValue(string deviceName, string propertyName, JToken newValue)
     {
-        return MQTTClient.EnqueueAsync($"zigbee2mqtt/{name}/set/{propName}", newValue.ToString());
+        if (MQTTClient is null)
+            return false;
+
+        logger.Info($"Updating device {deviceName} state {propertyName} with new value {newValue}");
+        await MQTTClient.EnqueueAsync($"zigbee2mqtt/{deviceName}/set/{propertyName}", newValue.ToString());
+        return true;
     }
+
+    public Task<bool> SetValue(long deviceId, string propertyName, JToken newValue)
+    {
+        if (MQTTClient is null || IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out var device))
+            return Task.FromResult(false);
+        return SetValue(device.FriendlyName, propertyName, newValue);
+    }
+    public Task<bool> SetValue(Device device, string propertyName, JToken newValue)
+    {
+        if (MQTTClient is null)
+            return Task.FromResult(false);
+        return SetValue(device.FriendlyName, propertyName, newValue);
+    }
+
     public Task EnqueueToZigbee(string path, JToken payload)
     {
         return MQTTClient.EnqueueAsync($"zigbee2mqtt/{path}", payload.ToString());
@@ -215,40 +236,11 @@ public class Zigbee2MqttManager : IAsyncDisposable
                     InstanceContainer
                         .Instance
                         .DeviceStateManager
-                        .PushNewState(deviceId, "available", payload == "online");
+                        .SetSingleState(deviceId, "available", payload == "online");
                 }
                 else
                 {
                     logger.Warn($"Couldn't set availability ({payload}) on {deviceName}");
-                    /*
-                     *
-2022-12-20 20:29:35.9043|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Katzenfütterstelle 💡
-2022-12-20 20:29:35.9058|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Wohnzimmer FLOALT panel 💡
-2022-12-20 20:29:35.9058|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Büro FLOALT panel  💡
-2022-12-20 20:29:35.9058|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Esszimmer Switch
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Wohnzimmer Fernbedienung
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Esszimmer Fensterbank 💡
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Büro Fernbedienung
-2022-12-20 20:29:35.9091|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Badezimmer 🛀
-2022-12-20 20:29:35.9134|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Wohnzimmer 🛋️
-2022-12-20 20:29:35.9134|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Schlafzimmer 🌡
-2022-12-20 20:29:35.9179|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Zimmer
-2022-12-20 20:29:35.9179|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Küche | Esszimmer 🍽️
-2022-12-20 20:29:35.9179|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Büro ☎️
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Papa Schlafzimmer 🛌
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Eingangsbereich 🥾
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Papa Badezimmer 🚿
-2022-12-20 20:29:35.9212|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Patrick ♒ Zimmer
-2022-12-20 20:29:35.9257|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (offline) on Papa Schlafzimmer
-2022-12-20 20:29:35.9257|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (offline) on Esszimmer Deckenleuchte
-2022-12-20 20:29:35.9257|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Schlafzimmer 💡
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Sascha Zimmer Strom
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Kühlschrank
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Waschraum Trockner
-2022-12-20 20:29:35.9292|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on Waschraum Waschmaschine
-2022-12-20 20:29:35.9335|WARN|AppBroker.Zigbee2Mqtt.Zigbee2MqttManager|Couldn't set availability (online) on 901
-                     *
-                     */
                 }
                 break;
             case "extensions":
@@ -269,12 +261,12 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 InstanceContainer
                     .Instance
                     .DeviceStateManager
-                    .PushNewState(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
+                    .SetMultipleStates(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
 
                 InstanceContainer
                     .Instance
                     .DeviceStateManager
-                    .PushNewState(id, "lastReceived", DateTime.Now);
+                    .SetSingleState(id, "lastReceived", DateTime.Now);
             }
         }
     }
@@ -314,15 +306,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
         }
     }
 
-    public async Task<bool> SetStateOnDevice(string deviceName, string propertyName, JToken newValue)
-    {
-        if (MQTTClient is null)
-            return false;
-
-        logger.Info($"Updating device {deviceName} state {propertyName} with new value {newValue}");
-        await MQTTClient.EnqueueAsync($"zigbee2mqtt/{deviceName}/set/{propertyName}", newValue.ToString());
-        return true;
-    }
 
     public async ValueTask DisposeAsync()
     {
