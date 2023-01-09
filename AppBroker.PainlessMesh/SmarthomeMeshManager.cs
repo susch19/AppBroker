@@ -103,7 +103,7 @@ public class SmarthomeMeshManager : IDisposable
     private static readonly byte[] fromServer = new byte[] { 1 };
     private void SendTimeUpdate(object? state)
     {
-        var dto = new DateTimeOffset(DateTime.Now.Ticks, TimeSpan.Zero);
+        var dto = new DateTimeOffset(DateTime.Now);
         var list = new ByteLengthList(fromServer, BitConverter.GetBytes((int)dto.ToUnixTimeSeconds()));
         var msg = new BinarySmarthomeMessage(0, MessageType.Update, Command.Time, list);
         SendBroadcast(msg);

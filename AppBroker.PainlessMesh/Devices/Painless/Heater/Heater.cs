@@ -17,6 +17,9 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
+using System.Globalization;
+using Esprima.Ast;
+using AppBroker;
 
 namespace AppBrokerASP.Devices.Painless.Heater;
 
@@ -24,6 +27,19 @@ namespace AppBrokerASP.Devices.Painless.Heater;
 [AppBroker.ClassPropertyChangedAppbroker]
 public partial class Heater : PainlessDevice, IDisposable
 {
+    private HeaterConfig[] timeTemps
+    {
+        get
+        {
+            using BrokerDbContext? cont = DbProvider.BrokerDbContext;
+            return cont.HeaterConfigs
+                .Include(x => x.Device)
+                .Where(x => x.Device!.Id == Id)
+                .Select(x => (HeaterConfig)x)
+                .ToArray();
+        }
+    }
+
     private HeaterConfig? temperature;
     private HeaterConfig? currentConfig;
     private HeaterConfig? currentCalibration;
@@ -33,19 +49,16 @@ public partial class Heater : PainlessDevice, IDisposable
 
     [AppBroker.IgnoreField]
     private readonly Task? heaterSensorMapping;
-    [AppBroker.IgnoreField]
-    private readonly List<HeaterConfig> timeTemps = new();
+
     [AppBroker.IgnoreField]
     private bool disposed;
+    [IgnoreField]
+    static TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
 
     public Heater(long id, ByteLengthList parameters) : base(id, "PainlessMeshHeater")
     {
         using BrokerDbContext? cont = DbProvider.BrokerDbContext;
-        timeTemps.AddRange(
-            cont.HeaterConfigs
-            .Include(x => x.Device)
-            .Where(x => x.Device!.Id == id).
-            Select(x => (HeaterConfig)x));
+
 
         ShowInApp = true;
         //cont.HeaterCalibrations.FirstOrDefault(x => x.Id == Id);
@@ -100,7 +113,19 @@ public partial class Heater : PainlessDevice, IDisposable
         }
     }
 
-    private static byte[] GetSendableTimeTemps(IEnumerable<HeaterConfig> timeTemps) => timeTemps.OrderBy(x => x.DayOfWeek).ThenBy(x => x.TimeOfDay).SelectMany(x => ((TimeTempMessageLE)x).ToBinary()).ToArray();
+    private static byte[] GetSendableTimeTemps(IEnumerable<HeaterConfig> timeTemps)
+        => timeTemps
+        .OrderBy(x => x.DayOfWeek)
+        .ThenBy(x => x.TimeOfDay)
+        .SelectMany(x => Convert(x).ToBinary())
+        .ToArray();
+
+    private static TimeTempMessageLE Convert(HeaterConfig hc)
+    {
+        var offset = tz.GetUtcOffset(hc.TimeOfDay);
+        var newTime=hc.TimeOfDay.Subtract(offset);
+        return new(hc.DayOfWeek, new TimeSpan(newTime.Hour, newTime.Minute, 0), (float)hc.Temperature);
+    }
 
     private Task TrySubscribe(List<DeviceMappingModel> mappings)
     {
@@ -165,6 +190,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
                         var dt = DateTime.UnixEpoch.AddSeconds(seconds);
                         var logLine = Encoding.UTF8.GetString(item.AsSpan(sizeof(long)));
+                        dt = dt.Add(tz.GetUtcOffset(dt));
 
                         Logger.Info($"{Id}|{FriendlyName}|{dt:yyyy-MM-dd HH:mm:ss}|{logLine}");
                     }
@@ -211,16 +237,25 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void HandleTimeTempMessageUpdate(byte[] messages)
     {
+        void CorrectTimeZone(HeaterConfig config)
+        {
+            config.TimeOfDay = config.TimeOfDay.Add(tz.GetUtcOffset(config.TimeOfDay));
+        }
+
         Span<byte> message = messages.AsSpan();
         var ttm = TimeTempMessageLE.LoadFromBinary(message[..3]);
         Temperature = ttm;
+        CorrectTimeZone(Temperature);
+
         ttm = TimeTempMessageLE.LoadFromBinary(message[3..6]);
         CurrentConfig = ttm;
+        CorrectTimeZone(CurrentConfig);
         ttm = TimeTempMessageLE.LoadFromBinary(message[6..9]);
         try
         {
             ttm.Temp -= 51.2f;
             CurrentCalibration = ttm;
+            CorrectTimeZone(CurrentCalibration);
         }
         catch (Exception e)
         {
@@ -237,7 +272,8 @@ public partial class Heater : PainlessDevice, IDisposable
         {
             case Command.Temp:
                 float temp = (float)parameters[0];
-                var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
+
+                var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.UtcNow.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.UtcNow.TimeOfDay.Hours, DateTime.UtcNow.TimeOfDay.Minutes, 0), temp);
 
                 msg = new((uint)Id, MessageType.Update, command, ttm.ToBinary());
                 meshManager.SendSingle((uint)Id, msg);
@@ -278,10 +314,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
                 UpdateDB(hc);
 
-                IEnumerable<TimeTempMessageLE>? ttm = hc.Select(x => new TimeTempMessageLE(x.DayOfWeek, new TimeSpan(x.TimeOfDay.Hour, x.TimeOfDay.Minute, 0), (float)x.Temperature));
-                byte[]? s = ttm.SelectMany(x => x.ToBinary()).ToArray();
-
-                msg = new((uint)Id, MessageType.Options, command, s);
+                msg = new((uint)Id, MessageType.Options, command, GetSendableTimeTemps(hc));
                 meshManager.SendSingle((uint)Id, msg);
                 break;
             }
@@ -306,8 +339,6 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void UpdateDB(IEnumerable<HeaterConfig> hc)
     {
-        timeTemps.Clear();
-        timeTemps.AddRange(hc);
 
         var models = hc.Select(x => (HeaterConfigModel)x).ToList();
         using BrokerDbContext? cont = DbProvider.BrokerDbContext;
