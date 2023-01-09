@@ -15,12 +15,14 @@ public static class DbProvider
     public static HistoryContext HistoryContext => new();
     static DbProvider()
     {
-
-        using var ctx = BrokerDbContext;
-        using var ctx2 = HistoryContext;
-
-        ctx.Database.Migrate();
-        ctx2.Database.Migrate();
+        {
+            using var ctx = BrokerDbContext;
+            ctx.Database.Migrate();
+        }
+        {
+            using var ctx2 = HistoryContext;
+            ctx2.Database.Migrate();
+        }
 
     }
 

@@ -317,7 +317,7 @@ public class JavaScriptDevice : Device
         using BrokerDbContext? cont = DbProvider.BrokerDbContext;
         DeviceModel? d = cont.Devices
             .Include(x => x.HeaterConfigs)
-            .ThenInclude(x => x.HeatingPlan)
+            //.ThenInclude(x => x.HeatingPlan)
             .FirstOrDefault(x => x.Id == Id);
 
         if (d is null || d.HeaterConfigs is null || d.HeaterConfigs.Count < 1)
@@ -327,7 +327,7 @@ public class JavaScriptDevice : Device
         var curDow = (DayOfWeek)((int)(DateTime.Now.DayOfWeek + 6) % 7);
         var curTimeOfDay = DateTime.Now.TimeOfDay;
         foreach (var item in d.HeaterConfigs
-            .Where(x => x.HeatingPlan is null || x.HeatingPlan.Active)
+            //.Where(x => x.HeatingPlan is null || x.HeatingPlan.Active)
             .OrderByDescending(x => x.DayOfWeek)
             .ThenByDescending(x => x.TimeOfDay))
         {

@@ -29,6 +29,8 @@ public class GroupingDevice<T> : Device where T :
     IAdditionOperators<T, T, T>, 
     IDivisionOperators<T, T, T>, IMinMaxValue<T>
 {
+    public T Value => IInstanceContainer.Instance.DeviceStateManager.GetSingleState(Id, "something").ToObject<T>();
+
     private readonly Dictionary<long, T> storedStates = new();
     private readonly Dictionary<long, string> devices;
     private readonly string ownPropertyName;
@@ -80,9 +82,9 @@ public class GroupingDevice<T> : Device where T :
             GroupingMode.Avg => storedStates.Values.Aggregate((x, y) => x + y) / GenericCaster<int, T>.Cast(storedStates.Count),
             _ => default
         };
-        if (newValue != default)
+        if (newValue != null)
         {
-            IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, ownPropertyName, JToken.FromObject(newValue!));
+            IInstanceContainer.Instance.DeviceStateManager.PushNewState(Id, ownPropertyName, JToken.FromObject(newValue!));
             Console.WriteLine(newValue);
         }
     }

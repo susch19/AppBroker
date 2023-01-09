@@ -16,9 +16,14 @@ namespace AppBroker.Core.Extension
         /// 
         /// </summary>
         /// <param name="priority">The priority of this plugin, lower means, it gets loaded before the ones with a higher number</param>
-        public PluginAttribute(int priority = 0)
+        public PluginAttribute(int priority)
         {
             LoadingPriority = priority;
+        }
+
+        public PluginAttribute()
+        {
+            LoadingPriority = 0;
         }
     }
 }

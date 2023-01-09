@@ -85,8 +85,6 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
 
                     b.HasKey("DeviceId", "GroupId");
 
-                    b.HasIndex("GroupId");
-
                     b.ToTable("GroupDeviceMappingModels");
                 });
 
@@ -130,8 +128,6 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
 
                     b.HasIndex("DeviceId");
 
-                    b.HasIndex("HeatingPlanId");
-
                     b.ToTable("HeaterConfigs");
                 });
 
@@ -168,25 +164,6 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("AppBroker.Core.Database.Model.GroupDeviceMappingModel", b =>
-                {
-                    b.HasOne("AppBroker.Core.Database.Model.DeviceModel", "Device")
-                        .WithMany("DeviceGroupMappings")
-                        .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppBroker.Core.Database.Model.GroupModel", "Group")
-                        .WithMany("DeviceGroupMappings")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Device");
-
-                    b.Navigation("Group");
-                });
-
             modelBuilder.Entity("AppBroker.Core.Database.Model.HeaterConfigModel", b =>
                 {
                     b.HasOne("AppBroker.Core.Database.Model.DeviceModel", "Device")
@@ -195,27 +172,12 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AppBroker.Core.Database.Model.HeatingPlanModel", "HeatingPlan")
-                        .WithMany()
-                        .HasForeignKey("HeatingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Device");
-
-                    b.Navigation("HeatingPlan");
                 });
 
             modelBuilder.Entity("AppBroker.Core.Database.Model.DeviceModel", b =>
                 {
-                    b.Navigation("DeviceGroupMappings");
-
                     b.Navigation("HeaterConfigs");
-                });
-
-            modelBuilder.Entity("AppBroker.Core.Database.Model.GroupModel", b =>
-                {
-                    b.Navigation("DeviceGroupMappings");
                 });
 #pragma warning restore 612, 618
         }

@@ -13,9 +13,9 @@ public class GroupDeviceMappingModel
 
     public int GroupId { get; set; }
 
-    [ForeignKey(nameof(DeviceId))]
-    public virtual DeviceModel Device { get; set; }
+    //[ForeignKey(nameof(DeviceId))]
+    //public virtual DeviceModel? Device { get; set; }
 
-    [ForeignKey(nameof(GroupId))]
-    public virtual GroupModel Group { get; set; }
+    //[ForeignKey(nameof(GroupId))]
+    //public virtual GroupModel? Group { get; set; }
 }

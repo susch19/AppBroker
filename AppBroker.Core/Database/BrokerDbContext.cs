@@ -21,7 +21,6 @@ public class BaseDbContext : DbContext
 public class BrokerDbContext : BaseDbContext
 {
     public DbSet<HeaterConfigModel> HeaterConfigs => Set<HeaterConfigModel>();
-    //public DbSet<HeaterConfigModel> HeaterCalibrations { get; set; }
     public DbSet<DeviceModel> Devices => Set<DeviceModel>();
     public DbSet<DeviceMappingModel> DeviceToDeviceMappings => Set<DeviceMappingModel>();
     public DbSet<HeatingPlanModel> HeatingPlanModels => Set<HeatingPlanModel>();

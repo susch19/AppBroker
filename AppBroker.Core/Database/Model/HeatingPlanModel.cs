@@ -9,4 +9,7 @@ public class HeatingPlanModel
     public int Id { get; set; }
     public string Name { get; set; }
     public bool Active { get; set; }
+
+    //[InverseProperty(nameof(HeaterConfigModel.HeatingPlan))]
+    //public virtual ICollection<HeaterConfigModel>? HeaterConfigs { get; set; }
 }

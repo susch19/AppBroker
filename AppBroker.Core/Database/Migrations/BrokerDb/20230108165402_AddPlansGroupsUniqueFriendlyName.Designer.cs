@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppBroker.Core.Database.Migrations.BrokerDb
 {
     [DbContext(typeof(BrokerDbContext))]
-    [Migration("20230108142308_AddGroupsAndHeatingPlans")]
-    partial class AddGroupsAndHeatingPlans
+    [Migration("20230108165402_AddPlansGroupsUniqueFriendlyName")]
+    partial class AddPlansGroupsUniqueFriendlyName
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -57,6 +57,9 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
                     b.Property<string>("FriendlyName")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("FriendlyUniqueName")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LastState")
                         .HasColumnType("TEXT");
 
@@ -84,8 +87,6 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
                         .HasColumnType("INTEGER");
 
                     b.HasKey("DeviceId", "GroupId");
-
-                    b.HasIndex("GroupId");
 
                     b.ToTable("GroupDeviceMappingModels");
                 });
@@ -130,8 +131,6 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
 
                     b.HasIndex("DeviceId");
 
-                    b.HasIndex("HeatingPlanId");
-
                     b.ToTable("HeaterConfigs");
                 });
 
@@ -168,25 +167,6 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
                     b.Navigation("Parent");
                 });
 
-            modelBuilder.Entity("AppBroker.Core.Database.Model.GroupDeviceMappingModel", b =>
-                {
-                    b.HasOne("AppBroker.Core.Database.Model.DeviceModel", "Device")
-                        .WithMany("DeviceGroupMappings")
-                        .HasForeignKey("DeviceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("AppBroker.Core.Database.Model.GroupModel", "Group")
-                        .WithMany("DeviceGroupMappings")
-                        .HasForeignKey("GroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Device");
-
-                    b.Navigation("Group");
-                });
-
             modelBuilder.Entity("AppBroker.Core.Database.Model.HeaterConfigModel", b =>
                 {
                     b.HasOne("AppBroker.Core.Database.Model.DeviceModel", "Device")
@@ -195,27 +175,12 @@ namespace AppBroker.Core.Database.Migrations.BrokerDb
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("AppBroker.Core.Database.Model.HeatingPlanModel", "HeatingPlan")
-                        .WithMany()
-                        .HasForeignKey("HeatingPlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Device");
-
-                    b.Navigation("HeatingPlan");
                 });
 
             modelBuilder.Entity("AppBroker.Core.Database.Model.DeviceModel", b =>
                 {
-                    b.Navigation("DeviceGroupMappings");
-
                     b.Navigation("HeaterConfigs");
-                });
-
-            modelBuilder.Entity("AppBroker.Core.Database.Model.GroupModel", b =>
-                {
-                    b.Navigation("DeviceGroupMappings");
                 });
 #pragma warning restore 612, 618
         }

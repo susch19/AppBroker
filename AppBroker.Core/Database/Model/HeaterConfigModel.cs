@@ -22,8 +22,9 @@ public class HeaterConfigModel : IHeaterConfigModel
 
     [ForeignKey(nameof(DeviceId))]
     public virtual DeviceModel? Device { get; set; }
-    [ForeignKey(nameof(HeatingPlanId))]
-    public virtual HeatingPlanModel? HeatingPlan { get; set; }
+
+    //[ForeignKey(nameof(HeatingPlanId))]
+    //public virtual HeatingPlanModel? HeatingPlan { get; set; }
 
     public static implicit operator HeaterConfig(HeaterConfigModel model) => new() { DayOfWeek = model.DayOfWeek, Temperature = model.Temperature, TimeOfDay = model.TimeOfDay };
 

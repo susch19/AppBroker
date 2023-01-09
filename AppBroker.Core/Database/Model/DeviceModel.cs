@@ -17,8 +17,8 @@ public class DeviceModel
     public string? DeserializationData { get; set; }
 
 
-    [InverseProperty(nameof(GroupDeviceMappingModel.Device))]
-    public virtual ICollection<GroupDeviceMappingModel> DeviceGroupMappings { get; set; }
+    //[InverseProperty(nameof(GroupDeviceMappingModel.Device))]
+    //public virtual ICollection<GroupDeviceMappingModel>? DeviceGroupMappings { get; set; }
 
     [InverseProperty(nameof(HeaterConfigModel.Device))]
     public virtual ICollection<HeaterConfigModel>? HeaterConfigs { get; set; }
