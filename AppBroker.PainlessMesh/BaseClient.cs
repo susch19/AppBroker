@@ -17,6 +17,7 @@ public class BaseClient : IDisposable
 
     public event EventHandler<BinarySmarthomeMessage>? ReceivedData;
     public CancellationTokenSource Source { get; private set; }
+    public bool Connected => Client.Connected;
 
     protected TcpClient Client { get; }
     protected SslStream Stream { get; }

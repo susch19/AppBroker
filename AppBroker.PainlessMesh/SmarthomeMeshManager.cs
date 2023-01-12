@@ -2,6 +2,8 @@
 
 using AppBrokerASP.Devices.Painless;
 
+using Fluid.Ast.BinaryExpressions;
+
 using Newtonsoft.Json;
 
 using System.Net;
@@ -24,18 +26,24 @@ public class SmarthomeMeshManager : IDisposable
         }
     }
 
+    public int ConnectedClients => clients.Count(x => x.Connected);
+
     public event EventHandler<BinarySmarthomeMessage>? SingleUpdateMessageReceived;
     public event EventHandler<BinarySmarthomeMessage>? SingleOptionsMessageReceived;
     public event EventHandler<BinarySmarthomeMessage>? SingleGetMessageReceived;
-    public event EventHandler<(Sub, ByteLengthList)>? NewConnectionEstablished;
+    public event EventHandler<(long id, ByteLengthList)>? NewConnectionEstablished;
     public event EventHandler<uint>? ConnectionLost;
     public event EventHandler<(uint id, ByteLengthList parameter)>? ConnectionReestablished;
 
     private static readonly ServerSocket ServerSocket = new();
 
+    private List<BaseClient> clients = new List<BaseClient>();
     private readonly TimeSpan waitBeforeWhoIAmSendAgain;
     private readonly List<NodeSync> knownNodeIds;
+    private readonly HashSet<long> ownManagedIds = new HashSet<long>();
     private readonly int listenPort;
+    private readonly Lazy<PainlessMeshMqttManager> mqttManager =
+        new(IInstanceContainer.Instance.GetDynamic<PainlessMeshMqttManager>);
     private readonly ConcurrentDictionary<uint, (DateTime time, int count)> whoIAmSendTime;
 
     private readonly uint nodeId = 1;
@@ -54,14 +62,14 @@ public class SmarthomeMeshManager : IDisposable
         whoIAmSendTime = new();
         knownNodeIds = new() { new NodeSync(this.nodeId, 0), new NodeSync(0, 0) };
         this.listenPort = listenPort;
-
         if (!enabled)
             return;
 #if DEBUG
-        Task.Delay(5000).ContinueWith(_ =>
+        Task.Delay(5000).ContinueWith(async _ =>
         {
             this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257232294, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.4"), Encoding.UTF8.GetBytes("heater")));
             this.SocketClientDataReceived(null, new BinarySmarthomeMessage(3257171132, MessageType.Update, Command.WhoIAm, Encoding.UTF8.GetBytes("10.9.254.5"), Encoding.UTF8.GetBytes("ledstri")));
+
         });
 #endif
     }
@@ -87,6 +95,11 @@ public class SmarthomeMeshManager : IDisposable
             return;
         running = false;
         ServerSocket.Stop();
+        foreach (var item in clients)
+        {
+            item.Dispose();
+        }
+        clients.Clear();
         ServerSocket.OnClientConnected -= ServerSocket_OnClientConnected;
 
         foreach (Timer? timer in timers)
@@ -121,13 +134,17 @@ public class SmarthomeMeshManager : IDisposable
     private void ServerSocket_OnClientConnected(object? sender, BaseClient baseClient)
     {
         baseClient.ReceivedData += SocketClientDataReceived;
+        clients.Add(baseClient);
         SendToBridge(new BinarySmarthomeMessage(1, MessageType.Get, Command.Mesh));
     }
-
-    public void SocketClientDataReceived(object? sender, BinarySmarthomeMessage e)
+    private void SocketClientDataReceived(object? sender, BinarySmarthomeMessage e)
     {
-        //var bc = (BaseClient)sender;
+        SocketClientDataReceived(e);
+        mqttManager.Value.EnqueueToMqtt(e);
+    }
 
+    public void SocketClientDataReceived(BinarySmarthomeMessage e)
+    {
         if (e.MessageType == MessageType.Update && e.Command == Command.OnNewConnection)
             HandleUpdates(e);
 
@@ -139,7 +156,10 @@ public class SmarthomeMeshManager : IDisposable
 
             _ = whoIAmSendTime.TryRemove(e.NodeId, out (DateTime time, int count) asda);
             if (e.Parameters != null)
-                NewConnectionEstablished?.Invoke(this, (new Sub { NodeId = e.NodeId }, e.Parameters));
+            {
+                NewConnectionEstablished?.Invoke(this, (e.NodeId, e.Parameters));
+            }
+
             return;
         }
 
@@ -232,7 +252,7 @@ public class SmarthomeMeshManager : IDisposable
         return true;
     }
 
-    private void HandleUpdates(BinarySmarthomeMessage e)
+    internal void HandleUpdates(BinarySmarthomeMessage e)
     {
         switch (e.Command)
         {
@@ -241,7 +261,22 @@ public class SmarthomeMeshManager : IDisposable
             case Command.OnChangedConnections:
             case Command.OnNewConnection:
             case Command.Mesh:
-                RefreshMesh(e);
+
+                string? str = Encoding.UTF8.GetString(e.Parameters[0]);
+                logger.Debug(str);
+                var sub = JsonConvert.DeserializeObject<Sub>(str);
+                if (sub is null)
+                    return;
+
+                void FillManagedHashSet(Sub s)
+                {
+                    ownManagedIds.Add(s.NodeId);
+                    foreach (var bs in s.Subs)
+                        FillManagedHashSet(bs.Value);
+                }
+                FillManagedHashSet(sub);
+
+                RefreshMesh(sub);
                 break;
             default:
                 SingleUpdateMessageReceived?.Invoke(this, e);
@@ -249,13 +284,10 @@ public class SmarthomeMeshManager : IDisposable
         }
     }
 
-    private void RefreshMesh(BinarySmarthomeMessage e)
+    internal void RefreshMesh(Sub sub)
     {
         try
         {
-            string? str = Encoding.UTF8.GetString(e.Parameters[0]);
-            logger.Debug(str);
-            Sub? sub = JsonConvert.DeserializeObject<Sub>(str);
             if (sub is null || !TryParseSubsRecursive(sub, out List<Sub>? rsubs))
                 return;
             var subs = rsubs.Distinct().ToDictionary(x => x.NodeId, x => x);

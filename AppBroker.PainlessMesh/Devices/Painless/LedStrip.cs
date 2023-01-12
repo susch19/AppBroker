@@ -62,11 +62,6 @@ public partial class LedStrip : PainlessDevice
         get => GetProperty<ushort>();
         set => SetProperty(value);
     }
-    public bool State
-    {
-        get => GetProperty<bool>();
-        set => SetProperty(value);
-    }
 
 
     private readonly SmarthomeMeshManager? smarthomeMeshManager;
@@ -85,18 +80,17 @@ public partial class LedStrip : PainlessDevice
 
         switch (name)
         {
-            case "state":
-                command = newValue.ToObject<bool>() ? Command.On : Command.Off;
-                break;
             case "colorMode":
                 var strValue = newValue.ToObject<string>();
                 if (Enum.TryParse<Command>(strValue, out var cmd))
+                {
                     command = cmd;
+                }
                 break;
             case "brightness":
                 messageType = MessageType.Options;
                 command = Command.Brightness;
-                meshParams.Add(BitConverter.GetBytes(Brightness - 10));
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<int>()));
                 break;
             default:
                 break;
