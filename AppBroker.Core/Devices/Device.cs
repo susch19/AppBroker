@@ -172,9 +172,12 @@ public abstract class Device : IDisposable
         return true;
     }
 
-    public virtual void SendLastData(List<ISmartHomeClient> clients) => clients.ForEach(async x => await x.Update(this));
-
     public virtual void SendDataToAllSubscribers()
+    {
+        StateDataUpdated();
+    }
+
+    public virtual void StateDataUpdated()
     {
         sendLastDataTimer.Change(250, Timeout.Infinite);
     }

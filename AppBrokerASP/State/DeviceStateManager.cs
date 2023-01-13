@@ -122,7 +122,7 @@ public class DeviceStateManager : IDeviceStateManager
             device.ReceivedNewState(propertyName, newVal, stateFlags);
 
         if (device is not null && (stateFlags & StateFlags.SendDataToApp) > 0)
-            device.SendDataToAllSubscribers();
+            device.StateDataUpdated();
 
         if (device is not null && (stateFlags & StateFlags.StoreLastState) > 0)
             StoreLastState(id, deviceStates[id], device);

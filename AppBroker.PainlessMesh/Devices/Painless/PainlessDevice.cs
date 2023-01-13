@@ -207,9 +207,9 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
     protected virtual void UpdateMessageReceived(BinarySmarthomeMessage e) { }
     protected virtual void OptionMessageReceived(BinarySmarthomeMessage e) { }
 
-    protected override async Task SendLastDataTimerElapsed()
+    public override void SendDataToAllSubscribers()
     {
-        await mqttManager.EnqueueToMqtt("state", Id, JsonConvert.SerializeObject(IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id)));
-        await base.SendLastDataTimerElapsed();
+        mqttManager.EnqueueToMqtt("state", Id, JsonConvert.SerializeObject(IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id)));
+        base.SendDataToAllSubscribers();
     }
 }
