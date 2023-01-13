@@ -281,6 +281,7 @@ public class SmarthomeMeshManager : IDisposable
                     foreach (var bs in s.Subs)
                         FillManagedHashSet(bs.Value);
                 }
+                ownManagedIds.Clear();
                 FillManagedHashSet(sub);
 
                 RefreshMesh(sub);

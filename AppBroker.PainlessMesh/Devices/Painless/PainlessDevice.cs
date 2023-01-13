@@ -11,6 +11,7 @@ using AppBroker.PainlessMesh.Ota;
 
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless;
 
@@ -206,9 +207,9 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
     protected virtual void UpdateMessageReceived(BinarySmarthomeMessage e) { }
     protected virtual void OptionMessageReceived(BinarySmarthomeMessage e) { }
 
-    public override void SendDataToAllSubscribers()
+    protected override async Task SendLastDataTimerElapsed()
     {
-        mqttManager.EnqueueToMqtt("", Id, JsonConvert.SerializeObject(IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id)));
-        base.SendDataToAllSubscribers();
+        await mqttManager.EnqueueToMqtt("state", Id, JsonConvert.SerializeObject(IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id)));
+        await base.SendLastDataTimerElapsed();
     }
 }

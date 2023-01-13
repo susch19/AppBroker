@@ -92,7 +92,7 @@ public class PainlessMeshMqttManager : IAsyncDisposable
     /// <returns></returns>
     public Task EnqueueToMqtt(string path, JToken payload)
     {
-        return EnqueueToMqtt($"{topic}/{path}", payload.ToString());
+        return EnqueueToMqtt($"{path}", payload.ToString());
     }
     /// <summary>
     /// 
@@ -103,7 +103,7 @@ public class PainlessMeshMqttManager : IAsyncDisposable
     /// <returns></returns>
     public Task EnqueueToMqtt(string path, long id, JToken payload)
     {
-        return EnqueueToMqtt($"{topic}/{GetHexRepresentation(id)}/{path}", payload.ToString());
+        return EnqueueToMqtt($"{GetHexRepresentation(id)}/{path}", payload.ToString());
     }
     /// <summary>
     /// 
@@ -125,7 +125,7 @@ public class PainlessMeshMqttManager : IAsyncDisposable
     /// <returns></returns>
     public Task EnqueueToMqtt(string path, long id, string payload)
     {
-        return EnqueueToMqtt($"{topic}/{GetHexRepresentation(id)}/{path}", payload);
+        return EnqueueToMqtt($"{GetHexRepresentation(id)}/{path}", payload);
     }
 
 

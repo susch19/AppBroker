@@ -11,10 +11,10 @@ public partial class Sub : IEquatable<Sub>
 
     [JsonConverter(typeof(SubJsonSerializer))]
     [JsonProperty("subs")] //{"nodeId":1,"subs":[{"nodeId":3257153498}]}
-    public Dictionary<uint, Sub> Subs { get; set; }
+    public Dictionary<uint, Sub> Subs { get; set; } = new();
 
     public override bool Equals(object obj) => Equals(obj as Sub);
-    public bool Equals(Sub other) => other != null && NodeId == other.NodeId;
+    public bool Equals(Sub? other) => other != null && NodeId == other.NodeId;
     public override int GetHashCode() => HashCode.Combine(NodeId);
 
     public static bool operator ==(Sub left, Sub right) => EqualityComparer<Sub>.Default.Equals(left, right);

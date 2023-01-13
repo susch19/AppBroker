@@ -81,17 +81,19 @@ public abstract class Device : IDisposable
         TypeNames = GetBaseTypeNames(GetType()).ToList();
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
-        sendLastDataTimer = new Timer(async (s) =>
-        {
-            foreach (var item in Subscribers)
-            {
-                if (!await SendLastData(item))
-                    toRemove.Add(item);
+        sendLastDataTimer = new Timer(async (s) => await SendLastDataTimerElapsed(), null, Timeout.Infinite, Timeout.Infinite);
+    }
 
-            }
-            toRemove.ForEach(x => Subscribers.Remove(x));
-            toRemove.Clear();
-        }, null, Timeout.Infinite, Timeout.Infinite);
+    protected virtual async Task SendLastDataTimerElapsed()
+    {
+        foreach (var item in Subscribers)
+        {
+            if (!await SendLastData(item))
+                toRemove.Add(item);
+
+        }
+        toRemove.ForEach(x => Subscribers.Remove(x));
+        toRemove.Clear();
     }
 
     private IEnumerable<string> GetBaseTypeNames(Type type)
