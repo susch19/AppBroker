@@ -26,7 +26,7 @@ public class SmarthomeMeshManager : IDisposable
         }
     }
 
-    public int ConnectedClients => clients.Count(x => x.Connected);
+    public int ConnectedClients => clients.Count;
 
     public event EventHandler<BinarySmarthomeMessage>? SingleUpdateMessageReceived;
     public event EventHandler<BinarySmarthomeMessage>? SingleOptionsMessageReceived;
@@ -109,9 +109,16 @@ public class SmarthomeMeshManager : IDisposable
         timers.Clear();
     }
 
-    private void GetMeshUpdate(object? state) => SendToBridge(new BinarySmarthomeMessage(1, MessageType.Get, Command.Mesh));
-
-    internal void UpdateTime() => SendTimeUpdate(null);
+    private void GetMeshUpdate(object? state)
+    {
+        if (ConnectedClients > 0)
+            SendToBridge(new BinarySmarthomeMessage(1, MessageType.Get, Command.Mesh));
+    }
+    internal void UpdateTime()
+    {
+        if (ConnectedClients > 0)
+            SendTimeUpdate(null);
+    }
 
     private static readonly byte[] fromServer = new byte[] { 1 };
     private void SendTimeUpdate(object? state)
@@ -450,7 +457,9 @@ public class SmarthomeMeshManager : IDisposable
     {
         try
         {
-            WhoAmITask();
+            clients.RemoveAll(x => !x.Connected);
+            if (ConnectedClients > 0)
+                WhoAmITask();
         }
         catch (Exception ex)
         {

@@ -9,6 +9,7 @@ using AppBroker.PainlessMesh;
 using System.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using Namotion.Reflection;
+using Newtonsoft.Json;
 
 namespace AppBrokerASP.Devices.Painless;
 
@@ -107,6 +108,7 @@ public partial class LedStrip : PainlessDevice
     private void SetProperty<T>(T value, [CallerMemberName] string propertyName = "")
     {
         SetState(char.ToLowerInvariant(propertyName[0]) + propertyName[1..], JToken.FromObject(value));
+
     }
     private T? GetProperty<T>([CallerMemberName] string propertyName = "")
     {
@@ -215,4 +217,5 @@ public partial class LedStrip : PainlessDevice
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, meshParams);
         smarthomeMeshManager?.SendSingle((uint)Id, msg);
     }
+
 }

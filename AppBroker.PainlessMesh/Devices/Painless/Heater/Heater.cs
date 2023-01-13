@@ -432,6 +432,7 @@ public partial class Heater : PainlessDevice, IDisposable
         }
     }
 
+
     protected virtual void Dispose(bool disposing)
     {
         if (!disposed)

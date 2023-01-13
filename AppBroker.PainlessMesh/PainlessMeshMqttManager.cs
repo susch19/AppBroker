@@ -46,7 +46,7 @@ public class PainlessMeshMqttManager : IAsyncDisposable
     {
         whoAmIMessages[e.nodeId] = e.Item2;
         if (MQTTClient is not null)
-            MQTTClient.EnqueueAsync(topic+"/bridge/devices", JsonConvert.SerializeObject(whoAmIMessages), retain: true);
+            MQTTClient.EnqueueAsync(topic + "/bridge/devices", JsonConvert.SerializeObject(whoAmIMessages), retain: true);
     }
 
     public async Task Subscribe()
@@ -84,10 +84,50 @@ public class PainlessMeshMqttManager : IAsyncDisposable
         return SetValue(device.Id, propertyName, newValue);
     }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path">The sub path to push the message to, "topic/" is already part of it</param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
     public Task EnqueueToMqtt(string path, JToken payload)
     {
-        return MQTTClient.EnqueueAsync($"{topic}/{path}", payload.ToString());
+        return EnqueueToMqtt($"{topic}/{path}", payload.ToString());
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path">The sub path to push the message to, "topic/id/" is already part of it</param>
+    /// <param name="id"></param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    public Task EnqueueToMqtt(string path, long id, JToken payload)
+    {
+        return EnqueueToMqtt($"{topic}/{GetHexRepresentation(id)}/{path}", payload.ToString());
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path">The sub path to push the message to, "topic/" is already part of it</param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    public Task EnqueueToMqtt(string path, string payload)
+    {
+        return MQTTClient.EnqueueAsync($"{topic}/{path}", payload);
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="path">The sub path to push the message to, "topic/id/" is already part of it</param>
+    /// <param name="id"></param>
+    /// 
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    public Task EnqueueToMqtt(string path, long id, string payload)
+    {
+        return EnqueueToMqtt($"{topic}/{GetHexRepresentation(id)}/{path}", payload);
+    }
+
 
     public Task EnqueueToMqtt(BinarySmarthomeMessage message)
     {
@@ -140,8 +180,8 @@ public class PainlessMeshMqttManager : IAsyncDisposable
 
         var splitted = topic.Split('/');
 
-        var method = splitted.Last();
-        var idStr = splitted[^2];
+        var method = splitted[2];
+        var idStr = splitted[1];
         long id;
         if (idStr.Equals("bridge", StringComparison.OrdinalIgnoreCase))
             id = 1;
@@ -182,7 +222,21 @@ public class PainlessMeshMqttManager : IAsyncDisposable
             case "logging":
                 break;
             case "state":
-                TryInterpretTopicAsStateUpdate(id, payload);
+                if (splitted.Length == 3)
+                {
+                    TryInterpretTopicAsStateUpdate(id, payload);
+                }
+                else if(splitted.Length == 4 && splitted[3] == "set")
+                {
+                    var singleState = JToken.Parse(payload).First;
+                    SetSingleState(id, singleState.Path, singleState.First);
+                }
+                else if(splitted.Length == 5 && splitted[3] == "set")
+                {
+                    var propName = splitted[4];
+                    SetSingleState(id, propName, payload);
+                }
+
                 break;
 
         }
@@ -193,7 +247,19 @@ public class PainlessMeshMqttManager : IAsyncDisposable
         InstanceContainer
             .Instance
             .DeviceStateManager
-            .SetMultipleStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!, StateFlags.All);
+            .SetMultipleStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!);
+
+        InstanceContainer
+            .Instance
+            .DeviceStateManager
+            .SetSingleState(id, "lastReceived", DateTime.Now);
+    }
+    private void SetSingleState(long id, string propName, JToken value)
+    {
+        InstanceContainer
+            .Instance
+            .DeviceStateManager
+            .SetSingleState(id, propName, value, StateFlags.All);
 
         InstanceContainer
             .Instance
