@@ -5,6 +5,8 @@ using AppBroker.Core.Extension;
 
 using NLog;
 
+using System.ComponentModel.DataAnnotations;
+
 namespace AppBroker.susch;
 
 public class ByteDevice : Device
@@ -58,6 +60,8 @@ internal class Plugin : IPlugin
         return true;
     }
 
+    const string ActionName = "action";
+
     private void DeviceStateManager_StateChanged(object? sender, StateChangeArgs e)
     {
         if ((ulong)e.Id is 0x7cb03eaa0a0869d9 or 0xa4c1380aa5199538
@@ -68,57 +72,76 @@ internal class Plugin : IPlugin
             _ = device.UpdateFromApp(Command.On, emptyParams); //Simulate toggling to true via app
         }
         else if ((ulong)e.Id is 0x001788010c255322
-            && e.PropertyName == "action")
+            && e.PropertyName == ActionName
+            || e.PropertyName == "action_duration")
         {
             var toControlJson = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(e.Id, "controlId");
             long lamp = unchecked((long)0xbc33acfffe180f06), ledstrip = 763955710;
-
 
             if (toControlJson is null)
                 toControlJson = lamp;
 
             long controlId = toControlJson.ToObject<long>();
 
-            var currentState = (IInstanceContainer.Instance.DeviceStateManager.GetSingleState(controlId, "state") ?? false).ToObject<bool>();
 
             var gotDevice = IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(controlId, out var dev);
-            switch (e.NewValue.ToObject<HueRemoteAction>())
+
+            var action = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(e.Id, ActionName).ToObject<HueRemoteAction>();
+            switch (action)
             {
                 case HueRemoteAction.on_press:
-                    if (!gotDevice)
-                        dev.ReceivedNewState("state", currentState ? "OFF" : "ON", StateFlags.All);
-
                     break;
                 case HueRemoteAction.on_hold:
                     if (controlId != lamp)
-                        IInstanceContainer.Instance.DeviceStateManager.SetSingleState(e.Id, "controlId", lamp);
+                        IInstanceContainer.Instance.DeviceStateManager.SetSingleState(e.Id, "controlId", lamp, StateFlags.StoreLastState);
                     break;
                 case HueRemoteAction.on_press_release:
+                {
+                    var currentState = (IInstanceContainer.Instance.DeviceStateManager.GetSingleState(lamp, "state") ?? false).ToObject<bool>();
+                    IInstanceContainer.Instance.DeviceStateManager.SetSingleState(lamp, "state", currentState ? "OFF" : "ON", StateFlags.SendToThirdParty);
                     break;
+                }
                 case HueRemoteAction.on_hold_release:
                     break;
                 case HueRemoteAction.off_press:
                     break;
                 case HueRemoteAction.off_hold:
                     if (controlId != ledstrip)
-                        IInstanceContainer.Instance.DeviceStateManager.SetSingleState(e.Id, "controlId", ledstrip);
+                        IInstanceContainer.Instance.DeviceStateManager.SetSingleState(e.Id, "controlId", ledstrip, StateFlags.StoreLastState);
                     break;
                 case HueRemoteAction.off_press_release:
+                {
+                    var currentState = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(ledstrip, "colorMode");
+                    IInstanceContainer.Instance.DeviceStateManager.SetSingleState(ledstrip, "colorMode", currentState.ToString() == "Off" ? "SingleColor" : "Off", StateFlags.SendToThirdParty);
+#if DEBUG
+                    if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(ledstrip, out var ledStripDev))
+                        ledStripDev.SendDataToAllSubscribers();
+#endif
                     break;
+                }
+                break;
                 case HueRemoteAction.off_hold_release:
                     break;
                 case HueRemoteAction.up_press:
-                    break;
                 case HueRemoteAction.up_hold:
+                {
+                    var currentBrightness = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(controlId, "brightness").ToObject<ushort>();
+                    var newBrightness = Math.Min(byte.MaxValue, currentBrightness + 10);
+                    IInstanceContainer.Instance.DeviceStateManager.SetSingleState(controlId, "brightness", newBrightness, StateFlags.SendToThirdParty);
                     break;
+                }
                 case HueRemoteAction.up_press_release:
                     break;
                 case HueRemoteAction.up_hold_release:
                     break;
                 case HueRemoteAction.down_press:
-                    break;
                 case HueRemoteAction.down_hold:
+                {
+                    var currentBrightness = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(controlId, "brightness").ToObject<short>();
+                    var newBrightness = Math.Max(byte.MinValue, currentBrightness - 10);
+                    IInstanceContainer.Instance.DeviceStateManager.SetSingleState(controlId, "brightness", newBrightness, StateFlags.SendToThirdParty);
                     break;
+                }
                 case HueRemoteAction.down_press_release:
                     break;
                 case HueRemoteAction.down_hold_release:

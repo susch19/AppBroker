@@ -93,6 +93,21 @@ public partial class LedStrip : PainlessDevice
                 command = Command.Brightness;
                 meshParams.Add(BitConverter.GetBytes(newValue.ToObject<int>()));
                 break;
+            case "delay":
+                messageType = MessageType.Options;
+                command = Command.Delay;
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<int>()));
+                break;
+            case "numberOfLeds":
+                messageType = MessageType.Options;
+                command = Command.Calibration;
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<int>()));
+                break;
+            case "colorNumber":
+                messageType = MessageType.Options;
+                command = Command.Color;
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<uint>()));
+                break;
             default:
                 break;
         }
