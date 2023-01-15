@@ -2,6 +2,8 @@
 using AppBroker.Core.Database;
 using AppBroker.Core.Devices;
 
+using Elsa.Activities.StateMachine;
+
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 using Newtonsoft.Json;
@@ -87,110 +89,52 @@ public class DeviceStateManager : IDeviceStateManager
     public bool TryGetCurrentState(long id, out Dictionary<string, JToken>? result)
         => deviceStates.TryGetValue(id, out result);
 
-    public void SetSingleState(long id, string propertyName, JToken newVal)
+    /// <inheritdoc/>
+    public void SetSingleState(long id, string propertyName, JToken newVal, StateFlags stateFlags = StateFlags.AllExceptThirdParty)
     {
         propertyName = MapValueName(id, propertyName);
+        InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device);
 
         if (deviceStates.TryGetValue(id, out var oldState))
         {
-            bool changed = !oldState.ContainsKey(propertyName) || !JToken.DeepEquals(oldState[propertyName], newVal);
 
-            if (!changed)
-                return;
-
-            SetNewState(id, propertyName, newVal, oldState);
-        }
-        else
-        {
-
-            IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
-            AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
-            StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
-            if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev))
-                dev.ReceivedNewState(propertyName, newVal);
-
-            deviceStates[id] = new Dictionary<string, JToken> { { propertyName, newVal } };
-        }
-
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
-            device.SendDataToAllSubscribers();
-    }
-
-    public void PushNewState(long id, string propertyName, JToken newVal)
-    {
-        propertyName = MapValueName(id, propertyName);
-
-        if (deviceStates.TryGetValue(id, out var oldState))
-        {
             if (oldState.ContainsKey(propertyName) && JToken.DeepEquals(oldState[propertyName], newVal))
                 return;
 
-            SetNewState(id, propertyName, newVal, oldState);
+            var oldVal = oldState.GetValueOrDefault(propertyName);
+            InstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
+
+            AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
+            oldState[propertyName] = newVal;
         }
         else
         {
             InstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, null, newVal);
             AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
 
-            deviceStates[id][propertyName] = newVal;
+            deviceStates[id] = new Dictionary<string, JToken> { { propertyName, newVal } };
         }
 
-        if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
-            device.SendDataToAllSubscribers();
+        if ((stateFlags & StateFlags.NotifyOfStateChange) > 0)
+            StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
 
-        StoreLastState(id, deviceStates[id], device);
+        if (device is not null && (stateFlags & StateFlags.SendToThirdParty) > 0)
+            device.ReceivedNewState(propertyName, newVal, stateFlags);
+
+        if (device is not null && (stateFlags & StateFlags.SendDataToApp) > 0)
+            device.StateDataUpdated();
+
+        if (device is not null && (stateFlags & StateFlags.StoreLastState) > 0)
+            StoreLastState(id, deviceStates[id], device);
     }
 
-    public void PushNewState(long id, Dictionary<string, JToken> newState)
+    /// <inheritdoc/>
+    public void SetMultipleStates(long id, Dictionary<string, JToken> newState, StateFlags stateFlags = StateFlags.AllExceptThirdParty)
     {
-        newState = newState.ToDictionary(x => MapValueName(id, x.Key), x => x.Value);
-        if (deviceStates.TryGetValue(id, out var oldState))
+        foreach (var item in newState)
         {
-            List<string> changedKeys = new();
-            foreach (var item in newState.Keys)
-            {
-                if (!oldState.ContainsKey(item))
-                    changedKeys.Add(item);
-                else if (!JToken.DeepEquals(oldState[item], newState[item]))
-                    changedKeys.Add(item);
-            }
-            if (changedKeys.Count == 0)
-                return;
-            foreach (var item in changedKeys)
-            {
-                var newVal = newState[item];
-                SetNewState(id, item, newVal, oldState);
-            }
+            SetSingleState(id, item.Key, item.Value, stateFlags);
         }
-        else
-        {
-
-            foreach (var item in newState)
-            {
-                InstanceContainer.Instance.HistoryManager.StoreNewState(id, item.Key, null, item.Value);
-                AddStatesForBackwartsCompatibilityForOldApp(id, item.Key, item.Value);
-            }
-            deviceStates[id] = newState;
-        }
-
-        if (InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device))
-            device.SendDataToAllSubscribers();
-
-        StoreLastState(id, deviceStates[id], device);
-    }
-
-    private void SetNewState(long id, string propertyName, JToken newVal, Dictionary<string, JToken> state)
-    {
-        propertyName = MapValueName(id, propertyName);
-        var oldVal = state.GetValueOrDefault(propertyName);
-        IInstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
-        StateChanged?.Invoke(this, new(id, propertyName, oldVal, newVal));
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var dev))
-            dev.ReceivedNewState(propertyName, newVal);
-        AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
-        state[propertyName] = newVal;
-
-        StoreLastState(id, state, dev);
     }
 
     private static void StoreLastState(long id, Dictionary<string, JToken> state, Device? dev)

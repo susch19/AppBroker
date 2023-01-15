@@ -68,7 +68,7 @@ public class DeviceController : ControllerBase
             newStates = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, JToken>>(await reader.ReadToEndAsync())!;
         }
 
-        stateManager.PushNewState(id, newStates);
+        stateManager.SetMultipleStates(id, newStates);
 
         var curState = stateManager.GetCurrentState(id);
         if (curState == null)

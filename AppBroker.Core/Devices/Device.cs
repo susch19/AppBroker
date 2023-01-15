@@ -81,17 +81,19 @@ public abstract class Device : IDisposable
         TypeNames = GetBaseTypeNames(GetType()).ToList();
         Logger = NLog.LogManager.GetCurrentClassLogger();
         FriendlyName = "";
-        sendLastDataTimer = new Timer(async (s) =>
-        {
-            foreach (var item in Subscribers)
-            {
-                if (!await SendLastData(item))
-                    toRemove.Add(item);
+        sendLastDataTimer = new Timer(async (s) => await SendLastDataTimerElapsed(), null, Timeout.Infinite, Timeout.Infinite);
+    }
 
-            }
-            toRemove.ForEach(x => Subscribers.Remove(x));
-            toRemove.Clear();
-        }, null, Timeout.Infinite, Timeout.Infinite);
+    protected virtual async Task SendLastDataTimerElapsed()
+    {
+        foreach (var item in Subscribers)
+        {
+            if (!await SendLastData(item))
+                toRemove.Add(item);
+
+        }
+        toRemove.ForEach(x => Subscribers.Remove(x));
+        toRemove.Clear();
     }
 
     private IEnumerable<string> GetBaseTypeNames(Type type)
@@ -170,9 +172,12 @@ public abstract class Device : IDisposable
         return true;
     }
 
-    public virtual void SendLastData(List<ISmartHomeClient> clients) => clients.ForEach(async x => await x.Update(this));
+    public virtual void SendDataToAllSubscribers()
+    {
+        StateDataUpdated();
+    }
 
-    public void SendDataToAllSubscribers()
+    public virtual void StateDataUpdated()
     {
         sendLastDataTimer.Change(250, Timeout.Infinite);
     }
@@ -186,10 +191,16 @@ public abstract class Device : IDisposable
         return currentState is null || !currentState.TryGetValue(name, out var val) ? null : val;
     }
 
-    public virtual void ReceivedNewState(string name, JToken newValue)
+    /// <summary>
+    /// Used for sending a state to the third party application. This will most likely be triggered from the <see cref="IDeviceStateManager"/>, but can also be called directly. This is not supposed to set the state in the <see cref="IDeviceStateManager"/>!
+    /// </summary>
+    /// <param name="name">the name of the property that was set</param>
+    /// <param name="newValue">The value to send</param>
+    public virtual void ReceivedNewState(string name, JToken newValue, StateFlags stateFlags)
     {
 
     }
+
     public virtual void SetState(string name, JToken newValue)
         => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, name, newValue);
 

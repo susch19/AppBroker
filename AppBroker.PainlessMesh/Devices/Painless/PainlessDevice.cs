@@ -11,6 +11,7 @@ using AppBroker.PainlessMesh.Ota;
 
 using System.Reflection;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace AppBrokerASP.Devices.Painless;
 
@@ -36,6 +37,8 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
     [AppBroker.IgnoreField]
     protected UpdateManager updateManager;
 
+    [AppBroker.IgnoreField]
+    private readonly PainlessMeshMqttManager? mqttManager = IInstanceContainer.Instance.GetDynamic<PainlessMeshMqttManager>();
 
     protected PainlessDevice(long nodeId, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {
@@ -47,9 +50,7 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
         meshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
         meshManager.SingleGetMessageReceived += Node_SingleGetMessageReceived;
 
-
         Initialized = true;
-
     }
 
     protected PainlessDevice(long nodeId, ByteLengthList parameter, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
@@ -205,4 +206,10 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
 
     protected virtual void UpdateMessageReceived(BinarySmarthomeMessage e) { }
     protected virtual void OptionMessageReceived(BinarySmarthomeMessage e) { }
+
+    public override void SendDataToAllSubscribers()
+    {
+        mqttManager.EnqueueToMqtt("state", Id, JsonConvert.SerializeObject(IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id)));
+        base.SendDataToAllSubscribers();
+    }
 }

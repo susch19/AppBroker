@@ -276,3 +276,4 @@ OTA/*
 /AppBrokerASP/*.db-shm
 *.js
 *.bak
+/plugins

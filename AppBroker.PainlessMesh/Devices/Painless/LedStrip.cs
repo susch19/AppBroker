@@ -7,30 +7,132 @@ using Newtonsoft.Json.Linq;
 using AppBroker.PainlessMesh;
 
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using Namotion.Reflection;
+using Newtonsoft.Json;
 
 namespace AppBrokerASP.Devices.Painless;
 
 [DeviceName("ledstri")]
-[AppBroker.ClassPropertyChangedAppbroker]
 public partial class LedStrip : PainlessDevice
 {
-    private string colorMode = "";
-    private int delay;
-    private int numberOfLeds;
-    private int brightness;
-    private uint step;
-    private bool reverse;
-    private uint colorNumber;
-    private ushort version;
+    public string ColorMode
+    {
+        get => GetProperty<string>();
+        set => SetProperty(value);
+    }
 
-    [IgnoreField]
-    private SmarthomeMeshManager? smarthomeMeshManager;
+    public int Delay
+    {
+        get => GetProperty<int>();
+        set => SetProperty(value);
+    }
+
+    public int NumberOfLeds
+    {
+        get => GetProperty<int>();
+        set => SetProperty(value);
+    }
+
+    public int Brightness
+    {
+        get => GetProperty<int>();
+        set => SetProperty(value);
+    }
+
+    public uint Step
+    {
+        get => GetProperty<uint>();
+        set => SetProperty(value);
+    }
+
+    public bool Reverse
+    {
+        get => GetProperty<bool>();
+        set => SetProperty(value);
+    }
+
+    public uint ColorNumber
+    {
+        get => GetProperty<uint>();
+        set => SetProperty(value);
+    }
+
+    public ushort Version
+    {
+        get => GetProperty<ushort>();
+        set => SetProperty(value);
+    }
+
+
+    private readonly SmarthomeMeshManager? smarthomeMeshManager;
 
     public LedStrip(long id, ByteLengthList parameter) : base(id, parameter, "PainlessMeshLedStrip")
     {
         ShowInApp = true;
         IInstanceContainer.Instance.TryGetDynamic(out smarthomeMeshManager);
+    }
 
+    public override void ReceivedNewState(string name, JToken newValue, StateFlags stateFlags)
+    {
+        var command = Command.Zigbee;
+        var messageType = MessageType.Update;
+        ByteLengthList meshParams = new();
+
+        switch (name)
+        {
+            case "colorMode":
+                var strValue = newValue.ToObject<string>();
+                if (Enum.TryParse<Command>(strValue, out var cmd))
+                {
+                    command = cmd;
+                }
+                break;
+            case "brightness":
+                messageType = MessageType.Options;
+                command = Command.Brightness;
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<int>()));
+                break;
+            case "delay":
+                messageType = MessageType.Options;
+                command = Command.Delay;
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<int>()));
+                break;
+            case "numberOfLeds":
+                messageType = MessageType.Options;
+                command = Command.Calibration;
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<int>()));
+                break;
+            case "colorNumber":
+                messageType = MessageType.Options;
+                command = Command.Color;
+                meshParams.Add(BitConverter.GetBytes(newValue.ToObject<uint>()));
+                break;
+            default:
+                break;
+        }
+
+        if (command == Command.Zigbee)
+            return;
+
+        var msg = new BinarySmarthomeMessage((uint)Id, messageType, command, meshParams);
+        smarthomeMeshManager?.SendSingle((uint)Id, msg);
+    }
+
+
+    private void SetProperty<T>(T value, [CallerMemberName] string propertyName = "")
+    {
+        SetState(char.ToLowerInvariant(propertyName[0]) + propertyName[1..], JToken.FromObject(value));
+
+    }
+    private T? GetProperty<T>([CallerMemberName] string propertyName = "")
+    {
+
+        var state = InstanceContainer.Instance.DeviceStateManager.GetSingleState(Id, char.ToLowerInvariant(propertyName[0]) + propertyName[1..]);
+        if (state is null)
+            return default;
+
+        return state.ToObject<T>();
     }
 
     protected override void OptionMessageReceived(BinarySmarthomeMessage e) { }
@@ -62,13 +164,6 @@ public partial class LedStrip : PainlessDevice
                 Version = BitConverter.ToUInt16(item);
             ;
         }
-
-        //var param = e.Parameters.FirstOrDefault();
-
-        //logger.Debug(param.ToString());
-
-        //var span = param.ToString().AsSpan();
-        //var indices = span.IndexesOf(',');
 
         SendDataToAllSubscribers();
     }
@@ -137,4 +232,5 @@ public partial class LedStrip : PainlessDevice
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, command, meshParams);
         smarthomeMeshManager?.SendSingle((uint)Id, msg);
     }
+
 }
