@@ -1,6 +1,8 @@
-﻿namespace AppBrokerASP.Configuration;
+﻿using AppBroker.Core.Configuration;
 
-public class ConfigManager
+namespace AppBrokerASP.Configuration;
+
+public class ConfigManager : IConfigManager
 {
     public IConfiguration Configuration { get; }
 
@@ -8,6 +10,7 @@ public class ConfigManager
     public ServerConfig ServerConfig { get; }
     public HistoryConfig HistoryConfig { get; }
     public CloudConfig CloudConfig { get; }
+    public DatabaseConfig DatabaseConfig { get; }
 
     private static readonly string ConfigFolder = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "appbroker");
     private const string ZigbeeConfigName = "zigbee.json";
@@ -48,5 +51,8 @@ public class ConfigManager
 
         HistoryConfig = new HistoryConfig();
         configuration.GetSection(HistoryConfig.ConfigName).Bind(HistoryConfig);
+
+        DatabaseConfig = new DatabaseConfig();
+        configuration.GetSection(DatabaseConfig.ConfigName).Bind(DatabaseConfig);
     }
 }

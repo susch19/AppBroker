@@ -9,12 +9,13 @@ public static class DeviceLayoutService
     public static Dictionary<string, (DeviceLayout layout, string hash)> TypeDeviceLayouts = new();
     public static Dictionary<long, (DeviceLayout layout, string hash)> InstanceDeviceLayouts = new();
 
-    private static readonly string demoFilePath = Path.Combine("DeviceLayouts", "SampleLayout.json");
     private static readonly FileSystemWatcher fileSystemWatcher;
 
     static DeviceLayoutService()
     {
-        fileSystemWatcher = new FileSystemWatcher(new DirectoryInfo("DeviceLayouts").FullName, "*.json")
+        var deviceLayoutsPath = new DirectoryInfo("DeviceLayouts").FullName;
+        Directory.CreateDirectory(deviceLayoutsPath);
+        fileSystemWatcher = new FileSystemWatcher(deviceLayoutsPath, "*.json")
         {
             NotifyFilter = NotifyFilters.FileName |
                 NotifyFilters.LastWrite |
@@ -24,31 +25,6 @@ public static class DeviceLayoutService
         fileSystemWatcher.Created += FileChanged;
         fileSystemWatcher.EnableRaisingEvents = true;
 
-        //if (!File.Exists(demoFilePath))
-        //{
-        //    var deviceLayout = new DeviceLayout("DemoLayout", "Demo",
-        //        new() { -1, -2 },
-        //        new(new()
-        //        {
-        //            new("PropName", 0, TextStyle: new(22, "FontName", FontWeight.Bold, FontStyle.Italic))
-        //        }),
-        //        new(PropertyInfos: new()
-        //        {
-        //            //new("PropNameUpdateable", 0, EditInfo: new(MessageType.Update, Command.Delay), TextStyle: new(12, "FontName")),
-        //            //new("PropNameNotUpdable", 1),
-        //            //new("PropNameTempCurrent", 2, TextStyle: new(12, "FontName"), TabInfoId: 1, SpecialType: SpecialDetailType.Current),
-        //            //new("PropNameTempTarget", 3, EditInfo: new(MessageType.Update, Command.Temp), TextStyle: new(12, "FontName"), TabInfoId: 1, SpecialType: SpecialDetailType.Target)
-        //        },
-        //        TabInfos: new()
-        //        {
-        //            new(0, "DefaultIcon", 1),
-        //            new(1, "IconName", 2),
-        //            new(2, "IconName", 3, new("LinkedDeviceIdPropertyName", "DeviceTypeName")),
-        //        },
-        //        new() { }));
-        //    string? serializedDemo = JsonConvert.SerializeObject(deviceLayout, Formatting.Indented);
-        //    File.WriteAllText(demoFilePath, serializedDemo);
-        //}
         ReloadLayouts();
     }
 

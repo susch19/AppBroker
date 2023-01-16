@@ -20,7 +20,7 @@ public class CloudConnector
     public CloudConnector()
     {
         mainLogger = LogManager.GetCurrentClassLogger();
-        config = InstanceContainer.Instance.ConfigManager.CloudConfig;
+        config = InstanceContainer.Instance.ServerConfigManager.CloudConfig;
         if (config.Enabled)
         {
             try

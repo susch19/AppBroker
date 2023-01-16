@@ -13,6 +13,11 @@ using System.Net.Sockets;
 using System.Text;
 using System.Globalization;
 using AppBrokerASP.Plugins;
+using AppBroker.Core;
+using MQTTnet.Server;
+using MQTTnet;
+using Newtonsoft.Json;
+using Esprima;
 
 namespace AppBrokerASP;
 
@@ -34,6 +39,11 @@ public class Program
 
         _ = new InstanceContainer();
 
+        var pluginLoader = new PluginLoader(LogManager.LogFactory);
+        IInstanceContainer.Instance.RegisterDynamic(pluginLoader);
+
+        pluginLoader.LoadAssemblies();
+
         _ = DeviceLayoutService.InstanceDeviceLayouts;
 
         Logger? mainLogger = LogManager
@@ -45,18 +55,18 @@ public class Program
         {
 
             UsedPortForSignalR = port;
-            if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort == 0)
+            if (InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenPort == 0)
                 mainLogger.Info($"ListenPort is not configured in the appsettings serverconfig section and therefore default port {port} will be used, when no port was passed into listen url.");
             else
-                UsedPortForSignalR = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenPort;
+                UsedPortForSignalR = InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenPort;
 
             string[] listenUrls;
-            if (InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Any())
+            if (InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls.Any())
             {
-                listenUrls = new string[InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count];
-                for (int i = 0; i < InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls.Count; i++)
+                listenUrls = new string[InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls.Count];
+                for (int i = 0; i < InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls.Count; i++)
                 {
-                    string? item = InstanceContainer.Instance.ConfigManager.ServerConfig.ListenUrls[i];
+                    string? item = InstanceContainer.Instance.ServerConfigManager.ServerConfig.ListenUrls[i];
                     try
                     {
                         var builder = new UriBuilder(item)
@@ -90,7 +100,9 @@ public class Program
             {
                 config.Sources.Clear();
                 _ = config.AddConfiguration(InstanceContainer.Instance.ConfigManager.Configuration);
-            });
+            })
+            ;
+
 
             _ = webBuilder.WebHost.UseKestrel((ks) =>
             {
@@ -111,6 +123,7 @@ public class Program
                 _ = logging.ClearProviders();
                 _ = logging.AddNLog();
             });
+            var mqttConfig = InstanceContainer.Instance.ConfigManager.MqttConfig;
 
             var startup = new Startup(webBuilder.Configuration);
             startup.ConfigureServices(webBuilder.Services);
@@ -128,7 +141,7 @@ public class Program
                 _ = e.MapHub<SmartHome>(pattern: "/SmartHome");
                 _ = e.MapControllers();
 
-                if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+                if (mqttConfig.Enabled)
                 {
                     _ = e.MapConnectionHandler<MqttConnectionHandler>(
                         "/MQTTClient",
@@ -137,23 +150,43 @@ public class Program
                 }
             });
 
-
-            if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
+            if (mqttConfig.Enabled)
             {
                 _ = app.UseMqttServer(server =>
                 {
+
+
+                    static async Task Server_RetainedMessagesClearedAsync(EventArgs arg) => File.Delete(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath);
+                    static Task Server_LoadingRetainedMessageAsync(LoadingRetainedMessagesEventArgs arg)
+                    {
+                        if (File.Exists(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath))
+                        {
+                            var json = File.ReadAllText(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath);
+                            arg.LoadedRetainedMessages = JsonConvert.DeserializeObject<List<MqttApplicationMessage>>(json);
+                        }
+                        else
+                        {
+                            arg.LoadedRetainedMessages = new List<MqttApplicationMessage>();
+                        }
+                        return Task.CompletedTask;
+                    }
+
+                    static async Task Server_RetainedMessageChangedAsync(RetainedMessageChangedEventArgs arg) => File.WriteAllText(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath, JsonConvert.SerializeObject(arg.StoredRetainedMessages));
+                    ;
+
+
+                    server.RetainedMessageChangedAsync += Server_RetainedMessageChangedAsync;
+                    server.LoadingRetainedMessageAsync += Server_LoadingRetainedMessageAsync;
+                    server.RetainedMessagesClearedAsync += Server_RetainedMessagesClearedAsync;
                     // Todo: Do something with the server
                     // https://github.com/dotnet/MQTTnet/wiki/Server#aspnet-50=
                 });
             }
-            if (InstanceContainer.Instance.ConfigManager.ServerConfig.EnableJavaScript)
+            if (InstanceContainer.Instance.ServerConfigManager.ServerConfig.EnableJavaScript)
             {
                 InstanceContainer.Instance.JavaScriptEngineManager.Initialize();
             }
 
-            var pluginLoader = new PluginLoader(LogManager.LogFactory);
-
-            pluginLoader.LoadAssemblies();
             pluginLoader.InitializePlugins(LogManager.LogFactory);
 
             app.Run();
@@ -208,13 +241,13 @@ public class Program
                     && !x.IsIPv6Teredo))
             .ToArray();
 
-        var serv = new ServiceProfile(InstanceContainer.Instance.ConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
+        var serv = new ServiceProfile(InstanceContainer.Instance.ServerConfigManager.ServerConfig.InstanceName, "_smarthome._tcp", port, hostEntry);
 
         //serv.AddProperty("Min App Version", "0.0.2"); //Currently not needed, but supported by flutter app
         if (IsDebug)
             serv.AddProperty("Debug", IsDebug.ToString());
-        if (string.IsNullOrWhiteSpace(InstanceContainer.Instance.ConfigManager.ServerConfig.ClusterId))
-            serv.AddProperty("ClusterId", InstanceContainer.Instance.ConfigManager.ServerConfig.ClusterId);
+        if (string.IsNullOrWhiteSpace(InstanceContainer.Instance.ServerConfigManager.ServerConfig.ClusterId))
+            serv.AddProperty("ClusterId", InstanceContainer.Instance.ServerConfigManager.ServerConfig.ClusterId);
         sd.Advertise(serv);
 
         mdns.Start();

@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Devices;
 using AppBroker.Core.Javascript;
 
 using AppBrokerASP;
@@ -45,7 +46,7 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
             var stateFromManager =
                 IInstanceContainer.Instance.DeviceStateManager.GetSingleStateValue(Id, "lastReceived");
             if (stateFromManager is DateTime dt)
-                 return dt.ToString("dd.MM.yyyy HH:mm:ss");
+                return dt.ToString("dd.MM.yyyy HH:mm:ss");
 
             return "No Data";
         }
@@ -165,7 +166,7 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
             if (lastFound is null)
             {
                 logger.Warn($"Couldn't find {property} on {FriendlyName}");
-                return; 
+                return;
             }
 
             lastFound = lastFound.Features.FirstOrDefault(x => x.Name == toFind[index])
@@ -195,13 +196,31 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
                 InvokeOnDevice(name, async x => await SetValue(new SetFeatureValue(x, value)));
                 break;
             case (Command)150:
+            {
                 var propName = parameters[0].ToString();
-                zigbeeManager.SetValue(device.FriendlyName, propName, parameters[1]);
+                zigbeeManager.SetValue(this, propName, parameters[1]);
                 break;
+            }
             case (Command)151:
-                var propNameR = parameters[1].ToString();
-                zigbeeManager.SetValue(device.FriendlyName, propNameR, parameters[0]);
+            {
+                var propName = parameters[1].ToString();
+                zigbeeManager.SetValue(this, propName, parameters[0]);
                 break;
+            }
+            case (Command)152:
+            {
+                var propName = parameters[0].ToString();
+                var deviceId = parameters[2].ToObject<long>();
+                zigbeeManager.SetValue(deviceId, propName, parameters[1]);
+                break;
+            }
+            case (Command)153:
+            {
+                var propName = parameters[1].ToString();
+                var deviceId = parameters[2].ToObject<long>();
+                zigbeeManager.SetValue(deviceId, propName, parameters[0]);
+                break;
+            }
         }
         return base.UpdateFromApp(command, parameters);
     }
@@ -212,5 +231,21 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
         engine.DefineFunction("invokeOnDevice", (string name, object value) => InvokeOnDevice(name, (x) => SetValue(new SetFeatureValue(x, value))));
 
         return base.ExtendEngine(engine);
+    }
+
+    protected override bool FriendlyNameChanging(string oldName, string newName)
+    {
+        client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
+        if (zigbeeManager.friendlyNameToIdMapping.TryGetValue(oldName, out var id)
+            && id == Id
+            && !zigbeeManager.friendlyNameToIdMapping.ContainsKey(newName)
+            && zigbeeManager.friendlyNameToIdMapping.Remove(oldName, out _))
+        {
+            zigbeeManager.friendlyNameToIdMapping[newName] = id;
+            return true;
+        }
+
+        logger.Error($"Couldn't rename {oldName} to {newName} for zigbee2mqtt, because the old name was incorrect, it couldn't be removed from the mapping or the new name was already used");
+        return false;
     }
 }

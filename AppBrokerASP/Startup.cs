@@ -12,6 +12,10 @@ using Microsoft.AspNetCore.SignalR.Protocol;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using AppBroker.Core.Javascript;
 using AppBroker.Core;
+using AppBrokerASP.Plugins;
+using MQTTnet.Server;
+using MQTTnet;
+using Newtonsoft.Json;
 
 namespace AppBrokerASP;
 
@@ -34,6 +38,13 @@ public class Startup
                   .AllowAnyHeader()
                   .AllowAnyOrigin()));
 
+        services
+            .AddControllers()
+            .ConfigureApplicationPartManager(manager =>
+            {
+                manager.FeatureProviders.Add(new GenericControllerFeatureProvider());
+            });
+
         var signalRBuilder = services.AddSignalR(
             opt => opt.EnableDetailedErrors = true
             )
@@ -51,8 +62,8 @@ public class Startup
         _ = services.AddSingleton<IInstanceContainer>(container);
         _ = services.AddSingleton(container.IconService);
         _ = services.AddSingleton(container.ConfigManager);
-        _ = services.AddSingleton(container.ConfigManager.CloudConfig);
-        _ = services.AddSingleton(container.ConfigManager.ServerConfig);
+        _ = services.AddSingleton(container.ServerConfigManager.CloudConfig);
+        _ = services.AddSingleton(container.ServerConfigManager.ServerConfig);
         _ = services.AddSingleton(container.DeviceTypeMetaDataManager);
         _ = services.AddSingleton(container.DeviceManager);
         _ = services.AddSingleton(container.DeviceStateManager);

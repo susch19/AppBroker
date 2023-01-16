@@ -1,0 +1,38 @@
+{
+  "UniqueName": "SPZB0001",
+  "TypeName": "SPZB0001",
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "available",
+        "EditParameter": [],
+        "EditInfo": {
+          "EditType": "button",
+          "Dialog": "HeaterConfig",
+          "Display": "Heizplan einstellen"
+        }
+      },
+      {
+        "Name": "heatingSetpntCurrent",
+        "RowNr": 2,
+        "UnitOfMeasurement": " °C"
+      },
+      {
+        "Name": "valvePosition",
+        "RowNr": 3,
+        "UnitOfMeasurement": " %"
+      },
+      {
+        "Name": "battery",
+        "RowNr": 3,
+        "UnitOfMeasurement": " %"
+      },
+      {
+        "Name": "id",
+        "Order": 5,
+        "RowNr": 5,
+        "ShowOnlyInDeveloperMode": true
+      }
+    ]
+  }
+}

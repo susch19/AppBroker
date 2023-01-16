@@ -189,28 +189,7 @@
         "RowNr": 33,
         "DisplayName": "Status: "
       },
-      {
-        "Name": "state",
-        "RowNr": 1,
-        "EditInfo": {
-          "EditType": "FloatingActionButton",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": "Off",
-              "Value": false,
-              "CodePoint": 58595,
-              "Parameters": []
-            },
-            {
-              "Command": "On",
-              "Value": true,
-              "CodePoint": 58595,
-              "Parameters": []
-            }
-          ]
-        }
-      },
+     
       {
         "Name": "state",
         "Order": 1,

@@ -29,7 +29,7 @@ public class BrokerDbContext : BaseDbContext
 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder
-        .UseSqlite("Data Source=broker.db")
+        .UseSqlite(IInstanceContainer.Instance.ConfigManager.DatabaseConfig.BrokerDBConnectionString)
         .UseLazyLoadingProxies();
 }
 

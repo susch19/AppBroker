@@ -89,4 +89,10 @@
 		<Folder Include="Properties\" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="Icons\*.svg">
+	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

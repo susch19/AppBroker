@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core;
+using AppBroker.Core.Configuration;
 using AppBroker.Core.Javascript;
 using AppBroker.Core.Managers;
 
@@ -15,11 +16,13 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     public IDeviceTypeMetaDataManager DeviceTypeMetaDataManager { get; }
     public JavaScriptEngineManager JavaScriptEngineManager { get; }
 
-    public ConfigManager ConfigManager { get; }
     public IDeviceManager DeviceManager { get; }
     public IconService IconService { get; }
     public IDeviceStateManager DeviceStateManager { get; }
     public IHistoryManager HistoryManager { get; }
+
+    public IConfigManager ConfigManager => ServerConfigManager;
+    public ConfigManager ServerConfigManager { get; }
 
     private Dictionary<Type, object> dynamicObjects = new();
 
@@ -27,7 +30,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
     {
         IInstanceContainer.Instance = Instance = this;
         IconService = new IconService();
-        ConfigManager = new ConfigManager();
+        ServerConfigManager = new ConfigManager();
         DeviceStateManager = new DeviceStateManager();
 
         JavaScriptEngineManager = new JavaScriptEngineManager();
