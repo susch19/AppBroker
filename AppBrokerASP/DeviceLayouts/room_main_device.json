@@ -1,0 +1,17 @@
+{
+    "UniqueName": "room_main_device",
+    "TypeName": "room_main_device",
+    "DashboardDeviceLayout": {
+      "DashboardProperties": [
+        {
+          "Name": "id",
+          "EditParameter": [],
+          "EditInfo": {
+            "EditType": "button",
+            "Dialog": "HeaterConfig",
+            "Display": "Heizplan einstellen"
+          }
+        }
+      ]
+    }
+  }
