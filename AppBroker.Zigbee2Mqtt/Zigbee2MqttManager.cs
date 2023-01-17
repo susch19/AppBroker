@@ -16,7 +16,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace AppBroker.Zigbee2Mqtt;
 
-public class Zigbee2MqttManager : IAsyncDisposable
+public class Zigbee2MqttManager : IAsyncDisposable, IZigbee2MqttManager
 {
     public event EventHandler<MqttClientConnectResult> Connected;
     public event EventHandler<MqttClientConnectResult> Disconnected;
@@ -116,8 +116,9 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 return Task.CompletedTask;
             };
 
-        MQTTClient.DisconnectedAsync 
-            += (args) => {
+        MQTTClient.DisconnectedAsync
+            += (args) =>
+            {
 
                 Disconnected?.Invoke(this, args.ConnectResult);
                 return Task.CompletedTask;

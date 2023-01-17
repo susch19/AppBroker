@@ -1,31 +1,28 @@
-﻿using AppBroker.Core.Devices;
-using AppBroker.Zigbee2Mqtt.Devices;
-
-using Newtonsoft.Json.Linq;
-using AppBroker.Core.Models;
+﻿using AppBroker.Core;
 using AppBroker.Core.Database;
 using AppBroker.Core.Database.Model;
-using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
+using AppBroker.Core.Devices;
+using AppBroker.Core.Models;
 using AppBroker.maxi.Devices;
-using Microsoft.EntityFrameworkCore;
-using AppBroker.Core;
 using AppBroker.Zigbee2Mqtt;
-using System.Reactive.Linq;
-using dotVariant;
+using AppBroker.Zigbee2Mqtt.Devices;
+
+using Microsoft.EntityFrameworkCore;
+
+using Newtonsoft.Json.Linq;
+
 using NLog;
 
-namespace AppBroker.maxi;
+using System.Reactive.Linq;
 
-[Variant]
-internal partial struct RoomStateChange
-{
-    static partial void VariantOf(float temperature, bool isOpen, IHeaterConfigModel heaterConfigModel);
-}
+using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
+
+namespace AppBroker.maxi;
 
 internal static class RoomFactory
 {
 
-    public static IObservable<Room> Create(string name, Logger logger, IDeviceStateManager stateManager, Zigbee2MqttManager zigbee2Mqtt, Device mainDevice, params Device[] devices)
+    public static IObservable<Room> Create(string name, ILogger logger, IDeviceStateManager stateManager, IZigbee2MqttManager zigbee2Mqtt, Device mainDevice, params Device[] devices)
     {
         if (!devices.Contains(mainDevice))
         {
@@ -190,7 +187,7 @@ internal static class RoomFactory
                 var uncalibratedTemperature = temperatureInfo.localTemperature - temperatureInfo.calibration;
                 var offset = Math.Round(room.CurrentTemperature - uncalibratedTemperature, 2);
 
-                if(offset > maxPossibleOffset || offset < (maxPossibleOffset * -1))
+                if (offset > maxPossibleOffset || offset < (maxPossibleOffset * -1))
                 {
                     offset = 0;
                 }
@@ -198,7 +195,7 @@ internal static class RoomFactory
                 {
                     room.StateManager.PushNewState(temperatureInfo.device.Id, "unoccupied_local_temperature", uncalibratedTemperature);
                     _ = room.Zigbee2Mqtt.SetValue(temperatureInfo.device.FriendlyName, "unoccupied_local_temperature", uncalibratedTemperature);
-                }                
+                }
 
                 if (offset != temperatureInfo.calibration)
                 {
@@ -232,20 +229,6 @@ internal static class RoomFactory
         foreach (var device in climates)
         {
             device.SetDeviceAndZigbeeProperty(room, "system_mode", mode);
-
-            //if (room.IsOpen)
-            //{
-            //    _ = room.Zigbee2Mqtt.SetValue(device.FriendlyName, "eurotronic_host_flags", JToken.FromObject(new { window_open = true }));
-            //    device.SetDeviceAndZigbeeProperty(room, "trv_mode", 1);
-            //    device.SetDeviceAndZigbeeProperty(room, "valve_position", 0);
-            //    device.SetDeviceAndZigbeeProperty(room, "system_mode", "off");
-            //}
-            //else
-            //{
-            //    _ = room.Zigbee2Mqtt.SetValue(device.FriendlyName, "eurotronic_host_flags", JToken.FromObject(new { window_open = false }));
-            //    device.SetDeviceAndZigbeeProperty(room, "trv_mode", 2);
-            //    device.SetDeviceAndZigbeeProperty(room, "system_mode", "auto");
-            //}
         }
     }
 
@@ -318,14 +301,3 @@ internal static class RoomFactory
     private static string ToZigbeeId(this Device device)
         => ToZigbeeId(device.Id);
 }
-
-public record struct Room(
-    string Name,
-    Device MainDevice,
-    IReadOnlyList<Device> Devices,
-    IDeviceStateManager StateManager,
-    Zigbee2MqttManager Zigbee2Mqtt,
-    double CurrentTemperature,
-    bool IsOpen,
-    IHeaterConfigModel? CurrentPlan
-);

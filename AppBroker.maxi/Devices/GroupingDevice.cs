@@ -10,21 +10,11 @@ using System.Numerics;
 
 namespace AppBroker.maxi.Devices;
 
-public enum GroupingMode
-{
-    Sum,
-    Min,
-    Max,
-    Avg,
-
-}
-
-
-public class GroupingDevice<T> : Device where T : 
+public class GroupingDevice<T> : Device where T :
     notnull,
     INumber<T>,
     IAdditionOperators<T, T, T>,
-    IDivisionOperators<T, T, T>, 
+    IDivisionOperators<T, T, T>,
     IMinMaxValue<T>
 {
     public T Value
@@ -34,7 +24,7 @@ public class GroupingDevice<T> : Device where T :
         {
             var storedState = GetStoredState();
 
-            if(!Equals(storedState, valueTemp))
+            if (!Equals(storedState, valueTemp))
             {
                 logger.Warn($"State missmatch in Group Device {storedState} != {valueTemp}");
                 logger.Info($"Try to push current state from: {storedState} => {valueTemp}");
@@ -72,10 +62,10 @@ public class GroupingDevice<T> : Device where T :
     private readonly Logger logger;
     private readonly GroupingMode mode;
 
-    public GroupingDevice(long nodeId, GroupingMode mode, string propName, T defaultValue, params long[] ids) 
+    public GroupingDevice(long nodeId, GroupingMode mode, string propName, T defaultValue, params long[] ids)
         : this(
-              nodeId, 
-              mode, 
+              nodeId,
+              mode,
               propName,
               ids.ToDictionary(x => x, _ => propName),
               defaultValue
@@ -83,10 +73,10 @@ public class GroupingDevice<T> : Device where T :
     {
     }
 
-    public GroupingDevice(long nodeId, GroupingMode mode, string propName, T defaultValue, params (string name, long id)[] ids) 
+    public GroupingDevice(long nodeId, GroupingMode mode, string propName, T defaultValue, params (string name, long id)[] ids)
         : this(
-              nodeId, 
-              mode, 
+              nodeId,
+              mode,
               propName,
               ids.ToDictionary(x => x.id, x => x.name),
               defaultValue
