@@ -4,6 +4,8 @@ using AppBroker.Core.HelperMethods;
 
 using Newtonsoft.Json.Linq;
 
+using NLog;
+
 using System.Numerics;
 
 namespace AppBroker.maxi.Devices;
@@ -18,47 +20,89 @@ public enum GroupingMode
 }
 
 
-public class GroupingDevice<T> : Device where T :
+public class GroupingDevice<T> : Device where T : 
+    notnull,
     INumber<T>,
     IAdditionOperators<T, T, T>,
-    IDivisionOperators<T, T, T>, IMinMaxValue<T>
+    IDivisionOperators<T, T, T>, 
+    IMinMaxValue<T>
 {
     public T Value
     {
+
         get
         {
-            var state = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(Id, ownPropertyName);
+            var storedState = GetStoredState();
 
-            if (state is null)
-                return default;
+            if(!Equals(storedState, valueTemp))
+            {
+                logger.Warn($"State missmatch in Group Device {storedState} != {valueTemp}");
+                logger.Info($"Try to push current state from: {storedState} => {valueTemp}");
+                IInstanceContainer.Instance.DeviceStateManager.PushNewState(Id, ownPropertyName, JToken.FromObject(valueTemp));
+            }
 
-            return state.ToObject<T>();
+
+            return valueTemp;
+        }
+        private set
+        {
+            if (Equals(value, valueTemp))
+                return;
+
+            valueTemp = value;
+
+            if (valueTemp != null)
+            {
+                IInstanceContainer.Instance.DeviceStateManager.PushNewState(Id, ownPropertyName, JToken.FromObject(valueTemp));
+            }
+
+            ValueChanged?.Invoke(this, valueTemp!);
         }
     }
 
-    public event EventHandler<T> ValueChanged;
+    //Temporary to check how good storing works
+    private T valueTemp;
+
+    public event EventHandler<T>? ValueChanged;
 
     private readonly Dictionary<long, T> storedStates = new();
     private readonly Dictionary<long, string> devices;
+    private readonly T defaultValue;
     private readonly string ownPropertyName;
+    private readonly Logger logger;
     private readonly GroupingMode mode;
 
-    public GroupingDevice(long nodeId, GroupingMode mode, string propName, params long[] ids) : this(nodeId, mode, propName)
+    public GroupingDevice(long nodeId, GroupingMode mode, string propName, T defaultValue, params long[] ids) 
+        : this(
+              nodeId, 
+              mode, 
+              propName,
+              ids.ToDictionary(x => x, _ => propName),
+              defaultValue
+        )
     {
-        devices = ids.ToDictionary(x => x, _ => propName);
     }
 
-    public GroupingDevice(long nodeId, GroupingMode mode, string propName, params (string name, long id)[] ids) : this(nodeId, mode, propName)
+    public GroupingDevice(long nodeId, GroupingMode mode, string propName, T defaultValue, params (string name, long id)[] ids) 
+        : this(
+              nodeId, 
+              mode, 
+              propName,
+              ids.ToDictionary(x => x.id, x => x.name),
+              defaultValue
+        )
     {
-        devices = ids.ToDictionary(x => x.id, x => x.name);
     }
 
-    private GroupingDevice(long nodeId, GroupingMode mode, string propName) : base(nodeId)
+    private GroupingDevice(long nodeId, GroupingMode mode, string propName, Dictionary<long, string> devices, T defaultValue) : base(nodeId)
     {
+        logger = LogManager.GetCurrentClassLogger();
         this.mode = mode;
         ownPropertyName = propName;
         ShowInApp = true;
-
+        valueTemp = GetStoredState();
+        this.devices = devices;
+        this.defaultValue = defaultValue;
         IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
     }
 
@@ -67,7 +111,9 @@ public class GroupingDevice<T> : Device where T :
         if (!devices.TryGetValue(e.Id, out var propName) || e.PropertyName != propName)
             return;
 
-        var value = e.NewValue.ToObject<T>();
+        logger.Debug("Group device rcv state change");
+
+        var value = e.NewValue.ToObject<T>() ?? defaultValue;
         storedStates[e.Id] = value;
 
         if (storedStates.Count != devices.Count)
@@ -82,26 +128,27 @@ public class GroupingDevice<T> : Device where T :
                 if (state is null)
                     continue;
 
-                storedStates[item.Key] = state!.ToObject<T>();
+                storedStates[item.Key] = state.ToObject<T>() ?? defaultValue;
             }
         }
 
-
-        var newValue = mode switch
+        Value = mode switch
         {
             GroupingMode.Sum => storedStates.Values.Aggregate((x, y) => x + y),
             GroupingMode.Min => storedStates.Values.Min(),
             GroupingMode.Max => storedStates.Values.Max(),
             GroupingMode.Avg => storedStates.Values.Aggregate((x, y) => x + y) / GenericCaster<int, T>.Cast(storedStates.Count),
             _ => default
-        };
+        } ?? defaultValue;
+    }
 
-        if (newValue != null)
-        {
-            IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, ownPropertyName, JToken.FromObject(newValue!));
-            Console.WriteLine(newValue);
+    private T GetStoredState()
+    {
+        var state = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(Id, ownPropertyName);
 
-            ValueChanged?.Invoke(this, newValue);
-        }
+        if (state is null)
+            return defaultValue;
+
+        return state.ToObject<T>() ?? defaultValue;
     }
 }

@@ -12,6 +12,7 @@ using AppBroker.Core;
 using AppBroker.Zigbee2Mqtt;
 using System.Reactive.Linq;
 using dotVariant;
+using NLog;
 
 namespace AppBroker.maxi;
 
@@ -24,10 +25,11 @@ internal partial struct RoomStateChange
 internal static class RoomFactory
 {
 
-    public static IObservable<Room> Create(string name, IDeviceStateManager stateManager, Zigbee2MqttManager zigbee2Mqtt, Device mainDevice, params Device[] devices)
+    public static IObservable<Room> Create(string name, Logger logger, IDeviceStateManager stateManager, Zigbee2MqttManager zigbee2Mqtt, Device mainDevice, params Device[] devices)
     {
         if (!devices.Contains(mainDevice))
         {
+            logger.Warn("Main device is not part of devices. Main Device added automaticly");
             var oldDevices = devices;
             devices = new Device[oldDevices.Length];
             Array.Copy(oldDevices, 0, devices, 0, oldDevices.Length);
@@ -36,11 +38,22 @@ internal static class RoomFactory
 
         var currentConfig = GetCurrentHeaterConfig(mainDevice.Id);
 
+        logger.Debug($"Current heater config for {name} is {(currentConfig?.Temperature.ToString() ?? "null")}");
+
         var room = new Room(name, mainDevice, devices, stateManager, zigbee2Mqtt, 0.0f, false, currentConfig);
+
+        var init
+                = Observable
+                    .Return(-1L);
+
+        var time
+                = Observable
+                    .Interval(TimeSpan.FromMinutes(5));
 
         var changesByTime
                     = Observable
-                    .Interval(TimeSpan.FromMinutes(1))
+                    .Concat(init, time)
+                    .Do(_ => logger.Trace($"Get Room Update for {name} by time"))
                     .SelectMany(_ => GetRoomUpdates(room));
 
         //var deviceStateChanges
@@ -63,6 +76,8 @@ internal static class RoomFactory
                     )
             )
             .Merge()
+            .Throttle(TimeSpan.FromMinutes(2))
+            .Do(value => logger.Debug($"room {name} gets new average Temperature: {value.EventArgs}"))
             .Select(eventPattern => new RoomStateChange(eventPattern.EventArgs));
 
         var contactChanges
@@ -77,6 +92,7 @@ internal static class RoomFactory
                     )
             )
             .Merge()
+            .Do(value => logger.Debug($"room {name} gets new contact state Contact: {value.EventArgs < 1}"))
             .Select(eventPattern => new RoomStateChange(eventPattern.EventArgs < 1));
 
         var stateChanges
@@ -84,16 +100,25 @@ internal static class RoomFactory
             .Merge(changesByTime, temperatureChanges, contactChanges);
 
         return stateChanges
+            .Do(_ => logger.Trace($"rcv change message in {name}"))
             .Scan(room, (room, change)
                 => change
                     .Visit(
                         (float average) =>
                             {
-                                if (room.CurrentTemperature == average)
+                                var currentTemperature = Math.Round(average, 2);
+
+                                if (room.CurrentTemperature == currentTemperature)
                                     return room;
 
-                                var newRoom = room with { CurrentTemperature = average };
+                                var newRoom = room with { CurrentTemperature = currentTemperature };
+
+                                if (newRoom.IsOpen)
+                                    return newRoom;
+
                                 CalibrateTemperature(newRoom);
+
+                                logger.Debug($"room {name} changed current temperature form {room.CurrentTemperature} to {newRoom.CurrentTemperature}");
                                 return newRoom;
                             },
                         (bool isOpen) =>
@@ -103,27 +128,49 @@ internal static class RoomFactory
 
                                 var newRoom = room with { IsOpen = isOpen };
                                 UpdateRoomHeaterOpenWindow(newRoom);
+
+                                logger.Debug($"room {name} changed current open state form {room.IsOpen} to {newRoom.IsOpen}");
                                 return newRoom;
                             },
                         (IHeaterConfigModel model) =>
                             {
-                                if (room.CurrentPlan == model)
+                                if (IsEquals(room.CurrentPlan, model))
                                     return room;
 
                                 var newRoom = room with { CurrentPlan = model };
+
+                                if (newRoom.IsOpen)
+                                    return newRoom;
+
                                 SetTargetTemperature(newRoom);
+
+                                logger.Debug($"room {name} changed current plan form {(room.CurrentPlan?.Temperature.ToString() ?? "null")} to {(newRoom.CurrentPlan?.Temperature.ToString() ?? "null")}");
                                 return newRoom;
                             }
                      )
             )
-            .DistinctUntilChanged();
+            .DistinctUntilChanged()
+            .Do(room => logger.Info($"chg room state {room.CurrentTemperature} °C, {(room.IsOpen ? "open" : "closed")}, plan {room.CurrentPlan?.Temperature.ToString() ?? "null"} °C"));
+    }
+
+    private static bool IsEquals(IHeaterConfigModel? left, IHeaterConfigModel? right)
+    {
+        if (Equals(left, right))
+            return true;
+
+        if (left is null || right is null)
+            return false;
+
+        return left.DayOfWeek == right.DayOfWeek
+            && left.TimeOfDay.Ticks == right.TimeOfDay.Ticks
+            && left.Temperature == right.Temperature;
     }
 
     private static IEnumerable<RoomStateChange> GetRoomUpdates(Room room)
     {
         yield return IsRoomOpen(room.Devices);
         yield return FilterDevices(room.Devices, IsAverageTemperature).OfType<GroupingDevice<float>>().First().Value;
-        
+
         var currentHeaterConfig = GetCurrentHeaterConfig(room.MainDevice.Id);
 
         if (currentHeaterConfig is not null)
@@ -132,22 +179,36 @@ internal static class RoomFactory
 
     private static void CalibrateTemperature(Room room)
     {
+        const double maxPossibleOffset = 20d;
+
         FilterDevices(room.Devices, IsHeater)
             .OfType<Zigbee2MqttDevice>()
-            .Select(device => (device, localTemperature: GetLocalTemperature(room.StateManager, device)))
+            .Select(device => (device, localTemperature: GetLocalTemperature(room.StateManager, device), calibration: GetLocalCalibration(room.StateManager, device)))
             .ToList()
             .ForEach(temperatureInfo =>
             {
-                var offset = room.CurrentTemperature - temperatureInfo.localTemperature;
-                _ = room.Zigbee2Mqtt.SetValue(temperatureInfo.device.FriendlyName, "local_temperature_calibration", offset);
+                var uncalibratedTemperature = temperatureInfo.localTemperature - temperatureInfo.calibration;
+                var offset = Math.Round(room.CurrentTemperature - uncalibratedTemperature, 2);
+
+                if(offset > maxPossibleOffset || offset < (maxPossibleOffset * -1))
+                {
+                    offset = 0;
+                }
+                else
+                {
+                    room.StateManager.PushNewState(temperatureInfo.device.Id, "unoccupied_local_temperature", uncalibratedTemperature);
+                    _ = room.Zigbee2Mqtt.SetValue(temperatureInfo.device.FriendlyName, "unoccupied_local_temperature", uncalibratedTemperature);
+                }                
+
+                if (offset != temperatureInfo.calibration)
+                {
+                    _ = room.Zigbee2Mqtt.SetValue(temperatureInfo.device.FriendlyName, "local_temperature_calibration", offset);
+                }
             });
     }
 
     private static void SetTargetTemperature(Room room)
     {
-        if (room.IsOpen)
-            return;
-
         FilterDevices(room.Devices, IsHeater)
             .OfType<Zigbee2MqttDevice>()
             .Select(device => (device, config: GetCurrentHeaterConfig(device.Id) ?? room.CurrentPlan))
@@ -166,21 +227,25 @@ internal static class RoomFactory
                .OfType<Zigbee2MqttDevice>()
                .ToList();
 
+        var mode = room.IsOpen ? "off" : "auto";
+
         foreach (var device in climates)
         {
-            if (room.IsOpen)
-            {
-                _ = room.Zigbee2Mqtt.SetValue(device.FriendlyName, "eurotronic_host_flags", JToken.FromObject(new { window_open = true }));
-                device.SetDeviceAndZigbeeProperty(room, "trv_mode", 1);
-                device.SetDeviceAndZigbeeProperty(room, "valve_position", 0);
-                device.SetDeviceAndZigbeeProperty(room, "system_mode", "off");
-            }
-            else
-            {
-                _ = room.Zigbee2Mqtt.SetValue(device.FriendlyName, "eurotronic_host_flags", JToken.FromObject(new { window_open = false }));
-                device.SetDeviceAndZigbeeProperty(room, "trv_mode", 2);
-                device.SetDeviceAndZigbeeProperty(room, "system_mode", "auto");
-            }
+            device.SetDeviceAndZigbeeProperty(room, "system_mode", mode);
+
+            //if (room.IsOpen)
+            //{
+            //    _ = room.Zigbee2Mqtt.SetValue(device.FriendlyName, "eurotronic_host_flags", JToken.FromObject(new { window_open = true }));
+            //    device.SetDeviceAndZigbeeProperty(room, "trv_mode", 1);
+            //    device.SetDeviceAndZigbeeProperty(room, "valve_position", 0);
+            //    device.SetDeviceAndZigbeeProperty(room, "system_mode", "off");
+            //}
+            //else
+            //{
+            //    _ = room.Zigbee2Mqtt.SetValue(device.FriendlyName, "eurotronic_host_flags", JToken.FromObject(new { window_open = false }));
+            //    device.SetDeviceAndZigbeeProperty(room, "trv_mode", 2);
+            //    device.SetDeviceAndZigbeeProperty(room, "system_mode", "auto");
+            //}
         }
     }
 
@@ -216,6 +281,7 @@ internal static class RoomFactory
 
         if (d is null || d.HeaterConfigs is null || d.HeaterConfigs.Count < 1)
             return null;
+
         IHeaterConfigModel? bestFit = null;
 
         var curDow = (DayOfWeek)((int)(DateTime.Now.DayOfWeek + 6) % 7);
@@ -233,6 +299,9 @@ internal static class RoomFactory
         }
         return bestFit;
     }
+
+    private static float GetLocalCalibration(IDeviceStateManager stateManager, Device device)
+        => stateManager.GetSingleState(device.Id, "local_temperature_calibration")?.ToObject<float>() ?? 0;
 
     private static float GetLocalTemperature(IDeviceStateManager stateManager, Device device)
         => stateManager.GetSingleState(device.Id, "local_temperature")?.ToObject<float>() ?? 0;
@@ -256,7 +325,7 @@ public record struct Room(
     IReadOnlyList<Device> Devices,
     IDeviceStateManager StateManager,
     Zigbee2MqttManager Zigbee2Mqtt,
-    float CurrentTemperature,
+    double CurrentTemperature,
     bool IsOpen,
     IHeaterConfigModel? CurrentPlan
 );
