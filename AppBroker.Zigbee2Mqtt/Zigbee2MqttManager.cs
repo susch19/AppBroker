@@ -64,7 +64,17 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
     public Task SetValue(string name, string propName, JToken newValue)
     {
-        return MQTTClient.EnqueueAsync($"zigbee2mqtt/{name}/set/{propName}", newValue.ToString());
+        //TODO: Evil hack for other system cultures
+        string stringifiedValue;
+        if (newValue.Type == JTokenType.Float)
+        {
+            stringifiedValue = newValue.ToString().Replace("\"", "").Replace(",", ".");
+        }
+        else
+        {
+            stringifiedValue = newValue.ToString();
+        }
+        return MQTTClient.EnqueueAsync($"zigbee2mqtt/{name}/set/{propName}", stringifiedValue);
     }
     public Task EnqueueToZigbee(string path, JToken payload)
     {
