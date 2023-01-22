@@ -31,7 +31,7 @@ internal class Plugin : IPlugin
         var zigbee2MqttConfig = IInstanceContainer.Instance.GetDynamic<Zigbee2MqttConfig>();
         if (zigbee2MqttConfig.Enabled)
         {
-            _ = um.Connect().ContinueWith((x) => _ = um.Subscribe());
+            _ = um.Connect(x => um.Subscribe());
         }
 
         return true;
