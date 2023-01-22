@@ -235,12 +235,15 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 
     protected override bool FriendlyNameChanging(string oldName, string newName)
     {
-        client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
+        if (string.IsNullOrWhiteSpace(oldName) || string.IsNullOrWhiteSpace(newName))
+            return true;
+
         if (zigbeeManager.friendlyNameToIdMapping.TryGetValue(oldName, out var id)
             && id == Id
             && !zigbeeManager.friendlyNameToIdMapping.ContainsKey(newName)
             && zigbeeManager.friendlyNameToIdMapping.Remove(oldName, out _))
         {
+            client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
             zigbeeManager.friendlyNameToIdMapping[newName] = id;
             return true;
         }
