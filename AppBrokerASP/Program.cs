@@ -39,6 +39,11 @@ public class Program
 
         _ = new InstanceContainer();
 
+        Logger? mainLogger = LogManager
+            .Setup()
+            .LoadConfigurationFromSection(InstanceContainer.Instance.ConfigManager.Configuration)
+            .GetCurrentClassLogger();
+
         var pluginLoader = new PluginLoader(LogManager.LogFactory);
         IInstanceContainer.Instance.RegisterDynamic(pluginLoader);
 
@@ -46,10 +51,6 @@ public class Program
 
         _ = DeviceLayoutService.InstanceDeviceLayouts;
 
-        Logger? mainLogger = LogManager
-            .Setup()
-            .LoadConfigurationFromSection(InstanceContainer.Instance.ConfigManager.Configuration)
-            .GetCurrentClassLogger();
 
         try
         {
