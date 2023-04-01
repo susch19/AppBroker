@@ -2,6 +2,7 @@
 using AppBroker.Core.Database.History;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -9,9 +10,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppBroker.Core.Database.Migrations
 {
     [DbContext(typeof(HistoryContext))]
-    partial class HistoryContextModelSnapshot : ModelSnapshot
+    [Migration("20230401133729_HistoryIndex")]
+    partial class HistoryIndex
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -74,8 +77,7 @@ namespace AppBroker.Core.Database.Migrations
                     b.HasIndex("HistoryValueId");
 
                     b.HasIndex(new[] { "Timestamp", "HistoryValueId" }, "HistoryValueTimestampIndex")
-                        .IsUnique()
-                        .IsDescending();
+                        .IsUnique();
 
                     b.ToTable("HistoryValueBase");
 

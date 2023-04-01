@@ -122,7 +122,7 @@ public class HistoryManager : IHistoryManager
         var histProp = ctx.Properties.FirstOrDefault(x => x.PropertyName == propertyName && x.Device.DeviceId == deviceId);
         if (histProp == default)
             return Array.Empty<HistoryRecord>();
-        var first = ctx.ValueBases.FirstOrDefault();
+
         var values = ctx.ValueBases
             .Where(x=>x.HistoryValueId == histProp.Id 
                 && x.Timestamp > start 
