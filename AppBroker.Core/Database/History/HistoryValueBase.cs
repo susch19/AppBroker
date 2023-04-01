@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.EntityFrameworkCore;
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueBase")]
+[Table("HistoryValueBase"), 
+    Index(nameof(Timestamp), nameof(HistoryValueId), IsUnique = true, Name = "HistoryValueTimestampIndex")]
 public class HistoryValueBase
 {
     [Key]
