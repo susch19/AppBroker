@@ -2,7 +2,7 @@
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueDouble")]
+[Table("HistoryValueDoubles")]
 public class HistoryValueDouble : HistoryValueBase
 {
     public double Value { get; set; }

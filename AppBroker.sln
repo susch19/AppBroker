@@ -44,7 +44,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.Zigbee2Mqtt", "Ap
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.IOBroker", "AppBroker.IOBroker\AppBroker.IOBroker.csproj", "{1D791FDB-2F42-4C32-AC9E-0D0EECC48344}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AppBroker.susch", "AppBroker.susch\AppBroker.susch.csproj", "{602068C7-B3DE-40D2-8061-2B62956CCE0B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppBroker.susch", "AppBroker.susch\AppBroker.susch.csproj", "{602068C7-B3DE-40D2-8061-2B62956CCE0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

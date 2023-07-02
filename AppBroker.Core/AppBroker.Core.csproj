@@ -19,12 +19,13 @@
 		<PackageReference Include="CoordinateSharp" Version="2.15.2.1" />
 
 		<PackageReference Include="Jint" Version="3.0.0-beta-2041" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="7.0.8" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 		<PackageReference Include="NLog.Extensions.Logging" Version="5.2.0" />
 		<PackageReference Include="NonSucking.Framework.Extension" Version="0.1.0.74-alpha" />
+		<PackageReference Include="NonSucking.Framework.Extension.EntityFrameworkCore" Version="0.1.0.107-alpha" />
 		<PackageReference Include="NonSucking.Framework.Serialization" Version="0.1.0.66-alpha" />
 		<PackageReference Include="Quartz" Version="3.5.0" />
 		<PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />

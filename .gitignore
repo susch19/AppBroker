@@ -277,3 +277,12 @@ OTA/*
 *.js
 *.bak
 /plugins
+/DbMigrator/broker.db
+/DbMigrator/broker.db-shm
+/DbMigrator/broker.db-wal
+/DbMigrator/broker.db.bak
+/DbMigrator/history.db
+/DbMigrator/history.db-shm
+/DbMigrator/history.db-wal
+/AppBrokerASP/JSDevices
+/AppBrokerASP/JSExtensionDevices

@@ -3,9 +3,10 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppBroker.Core.Database.Model;
 
+[Table("Devices")]
 public class DeviceModel
 {
-    [Key]
+    [Key, DatabaseGenerated(DatabaseGeneratedOption.None)]
     public long Id { get; set; }
     public string TypeName { get; set; } = "";
     public string? FriendlyName { get; set; }

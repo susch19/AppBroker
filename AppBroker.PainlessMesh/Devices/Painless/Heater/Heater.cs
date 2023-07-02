@@ -92,14 +92,7 @@ public partial class Heater : PainlessDevice, IDisposable
             try
             {
                 byte[]? s = parameters[3];
-                byte[] s2 = GetSendableTimeTemps(timeTemps);
-
-                if (!s.SequenceEqual(s2))
-                {
-                    Logger.Warn($"Heater {LogName} has wrong temps saved, trying correcting");
-                    var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, s2);
-                    meshManager.SendSingle((uint)Id, msg);
-                }
+                SendCurrentConfig(s);
             }
             catch (Exception e)
             {
@@ -165,6 +158,18 @@ public partial class Heater : PainlessDevice, IDisposable
         return Task.CompletedTask;
     }
 
+    private void SendCurrentConfig(byte[]? savedTemps)
+    {
+        byte[] currentConfigs = GetSendableTimeTemps(timeTemps);
+
+        if (!(savedTemps?.SequenceEqual(currentConfigs) ?? false))
+        {
+            Logger.Warn($"Heater {LogName} has wrong temps saved, trying correcting");
+            var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Options, Command.Temp, currentConfigs);
+            meshManager.SendSingle((uint)Id, msg);
+        }
+    }
+
     protected override void UpdateMessageReceived(BinarySmarthomeMessage e)
     {
 
@@ -180,17 +185,21 @@ public partial class Heater : PainlessDevice, IDisposable
                 DisableHeating = false;
                 break;
             case Command.Log:
-
+                bool resendConfig = false;
                 foreach (var item in e.Parameters)
                 {
                     try
                     {
-
                         var seconds = BitConverter.ToInt64(item.AsSpan(0, sizeof(long)));
 
                         var dt = DateTime.UnixEpoch.AddSeconds(seconds);
                         var logLine = Encoding.UTF8.GetString(item.AsSpan(sizeof(long)));
                         dt = dt.Add(tz.GetUtcOffset(dt));
+
+                        if(logLine.Contains("Ti: 0"))
+                        {
+                            resendConfig = true;
+                        }
 
                         Logger.Info($"{Id}|{FriendlyName}|{dt:yyyy-MM-dd HH:mm:ss}|{logLine}");
                     }
@@ -202,6 +211,11 @@ public partial class Heater : PainlessDevice, IDisposable
 
                     }
                 }
+                if (resendConfig)
+                {
+                    SendCurrentConfig(Array.Empty<byte>());
+                }
+
                 break;
             default:
                 break;

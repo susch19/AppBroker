@@ -6,7 +6,7 @@ using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueHeaterConfig")]
+[Table("HistoryValueHeaterConfigs")]
 public class HistoryValueHeaterConfig : HistoryValueBase, IHeaterConfigModel
 {
     public DayOfWeek DayOfWeek { get; set; }

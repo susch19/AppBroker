@@ -2,7 +2,7 @@
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueTimeSpan")]
+[Table("HistoryValueTimeSpans")]
 public class HistoryValueTimeSpan : HistoryValueBase
 {
     public TimeSpan Value { get; set; }

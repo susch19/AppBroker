@@ -14,10 +14,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace AppBroker.Core.Database.Migrations
 {
     [DbContext(typeof(HistoryDbContext))]
-    [Migration(Id)]
-    partial class InitialCreate 
+    [Migration("20220908170854_AddFields")]
+    partial class AddFields
     {
-        public const string Id = $"20220908170853_InitialCreate";
 //        protected override void BuildTargetModel(ModelBuilder modelBuilder)
 //        {
 //#pragma warning disable 612, 618

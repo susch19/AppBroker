@@ -36,7 +36,7 @@ public class PainlessMeshDeviceManager
     {
         if (deviceManager.Devices.TryGetValue(e.id, out var device))
         {
-            logger.Info($"Reestablished connection to {device.FriendlyName} having nodeId {e}");
+            logger.Info($"Reestablished connection to {device.FriendlyName} having nodeId {e.id}");
             device.Reconnect(e.parameter);
         }
     }
@@ -45,7 +45,7 @@ public class PainlessMeshDeviceManager
     {
         if (deviceManager.Devices.TryGetValue(e.id, out var device))
         {
-            logger.Info($"Reestablished connection with whoami to {device.FriendlyName} having nodeId {e}");
+            logger.Info($"Reestablished connection with whoami to {device.FriendlyName} having nodeId {e.id}");
             device.Reconnect(e.l);
         }
         else

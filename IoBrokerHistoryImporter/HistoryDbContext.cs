@@ -37,7 +37,7 @@ public class HistoryProperty
     }
 }
 
-[Table("HistoryValueBase")]
+[Table("HistoryValueBases")]
 public class HistoryValueBase
 {
     [Key]
@@ -50,7 +50,7 @@ public class HistoryValueBase
     public virtual HistoryProperty HistoryValue { get; set; }
 }
 
-[Table("HistoryValueLong")]
+[Table("HistoryValueLongs")]
 public class HistoryValueLong : HistoryValueBase
 {
     public long Value { get; set; }
@@ -64,7 +64,7 @@ public class HistoryValueLong : HistoryValueBase
     }
 }
 
-[Table("HistoryValueString")]
+[Table("HistoryValueStrings")]
 public class HistoryValueString : HistoryValueBase
 {
     public string Value { get; set; }
@@ -78,7 +78,7 @@ public class HistoryValueString : HistoryValueBase
     }
 }
 
-[Table("HistoryValueDouble")]
+[Table("HistoryValueDoubles")]
 public class HistoryValueDouble : HistoryValueBase
 {
     public double Value { get; set; }
@@ -92,7 +92,7 @@ public class HistoryValueDouble : HistoryValueBase
     }
 }
 
-[Table("HistoryValueBool")]
+[Table("HistoryValueBools")]
 public class HistoryValueBool : HistoryValueBase
 {
     public bool Value { get; set; }
@@ -105,7 +105,7 @@ public class HistoryValueBool : HistoryValueBase
         Value = value;
     }
 }
-[Table("HistoryValueDateTime")]
+[Table("HistoryValueDateTimes")]
 public class HistoryValueDateTime : HistoryValueBase
 {
     public DateTime Value { get; set; }
@@ -118,7 +118,7 @@ public class HistoryValueDateTime : HistoryValueBase
         Value = value;
     }
 }
-[Table("HistoryValueTimeSpan")]
+[Table("HistoryValueTimeSpans")]
 public class HistoryValueTimeSpan : HistoryValueBase
 {
     public TimeSpan Value { get; set; }
@@ -131,7 +131,7 @@ public class HistoryValueTimeSpan : HistoryValueBase
         Value = value;
     }
 }
-[Table("HistoryValueHeaterConfig")]
+[Table("HistoryValueHeaterConfigs")]
 public class HistoryValueHeaterConfig : HistoryValueBase, IHeaterConfigModel
 {
     public DayOfWeek DayOfWeek { get; set; }

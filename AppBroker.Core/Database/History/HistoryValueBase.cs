@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueBase"), 
+[Table("HistoryValueBases"), 
     Index(nameof(Timestamp), nameof(HistoryValueId), IsUnique = true, Name = "HistoryValueTimestampIndex")]
 public class HistoryValueBase
 {

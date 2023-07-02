@@ -2,7 +2,7 @@
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueDateTime")]
+[Table("HistoryValueDateTimes")]
 public class HistoryValueDateTime : HistoryValueBase
 {
     public DateTime Value { get; set; }
