@@ -1,7 +1,13 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Xml.Linq;
 
+using AppBroker.Core.Database.History;
+using AppBroker.Core.Database.Model;
+
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 using NonSucking.Framework.Extension.EntityFrameworkCore.Migrations;
@@ -9,8 +15,21 @@ using NonSucking.Framework.Extension.EntityFrameworkCore.Migrations;
 
 namespace AppBroker.Core.Database.Migrations
 {
-    public partial class HeaterConfigs : Migration, IAutoMigrationTypeProvider
+    public partial class AddFields : Migration, IAutoMigrationTypeProvider
     {
+        public IReadOnlyList<Type> GetEntityTypes() => new Type[]
+        {
+            typeof(HistoryDevice),
+            typeof(HistoryProperty),
+            typeof(HistoryValueBase),
+            typeof(HistoryValueBool),
+            typeof(HistoryValueDateTime),
+            typeof(HistoryValueDouble),
+            typeof(HistoryValueLong),
+            typeof(HistoryValueString),
+            typeof(HistoryValueTimeSpan),
+        };
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.SetUpgradeOperations(this);
@@ -19,19 +38,6 @@ namespace AppBroker.Core.Database.Migrations
         {
             migrationBuilder.SetDowngradeOperations(this);
         }
-        public IReadOnlyList<Type> GetEntityTypes()
-            => new[] {
-                typeof(HistoryDevice),
-                typeof(HistoryProperty),
-                typeof(HistoryValueBase),
-                typeof(HistoryValueBool),
-                typeof(HistoryValueDateTime),
-                typeof(HistoryValueDouble),
-                typeof(HistoryValueLong),
-                typeof(HistoryValueString),
-                typeof(HistoryValueTimeSpan),
-                typeof(HistoryValueHeaterConfig)
-            };
 
         [Table("HistoryDevices")]
         public class HistoryDevice
@@ -148,19 +154,6 @@ namespace AppBroker.Core.Database.Migrations
                 Value = value;
             }
         }
-
-        [Table("HistoryValueHeaterConfigs")]
-        public class HistoryValueHeaterConfig : HistoryValueBase
-        {
-            public DayOfWeek DayOfWeek { get; set; }
-            public DateTime TimeOfDay { get; set; }
-            public double Temperature { get; set; }
-
-            public HistoryValueHeaterConfig()
-            {
-            }
-        }
-
 
     }
 }

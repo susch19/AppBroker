@@ -2,7 +2,7 @@
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueString")]
+[Table("HistoryValueStrings")]
 public class HistoryValueString : HistoryValueBase
 {
     public string Value { get; set; }

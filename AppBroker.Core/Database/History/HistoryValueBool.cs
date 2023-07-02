@@ -2,7 +2,7 @@
 
 namespace AppBroker.Core.Database.History;
 
-[Table("HistoryValueBool")]
+[Table("HistoryValueBools")]
 public class HistoryValueBool : HistoryValueBase
 {
     public bool Value { get; set; }

@@ -7,6 +7,8 @@ using AppBrokerASP.Cloud;
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices;
 
+using Elsa.Server.Api.Attributes;
+
 using Microsoft.AspNetCore.Mvc;
 
 using Newtonsoft.Json;
@@ -23,12 +25,14 @@ public class DeviceController : ControllerBase
     private readonly IDeviceStateManager stateManager;
     private readonly IDeviceManager deviceManager;
     private readonly JavaScriptEngineManager engineManager;
+    private readonly IHistoryManager historyManager;
 
-    public DeviceController(IDeviceStateManager stateManager, IDeviceManager deviceManager, JavaScriptEngineManager engineManager)
+    public DeviceController(IDeviceStateManager stateManager, IDeviceManager deviceManager, JavaScriptEngineManager engineManager, IHistoryManager historyManager)
     {
         this.stateManager = stateManager;
         this.deviceManager = deviceManager;
         this.engineManager = engineManager;
+        this.historyManager = historyManager;
     }
 
     [HttpPatch("rebuild/{id}")]
@@ -43,7 +47,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpPatch]
-    public ActionResult ReloadJSDevices([FromQuery]bool onlyNew = true)
+    public ActionResult ReloadJSDevices([FromQuery] bool onlyNew = true)
     {
         engineManager.ReloadJsDevices(onlyNew);
         return GetDevices();
@@ -76,6 +80,13 @@ public class DeviceController : ControllerBase
         return Content(JsonConvert.SerializeObject(curState), "application/json");
     }
 
+    [HttpGet("history/{id}")]
+    public ActionResult GetHistory(long id, [RequiredFromQuery] DateTime from, [RequiredFromQuery] DateTime to, [RequiredFromQuery] string propName)
+    {
+        return Content(JsonConvert.SerializeObject(historyManager.GetHistoryFor(id, propName, from, to)));
+    }
+
+
     [HttpGet("state/{id}/{name}")]
     public ActionResult GetDeviceState(long id, string name)
     {
@@ -94,8 +105,8 @@ public class DeviceController : ControllerBase
         {
             newState = Newtonsoft.Json.JsonConvert.DeserializeObject<NewStateRecord>(await reader.ReadToEndAsync());
         }
-        
-        
+
+
         stateManager.SetSingleState(id, newState.Name, newState.Value);
 
         var curState = stateManager.GetSingleState(id, newState.Name);
@@ -123,7 +134,7 @@ public class DeviceController : ControllerBase
 
 
     [HttpGet]
-    public ActionResult GetDevices([FromQuery]bool includeState = false)
+    public ActionResult GetDevices([FromQuery] bool includeState = false)
     {
         return includeState
             ? Content(JsonConvert.SerializeObject(deviceManager.Devices.Values), "application/json")

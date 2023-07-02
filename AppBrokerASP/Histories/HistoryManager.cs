@@ -124,10 +124,11 @@ public class HistoryManager : IHistoryManager
             return Array.Empty<HistoryRecord>();
 
         var values = ctx.ValueBases
-            .Where(x=>x.HistoryValueId == histProp.Id 
-                && x.Timestamp > start 
-                && x.Timestamp < end)
-            .ToArray();
+            .Where(x => x.HistoryValueId == histProp.Id
+                && x.Timestamp > start.ToUniversalTime()
+                && x.Timestamp < end.ToUniversalTime())
+             .ToArray();
+        
         return values
             .OfType<HistoryValueDouble>()
             .Select(x => new HistoryRecord(x.Value, (long)new TimeSpan(x.Timestamp.Ticks).TotalMilliseconds))

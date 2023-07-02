@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AppBroker.Core.Database.Model;
 
+[Table("DeviceToDeviceMappings")]
 public class DeviceMappingModel
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]

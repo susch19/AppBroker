@@ -2,21 +2,22 @@
 
 using Microsoft.EntityFrameworkCore;
 
+using NonSucking.Framework.Extension.EntityFrameworkCore;
+
 namespace AppBroker.Core.Database;
 
 
-public class BaseDbContext : DbContext
+public class BaseDbContext : DatabaseContext
 {
+    public string DatabaseType { get; protected set; }
 
-    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    public BaseDbContext()
     {
-        configurationBuilder
-            .Properties<DateTime>()
-            .HaveConversion<DateTimeLongConverter>();
-        configurationBuilder
-            .Properties<TimeSpan>()
-            .HaveConversion<TimeSpanLongConverter>();
+        EnableUseLazyLoading = true;
+        AssemblyRootName = nameof(AppBroker);
+        AddAllEntities = false;
     }
+
 }
 
 public class BrokerDbContext : BaseDbContext
@@ -28,9 +29,30 @@ public class BrokerDbContext : BaseDbContext
     //public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
 
 
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => _ = optionsBuilder
-        .UseSqlite(IInstanceContainer.Instance.ConfigManager.DatabaseConfig.BrokerDBConnectionString)
-        .UseLazyLoadingProxies();
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        var dbConfig = IInstanceContainer.Instance.ConfigManager.DatabaseConfig;
+        DatabaseFactory.Initialize(new FileInfo(dbConfig.BrokerDatabasePluginName).FullName);
+        DatabaseType = dbConfig.BrokerDatabasePluginName;
+        foreach (var item in DatabaseFactory.DatabaseConfigurators)
+        {
+            item.OnConfiguring(optionsBuilder, dbConfig.BrokerDBConnectionString).UseLazyLoadingProxies();
+        }
+
+        base.OnConfiguring(optionsBuilder);
+    }
+    protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+    {
+        if (DatabaseType.Contains("sqlite", StringComparison.OrdinalIgnoreCase))
+        {
+            configurationBuilder
+                .Properties<DateTime>()
+                .HaveConversion<DateTimeLongConverter>();
+            configurationBuilder
+                .Properties<TimeSpan>()
+                .HaveConversion<TimeSpanLongConverter>();
+        }
+    }
 }
 
 /*

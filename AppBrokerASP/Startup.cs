@@ -67,6 +67,7 @@ public class Startup
         _ = services.AddSingleton(container.DeviceTypeMetaDataManager);
         _ = services.AddSingleton(container.DeviceManager);
         _ = services.AddSingleton(container.DeviceStateManager);
+        _ = services.AddSingleton(container.HistoryManager);
 
         var elsaSection = Configuration.GetSection("Elsa");
 

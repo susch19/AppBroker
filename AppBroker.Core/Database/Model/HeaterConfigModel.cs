@@ -9,6 +9,7 @@ using DayOfWeek = AppBroker.Core.Models.DayOfWeek;
 
 namespace AppBroker.Core.Database.Model;
 
+[Table("HeaterConfigs")]
 public class HeaterConfigModel : IHeaterConfigModel
 {
     [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]

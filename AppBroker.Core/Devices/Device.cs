@@ -248,6 +248,7 @@ public abstract class Device : IDisposable
             existing.DeserializationData = this.ToJsonTyped();
         }
 
+        //Identity insert per db provider
         ctx.SaveChanges();
     }
 
