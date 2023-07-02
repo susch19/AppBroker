@@ -126,10 +126,17 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
         var payload = e.ApplicationMessage.ConvertPayloadToString();
 
-        var splitted = topic.Split('/', 3);
+        var splitted = topic.Split('/', 2);
 
         var deviceName = splitted[1];
-        if (splitted.Length < 3)
+        var lastIndex = deviceName.LastIndexOf("/");
+
+        if (lastIndex > 0)
+        {
+            deviceName = deviceName.Substring(0, lastIndex);
+        }
+
+        if (splitted.Length < 2)
         {
             Console.WriteLine($"[{topic}] {payload}");
             if (devices is null)
@@ -144,7 +151,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
         }
         //zigbee2mqtt/bridge/request/backup
 
-        var method = splitted[2];
+        var method = splitted[1].Split('/').Last();
         switch (method)
         {
             case "devices":
@@ -237,14 +244,14 @@ public class Zigbee2MqttManager : IAsyncDisposable
                     InstanceContainer
                         .Instance
                         .DeviceStateManager
-                        .SetSingleState(deviceId, "available", payload == "online");
+                        .SetSingleState(deviceId, "available", payload == "online" || payload == "{\"state\":\"online\"}");
                 }
                 else
                 {
                     logger.Warn($"Couldn't set availability ({payload}) on {deviceName}");
                 }
                 break;
-            case "request/backup":
+            case "backup":
                 var backup = JsonConvert.DeserializeObject<Zigbee2MqttBackup>(payload);
                 //TODO: Store Backup somewhere
                 break;

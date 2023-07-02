@@ -235,6 +235,9 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 
     protected override bool FriendlyNameChanging(string oldName, string newName)
     {
+        if (string.IsNullOrWhiteSpace(oldName) || string.IsNullOrWhiteSpace(newName))
+            return true;
+
         client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
         if (zigbeeManager.friendlyNameToIdMapping.TryGetValue(oldName, out var id)
             && id == Id
