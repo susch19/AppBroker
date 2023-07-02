@@ -24,7 +24,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
     private Zigbee2MqttDeviceJson[]? devices;
     private readonly ZigbeeConfig config;
     private readonly Logger logger;
-    private readonly Stack<(string, string, string)> cachedBeforeConnect = new();
+    private readonly Stack<(string, string)> cachedBeforeConnect = new();
 
     public Zigbee2MqttManager(ZigbeeConfig zigbee2MqttConfig)
     {
@@ -119,167 +119,143 @@ public class Zigbee2MqttManager : IAsyncDisposable
     private async Task Mqtt_ApplicationMessageReceivedAsync(MqttApplicationMessageReceivedEventArgs e)
     {
         var topic = e.ApplicationMessage.Topic;
-        if (!topic.StartsWith("zigbee2mqtt/"))
+        if (!topic.StartsWith($"{config.Topic}/"))
         {
             return;
         }
 
+        topic = topic[(config.Topic.Length + 1)..];
         var payload = e.ApplicationMessage.ConvertPayloadToString();
 
-        var splitted = topic.Split('/', 2);
-
-        var deviceName = splitted[1];
-        var lastIndex = deviceName.LastIndexOf("/");
-
-        if (lastIndex > 0)
+        if (topic == "bridge/info")
         {
-            deviceName = deviceName.Substring(0, lastIndex);
-        }
-
-        if (splitted.Length < 2)
-        {
-            Console.WriteLine($"[{topic}] {payload}");
-            if (devices is null)
-            {
-                logger.Trace($"Got state before device {deviceName}, is something wrong with the retained messages of the mqtt broker?");
-                cachedBeforeConnect.Push((topic, deviceName, payload));
+            var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
+            var manager = IInstanceContainer.Instance.DeviceStateManager;
+            if (!long.TryParse(c.Coordinator.IEEEAddress, out var coordinatorId))
                 return;
-            }
-            TryInterpretTopicAsStateUpdate(topic, deviceName, payload);
-            return;
+            manager.SetSingleState(coordinatorId, nameof(c.PermitJoin), c.PermitJoin);
+            manager.SetSingleState(coordinatorId, nameof(c.PermitJoinTimeout), c.PermitJoinTimeout);
+            manager.SetSingleState(coordinatorId, nameof(c.RestartRequired), c.RestartRequired);
+        }
+        else if (topic == "bridge/state")
+        {
 
         }
-        //zigbee2mqtt/bridge/request/backup
-
-        var method = splitted[1].Split('/').Last();
-        switch (method)
+        else if (topic == "bridge/logging")
         {
-            case "devices":
-                devices = JsonConvert.DeserializeObject<Zigbee2MqttDeviceJson[]>(payload);
-                using (var ctx = DbProvider.BrokerDbContext)
+            var g = JsonConvert.DeserializeObject<Zigbee2MqttLogMessage>(payload);
+            var lvl = g!.Level switch
+            {
+                Zigbee2MqttLogLevel.Error => LogLevel.Error,
+                Zigbee2MqttLogLevel.Warning => LogLevel.Warn,
+                Zigbee2MqttLogLevel.Info => LogLevel.Info,
+                _ => LogLevel.Info,
+            };
+            _ = logger.ForLogEvent(lvl).Message(g.Message).Callsite();
+        }
+        else if (topic == "bridge/devices")
+        {
+            devices = JsonConvert.DeserializeObject<Zigbee2MqttDeviceJson[]>(payload);
+            using (var ctx = DbProvider.BrokerDbContext)
+            {
+                foreach (var item in devices!)
                 {
-
-                    foreach (var item in devices!)
+                    var id = long.Parse(item.IEEEAddress[2..], NumberStyles.HexNumber);
+                    logger.Debug($"Trying to create new device {id}");
+                    var dbDevice = ctx.Devices.FirstOrDefault(x => x.Id == id);
+                    if (dbDevice is not null && !string.IsNullOrWhiteSpace(dbDevice.FriendlyName) && dbDevice.FriendlyName != item.FriendlyName)
                     {
-                        var id = long.Parse(item.IEEEAddress[2..], NumberStyles.HexNumber);
-                        logger.Debug($"Trying to create new device {id}");
-                        var dbDevice = ctx.Devices.FirstOrDefault(x => x.Id == id);
-                        if (dbDevice is not null && !string.IsNullOrWhiteSpace(dbDevice.FriendlyName) && dbDevice.FriendlyName != item.FriendlyName)
-                        {
-                            logger.Info($"Friendly name of Zigbee2Mqtt Device {item.FriendlyName} does not match saved name {dbDevice.FriendlyName}, updating");
-                            await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyName}\"}}");
-                            item.FriendlyName = dbDevice.FriendlyName;
-                        }
+                        logger.Info($"Friendly name of Zigbee2Mqtt Device {item.FriendlyName} does not match saved name {dbDevice.FriendlyName}, updating");
+                        await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyName}\"}}");
+                        item.FriendlyName = dbDevice.FriendlyName;
+                    }
 
-                        friendlyNameToIdMapping[item.FriendlyName] = id;
-                        if (IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
-                        {
-                            logger.Debug($"Already having device {id} ");
-                            continue;
-                        }
+                    friendlyNameToIdMapping[item.FriendlyName] = id;
+                    if (IInstanceContainer.Instance.DeviceManager.Devices.ContainsKey(id))
+                    {
+                        logger.Debug($"Already having device {id} ");
+                        continue;
+                    }
 
+                    Device? dev;
 
+                    if (item.Type == Zigbee2MqttDeviceType.Coordinator)
+                        dev = new CoordinatorDevice(item, id);
+                    else
+                        dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromNameWithBaseType(Zigbee2MqttDevice.GetTypeName(item), typeof(Zigbee2MqttDevice), typeof(Zigbee2MqttDevice), item!, id);
 
-                        Device? dev;
-
-                        if (item.Type == Zigbee2MqttDeviceType.Coordinator)
-                            dev = new CoordinatorDevice(item, id);
-                        else
-                            dev = IInstanceContainer.Instance.DeviceTypeMetaDataManager.CreateDeviceFromNameWithBaseType(Zigbee2MqttDevice.GetTypeName(item), typeof(Zigbee2MqttDevice), typeof(Zigbee2MqttDevice), item!, id);
-
-                        if (dev is not null)
-                        {
-                            logger.Info($"Got new device {item.FriendlyName} with id {id}");
-                            InstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
-                        }
-                        else
-                        {
-                            logger.Info($"Couldn't initialize device {item.FriendlyName} with id {id}");
-                        }
+                    if (dev is not null)
+                    {
+                        logger.Info($"Got new device {item.FriendlyName} with id {id}");
+                        InstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
+                    }
+                    else
+                    {
+                        logger.Info($"Couldn't initialize device {item.FriendlyName} with id {id}");
                     }
                 }
+            }
 
-                while (cachedBeforeConnect.TryPop(out var item))
-                {
-                    logger.Debug($"Popped state for {item.Item2}, {cachedBeforeConnect.Count} left to go");
-                    TryInterpretTopicAsStateUpdate(item.Item1, item.Item2, item.Item3);
-                }
-
-                break;
-
-            case "config":
-                //var b = JsonConvert.DeserializeObject<Zigbee2MqttBridgeConfig>(payload);
-                ;
-                break;
-
-            case "info":
-                var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
-                var manager = IInstanceContainer.Instance.DeviceStateManager;
-                if (!long.TryParse(c.Coordinator.IEEEAddress, out var coordinatorId))
-                    return;
-                manager.SetSingleState(coordinatorId, nameof(c.PermitJoin), c.PermitJoin);
-                manager.SetSingleState(coordinatorId, nameof(c.PermitJoinTimeout), c.PermitJoinTimeout);
-                manager.SetSingleState(coordinatorId, nameof(c.RestartRequired), c.RestartRequired);
-                ;
-                break;
-
-            case "groups":
-                //var d = JsonConvert.DeserializeObject<Zigbee2MqttGroup[]>(payload);
-                break;
-            case "logging":
-                var g = JsonConvert.DeserializeObject<Zigbee2MqttLogMessage>(payload);
-                var lvl = g!.Level switch
-                {
-                    Zigbee2MqttLogLevel.Error => LogLevel.Error,
-                    Zigbee2MqttLogLevel.Warning => LogLevel.Warn,
-                    Zigbee2MqttLogLevel.Info => LogLevel.Info,
-                    _ => LogLevel.Info,
-                };
-                _ = logger.ForLogEvent(lvl).Message(g.Message).Callsite();
-
-                break;
-            case "availability":
-                if (friendlyNameToIdMapping.TryGetValue(deviceName, out var deviceId))
-                {
-                    InstanceContainer
-                        .Instance
-                        .DeviceStateManager
-                        .SetSingleState(deviceId, "available", payload == "online" || payload == "{\"state\":\"online\"}");
-                }
-                else
-                {
-                    logger.Warn($"Couldn't set availability ({payload}) on {deviceName}");
-                }
-                break;
-            case "backup":
-                var backup = JsonConvert.DeserializeObject<Zigbee2MqttBackup>(payload);
-                //TODO: Store Backup somewhere
-                break;
-            case "extensions":
-            default:
-                break;
+            while (cachedBeforeConnect.TryPop(out var item))
+            {
+                logger.Debug($"Popped state for {item.Item1}:{item.Item2}, {cachedBeforeConnect.Count} left to go");
+                TryInterpretTopicAsStateUpdate(item.Item1, item.Item2);
+            }
         }
-
-        return;
-    }
-
-    private void TryInterpretTopicAsStateUpdate(string topic, string deviceName, string payload)
-    {
-        var zigbeeLength = "zigbee2mqtt/".Length;
-        if (topic.Length > zigbeeLength)
+        else if (topic == "bridge/groups")
         {
-            if (friendlyNameToIdMapping.TryGetValue(deviceName, out var id))
+            //var d = JsonConvert.DeserializeObject<Zigbee2MqttGroup[]>(payload);
+        }
+        else if (topic == "bridge/event")
+        {
+
+        }
+        else if (topic == "bridge/extensions")
+        {
+
+        }
+        else if (topic.EndsWith("/availability", StringComparison.OrdinalIgnoreCase))
+        {
+            var deviceName = topic[0..^"/availability".Length];
+
+            if (friendlyNameToIdMapping.TryGetValue(deviceName, out var deviceId))
             {
                 InstanceContainer
                     .Instance
                     .DeviceStateManager
-                    .SetMultipleStates(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
-
-                InstanceContainer
-                    .Instance
-                    .DeviceStateManager
-                    .SetSingleState(id, "lastReceived", DateTime.Now);
+                    .SetSingleState(deviceId, "available", payload == "online" || payload == "{\"state\":\"online\"}");
             }
+            else
+            {
+                logger.Warn($"Couldn't set availability ({payload}) on {deviceName}");
+            }
+        }
+        else
+        {
+            logger.Warn($"[{topic}] {payload}");
+            if (devices is null)
+            {
+                logger.Trace($"Got state before device {topic}, is something wrong with the retained messages of the mqtt broker?");
+                cachedBeforeConnect.Push((topic, payload));
+                return;
+            }
+            TryInterpretTopicAsStateUpdate(topic, payload);
+        }
+    }
+
+    private void TryInterpretTopicAsStateUpdate(string deviceName, string payload)
+    {
+        if (friendlyNameToIdMapping.TryGetValue(deviceName, out var id))
+        {
+            InstanceContainer
+                .Instance
+                .DeviceStateManager
+                .SetMultipleStates(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
+
+            InstanceContainer
+                .Instance
+                .DeviceStateManager
+                .SetSingleState(id, "lastReceived", DateTime.Now);
         }
     }
 
