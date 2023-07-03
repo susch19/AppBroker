@@ -31,7 +31,8 @@ public class HistoryDbContext : BaseDbContext
         DatabaseType = dbConfig.HistoryDatabasePluginName;
         foreach (var item in DatabaseFactory.DatabaseConfigurators)
         {
-            item.OnConfiguring(optionsBuilder, dbConfig.HistoryDBConnectionString).UseLazyLoadingProxies();
+            if (DatabaseType.Contains(item.Name, StringComparison.OrdinalIgnoreCase))
+                item.OnConfiguring(optionsBuilder, dbConfig.HistoryDBConnectionString).UseLazyLoadingProxies();
         }
 
         base.OnConfiguring(optionsBuilder);
