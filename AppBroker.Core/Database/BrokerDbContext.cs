@@ -36,7 +36,8 @@ public class BrokerDbContext : BaseDbContext
         DatabaseType = dbConfig.BrokerDatabasePluginName;
         foreach (var item in DatabaseFactory.DatabaseConfigurators)
         {
-            item.OnConfiguring(optionsBuilder, dbConfig.BrokerDBConnectionString).UseLazyLoadingProxies();
+            if (DatabaseType.Contains(item.Name, StringComparison.OrdinalIgnoreCase))
+                item.OnConfiguring(optionsBuilder, dbConfig.BrokerDBConnectionString).UseLazyLoadingProxies();
         }
 
         base.OnConfiguring(optionsBuilder);
