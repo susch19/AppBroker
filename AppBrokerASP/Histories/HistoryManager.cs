@@ -3,6 +3,8 @@ using AppBroker.Core.Database;
 using AppBroker.Core.Database.History;
 using AppBroker.Core.Models;
 
+using Common.Logging;
+
 using Microsoft.EntityFrameworkCore;
 
 using Newtonsoft.Json.Linq;
@@ -19,6 +21,12 @@ public class HistoryManager : IHistoryManager
 {
     static HeaterConfig emptyHeaderConfig = new();
 
+    private ILog logger;
+
+    public HistoryManager()
+    {
+        logger = LogManager.GetLogger<HistoryManager>();
+    }
 
     public void StoreNewState(long id, string name, JToken? oldValue, JToken? newValue)
     {
@@ -66,11 +74,20 @@ public class HistoryManager : IHistoryManager
             default:
                 return;
         }
-        value.Timestamp = DateTime.UtcNow;
-        value.HistoryValue = histProp;
-        ctx.Add(value);
+        try
+        {
 
-        ctx.SaveChanges();
+            value.Timestamp = DateTime.UtcNow;
+            value.HistoryValue = histProp;
+            ctx.Add(value);
+
+            ctx.SaveChanges();
+        }
+        catch (Exception ex)
+        {
+            logger.Error($"Error during save of new state. Tried to save {value.GetType().Name} for property {histProp.Id}", ex);
+            throw;
+        }
     }
 
     public void EnableHistory(long id, string name)
@@ -111,8 +128,6 @@ public class HistoryManager : IHistoryManager
         return ctx.Properties.Include(x => x.Device).Select(x => new HistoryPropertyState(x.Device.DeviceId, x.PropertyName, x.Enabled)).ToList();
     }
 
-
-    Random random = new Random();
     public HistoryRecord[] GetHistoryFor(long deviceId, string propertyName, DateTime start, DateTime end)
     {
         //return Enumerable.Range(0, 100).Select(x => new HistoryRecord(random.NextDouble() * 30, (long)new TimeSpan(start.AddMinutes((long)(5 * x)).Ticks).TotalMilliseconds)).ToArray();
@@ -128,6 +143,8 @@ public class HistoryManager : IHistoryManager
                 && x.Timestamp > start.ToUniversalTime()
                 && x.Timestamp < end.ToUniversalTime())
              .ToArray();
+
+        logger.Info($"Loaded {values.Length} values for {propertyName} of device {deviceId} from {start} to {end}");
         
         return values
             .OfType<HistoryValueDouble>()
