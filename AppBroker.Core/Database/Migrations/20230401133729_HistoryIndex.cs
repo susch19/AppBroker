@@ -45,7 +45,7 @@ namespace AppBroker.Core.Database.Migrations
         public class HistoryDevice
         {
 
-            [Key]
+            [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
             public int Id { get; set; }
             public long DeviceId { get; set; }
         }
@@ -53,7 +53,7 @@ namespace AppBroker.Core.Database.Migrations
         [Table("HistoryProperties")]
         public class HistoryProperty
         {
-            [Key]
+            [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
             public long Id { get; set; }
 
             public bool Enabled { get; set; }
@@ -69,7 +69,7 @@ namespace AppBroker.Core.Database.Migrations
     Index(nameof(Timestamp), nameof(HistoryValueId), IsUnique = true, Name = "HistoryValueTimestampIndex")]
         public class HistoryValueBase
         {
-            [Key]
+            [Key, DatabaseGenerated(DatabaseGeneratedOption.Identity)]
             public long Id { get; set; }
             public DateTime Timestamp { get; set; }
             public long HistoryValueId { get; set; }

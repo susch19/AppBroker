@@ -53,30 +53,30 @@ class Program
     static Stopwatch stopwatch = new Stopwatch();
     static Stopwatch stopwatch2 = new Stopwatch();
 
-    const int InsertCount = 1000000;
+    const int InsertCount = 50000;
     static void Main(string[] args)
     {
         var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json", false, true)
             .Build();
-
+        //DbProvider.HistoryContext.Dispose();
         config = new MigratorConfig();
         configuration.GetSection("MigratorConfig").Bind(config);
 
-        if (!string.IsNullOrWhiteSpace(config.SourceHistoryConfig.ConnectionString)
-            && !string.IsNullOrWhiteSpace(config.SourceHistoryConfig.PluginName)
-            && !string.IsNullOrWhiteSpace(config.TargetHistoryConfig.ConnectionString)
-            && !string.IsNullOrWhiteSpace(config.TargetHistoryConfig.PluginName))
+        if (!string.IsNullOrWhiteSpace(config.SourceHistoryConfig?.ConnectionString)
+            && !string.IsNullOrWhiteSpace(config.SourceHistoryConfig?.PluginName)
+            && !string.IsNullOrWhiteSpace(config.TargetHistoryConfig?.ConnectionString)
+            && !string.IsNullOrWhiteSpace(config.TargetHistoryConfig?.PluginName))
         {
             stopwatch2.Restart();
             MigrateHistory();
             Console.WriteLine($"Migrated history in {stopwatch2.Elapsed}");
         }
 
-        if (!string.IsNullOrWhiteSpace(config.SourceBrokerConfig.ConnectionString)
-            && !string.IsNullOrWhiteSpace(config.SourceBrokerConfig.PluginName)
-            && !string.IsNullOrWhiteSpace(config.TargetBrokerConfig.ConnectionString)
-            && !string.IsNullOrWhiteSpace(config.TargetBrokerConfig.PluginName))
+        if (!string.IsNullOrWhiteSpace(config.SourceBrokerConfig?.ConnectionString)
+            && !string.IsNullOrWhiteSpace(config.SourceBrokerConfig?.PluginName)
+            && !string.IsNullOrWhiteSpace(config.TargetBrokerConfig?.ConnectionString)
+            && !string.IsNullOrWhiteSpace(config.TargetBrokerConfig?.PluginName))
         {
             stopwatch2.Restart();
             MigrateBroker();
@@ -90,51 +90,53 @@ class Program
     {
         using var source = new BrokerDbContextSource();
 
-        AddRange<AppBroker.Core.Database.Model.DeviceModel>(
-            () => new BrokerDbContextTarget(), 
-            source.Devices.EntityType, 
-            ()=> new BrokerDbContextSource());
-        AddRange<AppBroker.Core.Database.Model.HeaterConfigModel>(
-            () => new BrokerDbContextTarget(), 
-            source.HeaterConfigs.EntityType, 
-            () => new BrokerDbContextSource());
-        AddRange<AppBroker.Core.Database.Model.DeviceMappingModel>(
-            () => new BrokerDbContextTarget(), 
-            source.DeviceToDeviceMappings.EntityType, 
-            () => new BrokerDbContextSource());
+        AddRange<AppBroker.Core.Database.Model.DeviceModel, BrokerDbContextTarget, BrokerDbContextSource>(
+            source.Devices.EntityType/*, (x)=>0*/);
+        AddRange<AppBroker.Core.Database.Model.HeaterConfigModel, BrokerDbContextTarget, BrokerDbContextSource>(
+            source.HeaterConfigs.EntityType/*, (x) => x.HeaterConfigs.Max(x => x.Id)*/);
+        AddRange<AppBroker.Core.Database.Model.DeviceMappingModel, BrokerDbContextTarget, BrokerDbContextSource>(
+            source.DeviceToDeviceMappings.EntityType/*, (x)=>x.DeviceToDeviceMappings.Max(x=>x.Id)*/);
     }
     private static void MigrateHistory()
     {
         using var source = new HistoryContextSource();
 
-        AddRange<HistoryDevice>(()=> new HistoryContextTarget(), source.Devices.EntityType, () => new HistoryContextSource());
-        AddRange<HistoryProperty>(() => new HistoryContextTarget(), source.Properties.EntityType, () => new HistoryContextSource());
-        AddRange<HistoryValueBase>(() => new HistoryContextTarget(), source.ValueBases.EntityType, () => new HistoryContextSource());
+
+        AddRange<HistoryDevice, HistoryContextTarget, HistoryContextSource>(source.Devices.EntityType/*, (c)=>c.Devices.Max(x=>x.Id)*/);
+        AddRange<HistoryProperty, HistoryContextTarget, HistoryContextSource>(source.Properties.EntityType/*, (c)=>c.Properties.Max(x=>x.Id)*/);
+        AddRange<HistoryValueBase, HistoryContextTarget, HistoryContextSource>(source.ValueBases.EntityType/*, (c)=>c.ValueBases.Max(x=>x.Id)*/);
         //AddRange<>(target, source.Devices);
         //AddRange<>(target, source.Properties);
         //AddRange<>(target, source.ValueBases);
     }
 
-    static void AddRange<T>(Func<DbContext> getTarget, IEntityType et, Func<DbContext> getSource) where T : class
+    static void AddRange<T, TTarget, TSource>(IEntityType et/*, Func<TTarget, long> startAt*/) 
+        where T : class
+        where TTarget : DbContext, new()
+        where TSource : DbContext, new()
     {
         try
         {
-            using var src = getSource();
+
+
+            using var src = new TSource();
+            //using var trgt = new TTarget();
 
             var tableName = et.GetTableName();
 
-
             var eCount = src.Set<T>().Count();
 
+
             stopwatch.Restart();
-            for (int i = 0; i < eCount; i+= InsertCount)
+            for (long i = 0; i < eCount; i += InsertCount)
             {
-                using var source = getSource();
-                var target = getTarget();
+                using var source = new TSource();
+                var target = new TTarget();
+                
                 //using var trans = target.Database.BeginTransaction();
                 //target.Database.ExecuteSqlRaw($"SET IDENTITY_INSERT {tableName} ON");
                 /*trans = */
-                EntityInsertion(target, source.Set<T>().Skip(i).Take(InsertCount)/*, trans, tableName*/);
+                EntityInsertion(target, source.Set<T>().Skip((int)i).Take(InsertCount)/*, trans, tableName*/);
                 //Console.WriteLine($"Done {i} from {eCount}");
                 var saved = i + InsertCount;
                 Console.WriteLine($"Saved {(saved < eCount ? saved : eCount)} from {eCount} records in {stopwatch.ElapsedMilliseconds}ms");
@@ -164,10 +166,11 @@ class Program
         //{
         //list.Add(entity);
         var c = entities.ToArray();
-        target.BulkInsert(c, options => {
+        target.BulkInsert(c, options =>
+        {
             options.InsertKeepIdentity = true;
             options.AllowConcurrency = true;
-            }
+        }
         );
         var newCounter = Interlocked.Exchange(ref counter, counter + c.Length);
 

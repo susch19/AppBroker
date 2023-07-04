@@ -24,6 +24,11 @@ public class HistoryDbContext : BaseDbContext
     public DbSet<HistoryValueHeaterConfig> HistoryHeaterConfigs { get; set; }
 
 
+    public HistoryDbContext()
+    {
+        EnableUseLazyLoading = false;
+    }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         var dbConfig = IInstanceContainer.Instance.ConfigManager.DatabaseConfig;
@@ -32,7 +37,7 @@ public class HistoryDbContext : BaseDbContext
         foreach (var item in DatabaseFactory.DatabaseConfigurators)
         {
             if (DatabaseType.Contains(item.Name, StringComparison.OrdinalIgnoreCase))
-                item.OnConfiguring(optionsBuilder, dbConfig.HistoryDBConnectionString).UseLazyLoadingProxies();
+                item.OnConfiguring(optionsBuilder, dbConfig.HistoryDBConnectionString);
         }
 
         base.OnConfiguring(optionsBuilder);
