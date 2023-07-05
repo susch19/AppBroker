@@ -374,6 +374,9 @@ public partial class Heater : PainlessDevice, IDisposable
             cont.RemoveRange(oldConfs);
             _ = cont.SaveChanges();
         }
+        foreach (var item in models)
+            item.TimeOfDay = item.TimeOfDay.ToUniversalTime();
+        
         cont.AddRange(models);
         _ = cont.SaveChanges();
     }
