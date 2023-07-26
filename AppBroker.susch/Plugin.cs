@@ -34,5 +34,28 @@ internal class Plugin : IPlugin
         {
             device.UpdateFromApp(Command.On, emptyParams); //Simulate toggling to true via app
         }
+
+        if (e.Id is -6574912123078722435 /*washing maschine*/
+            && e.PropertyName == "current")
+        {
+            var histories = IInstanceContainer.Instance.HistoryManager.GetInMemoryHistory(e.Id, "current", DateTime.UtcNow.AddMinutes(-15));
+            if (histories is not null && histories.Count > 5)
+            {
+
+                bool success = true;
+                while (histories.Count > 0)
+                {
+                    if (histories.Dequeue().Value.ToObject<double>() > 0.1d)
+                    { 
+                        success = false;
+                        break;
+                    }
+                }
+                if (success)
+                {
+                    //Somehow notify smartphone
+                }
+            }
+        }
     }
 }

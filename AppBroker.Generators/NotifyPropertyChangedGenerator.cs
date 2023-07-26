@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Diagnostics;
 
 namespace AppBroker.Generators
 {
@@ -118,24 +119,24 @@ namespace AppBroker
 
         public void Execute(GeneratorExecutionContext context)
         {
-                // retrieve the populated receiver 
-                if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
-                    return;
+            // retrieve the populated receiver 
+            if (context.SyntaxContextReceiver is not SyntaxReceiver receiver)
+                return;
 
-                //Debugger.Launch();
+            //Debugger.Launch();
 
-                // get the added attribute, and INotifyPropertyChanged
-                INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
-                INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
-                INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
-                INamedTypeSymbol overrideFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.AddOverrideAttribute");
+            // get the added attribute, and INotifyPropertyChanged
+            INamedTypeSymbol attributeSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.PropertyChangedAppbrokerAttribute");
+            INamedTypeSymbol ignoreChangedFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreChangedFieldAttribute");
+            INamedTypeSymbol ignoreFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.IgnoreFieldAttribute");
+            INamedTypeSymbol overrideFieldSymbol = context.Compilation.GetTypeByMetadataName("AppBroker.AddOverrideAttribute");
 
-                foreach (var group in receiver.Classes)
-                {
-                    string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, overrideFieldSymbol, context);
-                    context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
-                }
+            foreach (var group in receiver.Classes)
+            {
+                string classSource = ProcessClass(group.Key as INamedTypeSymbol, group.Value, attributeSymbol, ignoreChangedFieldSymbol, ignoreFieldSymbol, overrideFieldSymbol, context);
+                context.AddSource($"{group.Key.Name}.Appbroker.cs", SourceText.From(classSource, Encoding.UTF8));
             }
+        }
 
         private bool BaseClassAlreadyHasAttribute(INamedTypeSymbol parent, string attributeName)
         {
