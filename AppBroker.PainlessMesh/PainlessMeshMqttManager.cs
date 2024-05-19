@@ -12,7 +12,6 @@ using Newtonsoft.Json.Linq;
 
 using NLog;
 
-using SocketIOClient.Transport;
 
 using System;
 using System.Collections.Generic;

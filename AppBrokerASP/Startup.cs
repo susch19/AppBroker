@@ -1,11 +1,6 @@
 ﻿
 using AppBrokerASP.Cloud;
-using AppBrokerASP.Devices.Elsa;
 using AppBrokerASP.SignalR;
-
-using Elsa;
-using Elsa.Persistence.EntityFramework.Core.Extensions;
-using Elsa.Persistence.EntityFramework.Sqlite;
 
 using MQTTnet.AspNetCore;
 using Microsoft.AspNetCore.SignalR.Protocol;
@@ -55,7 +50,6 @@ public class Startup
 
         _ = services.AddRazorPages();
 
-        _ = services.AddApiVersioning();
         _ = services.AddSingleton<JavaScriptEngineManager>();
         var container = InstanceContainer.Instance;
         _ = services.AddSingleton(new CloudConnector());
@@ -69,35 +63,7 @@ public class Startup
         _ = services.AddSingleton(container.DeviceStateManager);
         _ = services.AddSingleton(container.HistoryManager);
 
-        var elsaSection = Configuration.GetSection("Elsa");
 
-        if (elsaSection.GetValue("Enabled", true))
-        {
-            _ = services
-             .AddElsaCore(options => options
-                 .UseEntityFrameworkPersistence(ef => ef.UseSqlite())
-                 .AddConsoleActivities()
-                 .AddHttpActivities(elsaSection.GetSection("Server").Bind)
-                 .AddEmailActivities(elsaSection.GetSection("Smtp").Bind)
-                 .AddQuartzTemporalActivities()
-                 .AddJavaScriptActivities()
-                 .AddFileActivities()
-                 .AddPropertyActivities()
-                 .AddActivitiesFrom<Startup>()
-                 .AddFeatures(new[] { typeof(Startup) }, Configuration)
-                 .AddWorkflowsFrom<Startup>()
-                 .WithContainerName(elsaSection.GetSection("Server:ContainerName").Get<string>())
-             )
-            .AddJavaScriptTypeDefinitionProvider<DeviceJavascriptProvider>()
-            .AddJavaScriptTypeDefinitionProvider<DefaultAppbrokerJavascriptProvider>()
-            //.AddNotificationHandlersFrom<DefaultAppbrokerLiquidHandler>()
-            //.AddNotificationHandlersFrom<DeviceLiquidHandler>()
-            //;
-            ;
-
-            _ = services
-                .AddElsaApiEndpoints();
-        }
 
         if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
         {

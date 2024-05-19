@@ -7,8 +7,6 @@ using AppBrokerASP.Cloud;
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Devices;
 
-using Elsa.Server.Api.Attributes;
-
 using Microsoft.AspNetCore.Mvc;
 
 using Newtonsoft.Json;
@@ -81,7 +79,7 @@ public class DeviceController : ControllerBase
     }
 
     [HttpGet("history/{id}")]
-    public ActionResult GetHistory(long id, [RequiredFromQuery] DateTime from, [RequiredFromQuery] DateTime to, [RequiredFromQuery] string propName)
+    public ActionResult GetHistory(long id, [FromQuery] DateTime from, [FromQuery] DateTime to, [FromQuery] string propName)
     {
         return Content(JsonConvert.SerializeObject(historyManager.GetHistoryFor(id, propName, from, to)));
     }

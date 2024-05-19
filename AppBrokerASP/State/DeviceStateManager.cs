@@ -2,7 +2,6 @@
 using AppBroker.Core.Database;
 using AppBroker.Core.Devices;
 
-using Elsa.Activities.StateMachine;
 
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 

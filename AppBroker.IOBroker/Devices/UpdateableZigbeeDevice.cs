@@ -4,13 +4,11 @@ using Jint;
 
 using NiL.JS.Core;
 
-using SocketIOClient;
-
 namespace AppBroker.IOBroker.Devices;
 
 public class UpdateableZigbeeDevice : ZigbeeDevice
 {
-    public UpdateableZigbeeDevice(long nodeId, SocketIO socket, string typeName) :
+    public UpdateableZigbeeDevice(long nodeId, SocketIOClient.SocketIO socket, string typeName) :
         base(nodeId, socket, typeName)
     {
 

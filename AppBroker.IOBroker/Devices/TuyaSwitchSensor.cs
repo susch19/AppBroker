@@ -1,5 +1,4 @@
-﻿using SocketIOClient;
-using AppBroker.Core.Models;
+﻿using AppBroker.Core.Models;
 using AppBroker.Core.Devices;
 
 namespace AppBroker.IOBroker.Devices;
@@ -8,7 +7,7 @@ namespace AppBroker.IOBroker.Devices;
 public partial class TuyaSwitchSensor : ZigbeeSwitch
 {
 
-    public TuyaSwitchSensor(long nodeId, SocketIO socket) : base(nodeId, socket, nameof(TuyaSwitchSensor))
+    public TuyaSwitchSensor(long nodeId, SocketIOClient.SocketIO socket) : base(nodeId, socket, nameof(TuyaSwitchSensor))
     {
         ShowInApp = true;
     }

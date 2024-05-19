@@ -1,7 +1,6 @@
 using AppBroker.Core.Devices;
 using AppBroker.Zigbee2Mqtt;
 
-using SocketIOClient;
 
 namespace AppBroker.Zigbee2Mqtt.Devices;
 

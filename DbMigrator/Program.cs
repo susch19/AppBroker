@@ -1,33 +1,16 @@
-﻿
-using AppBroker.Core;
-using AppBroker.Core.Configuration;
-using AppBroker.Core.Database;
-using AppBroker.Core.Database.History;
-
-using AppBrokerASP.Configuration;
-
-using Elsa.ActivityResults;
+﻿using AppBroker.Core.Database.History;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
-
-using NonSucking.Framework.Extension.EntityFrameworkCore;
 
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Threading;
 
-using static Org.BouncyCastle.Math.EC.ECCurve;
-
 namespace DbMigrator;
-
 
 class DbConfig
 {
@@ -110,7 +93,7 @@ class Program
         //AddRange<>(target, source.ValueBases);
     }
 
-    static void AddRange<T, TTarget, TSource>(IEntityType et/*, Func<TTarget, long> startAt*/) 
+    static void AddRange<T, TTarget, TSource>(IEntityType et/*, Func<TTarget, long> startAt*/)
         where T : class
         where TTarget : DbContext, new()
         where TSource : DbContext, new()
@@ -132,7 +115,7 @@ class Program
             {
                 using var source = new TSource();
                 var target = new TTarget();
-                
+
                 //using var trans = target.Database.BeginTransaction();
                 //target.Database.ExecuteSqlRaw($"SET IDENTITY_INSERT {tableName} ON");
                 /*trans = */

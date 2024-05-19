@@ -15,7 +15,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Linq;
 using System;
-using Elsa.Activities.Signaling.Models;
 using System.IO.Compression;
 using AppBroker.Core;
 
