@@ -145,10 +145,10 @@ public class UpdateManager : IUpdateManager, IDisposable
     public void AdvertiseUpdate(FirmwareMetadata metadata, byte[] data, List<byte[]> parts)
     {
         var firmwareId = metadata.FirmwareId;
-        if (currentAdvertisments.TryGetValue(firmwareId, out var advertisment) && advertisment.AdvertiseUntil > DateTime.Now)
+        if (currentAdvertisments.TryGetValue(firmwareId, out var advertisment) && advertisment.AdvertiseUntil > DateTime.UtcNow)
             return;
 
-        currentAdvertisments[firmwareId] = new FirmwareAdvertisment(parts, DateTime.Now.AddHours(1), metadata, data);
+        currentAdvertisments[firmwareId] = new FirmwareAdvertisment(parts, DateTime.UtcNow.AddHours(1), metadata, data);
 
         if (advertismentTimers.TryGetValue(firmwareId, out var timer))
             timer?.Dispose();

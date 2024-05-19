@@ -54,8 +54,8 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 
     static Zigbee2MqttDevice()
     {
-        zigbeeManager = InstanceContainer.Instance.GetDynamic<Zigbee2MqttManager>();
-        client = InstanceContainer.Instance.GetDynamic<Zigbee2MqttManager>().MQTTClient!;
+        zigbeeManager = IInstanceContainer.Instance.GetDynamic<Zigbee2MqttManager>();
+        client = IInstanceContainer.Instance.GetDynamic<Zigbee2MqttManager>().MQTTClient!;
     }
 
     public Zigbee2MqttDevice(Zigbee2MqttDeviceJson device, long id)
@@ -235,20 +235,35 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 
     protected override bool FriendlyNameChanging(string oldName, string newName)
     {
-        if (string.IsNullOrWhiteSpace(oldName) || string.IsNullOrWhiteSpace(newName))
-            return true;
-
-        client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
-        if (zigbeeManager.friendlyNameToIdMapping.TryGetValue(oldName, out var id)
-            && id == Id
-            && !zigbeeManager.friendlyNameToIdMapping.ContainsKey(newName)
-            && zigbeeManager.friendlyNameToIdMapping.Remove(oldName, out _))
+#if DEBUG
+        return false;
+#endif
+        if (string.IsNullOrWhiteSpace(newName))
+            return false;
+        try
         {
-            zigbeeManager.friendlyNameToIdMapping[newName] = id;
-            return true;
-        }
+            if (string.IsNullOrWhiteSpace(oldName))
+            {
+                zigbeeManager.friendlyNameToIdMapping[newName] = Id;
+                return true;
+            }
+            logger.Info($"Trying to rename {oldName} to {newName} for device with id {Id}");
+            client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
+            if (zigbeeManager.friendlyNameToIdMapping.TryGetValue(oldName, out var id)
+                  && id == Id
+                  && !zigbeeManager.friendlyNameToIdMapping.ContainsKey(newName)
+                  && zigbeeManager.friendlyNameToIdMapping.Remove(oldName, out _))
+            {
+                zigbeeManager.friendlyNameToIdMapping[newName] = id;
+                return true;
+            }
 
-        logger.Error($"Couldn't rename {oldName} to {newName} for zigbee2mqtt, because the old name was incorrect, it couldn't be removed from the mapping or the new name was already used");
+            logger.Error($"Couldn't rename {oldName} to {newName} for zigbee2mqtt, because the old name was incorrect, it couldn't be removed from the mapping or the new name was already used");
+        }
+        catch (Exception ex)
+        {
+            logger.Error(ex, $" Couldn't rename {oldName} to {newName} for zigbee2mqtt");
+        }
         return false;
     }
 }

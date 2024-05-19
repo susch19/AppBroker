@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 
 namespace AppBroker.Core.Devices;
 
@@ -152,16 +153,6 @@ public abstract class Device : IDisposable
 
     public virtual dynamic? GetConfig()
     {
-        using BrokerDbContext? cont = DbProvider.BrokerDbContext;
-        var configs = cont
-            .HeaterConfigs
-            .Where(x => x.DeviceId == Id)
-            .ToList()
-            .Select<HeaterConfigModel, HeaterConfig>(x => x)
-            .ToList();
-        if (configs.Count > 0)
-            return configs.ToJson();
-
         return null;
     }
 

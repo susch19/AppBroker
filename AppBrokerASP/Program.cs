@@ -17,7 +17,6 @@ using AppBroker.Core;
 using MQTTnet.Server;
 using MQTTnet;
 using Newtonsoft.Json;
-using Esprima;
 
 namespace AppBrokerASP;
 
@@ -34,7 +33,7 @@ public class Program
 
     public static void Main(string[] args)
     {
-        Console.OutputEncoding = Encoding.Unicode;
+        Console.OutputEncoding = Encoding.UTF8;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
         _ = new InstanceContainer();

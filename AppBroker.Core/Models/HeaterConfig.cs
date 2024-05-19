@@ -40,9 +40,7 @@ public partial class HeaterConfig : IHeaterConfigModel, IEquatable<HeaterConfig?
         => new(hc.DayOfWeek, new TimeSpan(hc.TimeOfDay.Hour, hc.TimeOfDay.Minute, 0), (float)hc.Temperature);
     public static implicit operator HeaterConfig(TimeTempMessageLE ttm)
     {
-        var dt = DateTime.Now;
-        dt = dt.AddHours(ttm.Time.Hours - dt.Hour);
-        dt = dt.AddMinutes(ttm.Time.Minutes - dt.Minute);
+        var dt = new DateTime(2000, 01, 01, ttm.Time.Hours, ttm.Time.Minutes, ttm.Time.Seconds, DateTimeKind.Utc);
         return new HeaterConfig(ttm.DayOfWeek, dt, ttm.Temp);
     }
 

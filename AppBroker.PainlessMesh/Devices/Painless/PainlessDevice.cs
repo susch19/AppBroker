@@ -141,7 +141,7 @@ public abstract partial class PainlessDevice : PropChangedJavaScriptDevice
         if (!DeviceName.Equals(metadata.DeviceType, StringComparison.OrdinalIgnoreCase)
             || ((FirmwareVersionNr == metadata.FirmwareVersion || !metadata.Forced)
                 && FirmwareVersionNr >= metadata.FirmwareVersion)
-            || LastPartRequestReceived.AddSeconds(30) > DateTime.Now
+            || LastPartRequestReceived.AddSeconds(30) > DateTime.UtcNow
             || (metadata.TargetId > 0 && metadata.TargetId != Id))
         {
             return;
