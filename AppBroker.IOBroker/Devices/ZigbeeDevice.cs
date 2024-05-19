@@ -4,24 +4,18 @@ using AppBroker.Core.Models;
 using AppBrokerASP;
 using AppBrokerASP.Devices;
 
-using AppBrokerASP.Extension;
-
 using Newtonsoft.Json;
-
-using SocketIOClient.Transport;
 
 using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Text.RegularExpressions;
-
-using SocketIo = SocketIOClient.SocketIO;
 
 namespace AppBroker.IOBroker.Devices;
 
 [AppBroker.ClassPropertyChangedAppbroker]
 public partial class ZigbeeDevice : PropChangedJavaScriptDevice
 {
-    protected SocketIo Socket { get; }
+    protected SocketIOClient.SocketIO Socket { get; }
 
     public bool Available
     {
@@ -61,7 +55,7 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
     [AppBroker.IgnoreField]
     private bool available;
 
-    public ZigbeeDevice(long nodeId, SocketIo socket, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
+    public ZigbeeDevice(long nodeId, SocketIOClient.SocketIO socket, string typeName) : base(nodeId, typeName, new FileInfo(Path.Combine("JSExtensionDevices", typeName + ".js")))
     {
         TypeName = typeName;
         Socket = socket;
@@ -84,7 +78,7 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
             .ToArray());
     }
 
-    public ZigbeeDevice(long nodeId, SocketIo socket) : base(nodeId, null, null)
+    public ZigbeeDevice(long nodeId, SocketIOClient.SocketIO socket) : base(nodeId, null, null)
     {
         Socket = socket;
 
@@ -278,20 +272,19 @@ public partial class ZigbeeDevice : PropChangedJavaScriptDevice
         var i = AdapterWithId + "." + type.ToLower();
 
         var endMs = end.ToUnixTimeMilliseconds();
-        return Array.Empty<HistoryRecord>();
-        //var history = await Socket.EmitAsync("getHistory",
-        //    i,
-        //    new
-        //    {
-        //        id = i, // probably not necessary to put it here again
-        //        start = start.ToUnixTimeMilliseconds(),
-        //        //end = end.ToUnixTimeMilliseconds(),
-        //        ignoreNull = true,
-        //        aggregate = "none",
-        //        count = 2000
-        //    });
+        var history = await Socket.Emit("getHistory",
+            i,
+            new
+            {
+                id = i, // probably not necessary to put it here again
+                start = start.ToUnixTimeMilliseconds(),
+                //end = end.ToUnixTimeMilliseconds(),
+                ignoreNull = true,
+                aggregate = "none",
+                count = 2000
+            });
 
-        //return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.Ts < endMs).ToArray();
+        return history is null ? Array.Empty<HistoryRecord>() : history.GetValue<HistoryRecord[]>(1).Where(x => x.Ts < endMs).ToArray();
     }
 }
 

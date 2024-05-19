@@ -20,7 +20,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\AppBroker.Elsa\AppBroker.Elsa.csproj" />
 		<ProjectReference Include="..\AppBroker.PainlessMesh\AppBroker.PainlessMesh.csproj" />
 	</ItemGroup>
 

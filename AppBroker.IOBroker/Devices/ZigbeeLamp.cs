@@ -2,16 +2,13 @@
 
 using Newtonsoft.Json.Linq;
 
-
-using SocketIOClient;
-
 namespace AppBroker.IOBroker.Devices;
 
 public abstract partial class ZigbeeLamp : UpdateableZigbeeDevice
 {
 
 
-    public ZigbeeLamp(long nodeId, SocketIO socket, string typeName) : base(nodeId, socket, typeName)
+    public ZigbeeLamp(long nodeId, SocketIOClient.SocketIO socket, string typeName) : base(nodeId, socket, typeName)
     {
         ShowInApp = true;
     }

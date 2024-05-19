@@ -1,7 +1,5 @@
 using AppBroker.Core.Devices;
 
-using SocketIOClient;
-
 namespace AppBroker.IOBroker.Devices;
 
 [DeviceName("lumi.weather", "WSDCGQ11LM")]
@@ -9,7 +7,7 @@ namespace AppBroker.IOBroker.Devices;
 public partial class XiaomiTempSensor : ZigbeeDevice
 {
 
-    public XiaomiTempSensor(long id, SocketIO socket) : base(id, socket, nameof(XiaomiTempSensor))
+    public XiaomiTempSensor(long id, SocketIOClient.SocketIO socket) : base(id, socket, nameof(XiaomiTempSensor))
     {
         ShowInApp = true;
     }

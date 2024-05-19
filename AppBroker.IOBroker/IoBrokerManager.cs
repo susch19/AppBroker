@@ -1,18 +1,17 @@
 ﻿using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using AppBrokerASP.Extension;
-using SocketIOClient;
 using AppBroker.Core.Devices;
 using NonSucking.Framework.Extension.Threading;
 using AppBroker.Core.Database;
 using AppBroker.Core;
 using AppBroker.IOBroker.Devices;
+using SocketIO.Core;
 
 namespace AppBroker.IOBroker;
 
 public class IoBrokerManager
 {
-    private SocketIO? client;
+    private SocketIOClient.SocketIO? client;
     private readonly NLog.Logger logger;
     private readonly ZigbeeConfig config;
     private static readonly HttpClient http = new();
@@ -25,7 +24,7 @@ public class IoBrokerManager
 
     public async Task ConnectToIOBroker()
     {
-        client = new SocketIO(new Uri(config.SocketIOUrl), new SocketIOOptions()
+        client = new SocketIOClient.SocketIO(new Uri(config.SocketIOUrl), new SocketIOClient.SocketIOOptions()
         {
             EIO = config.NewSocketIoversion ? EngineIO.V4 : EngineIO.V3
         });
@@ -89,7 +88,7 @@ public class IoBrokerManager
         await client.ConnectAsync();
     }
 
-    public async Task GetZigbeeDevices(SocketIO socket)
+    public async Task GetZigbeeDevices(SocketIOClient.SocketIO socket)
     {
         if (client is null)
         {
@@ -98,7 +97,7 @@ public class IoBrokerManager
         }
 
         var allObjectsResponse = await socket.Emit("getObjects");
-        var allObjectscontentNew = allObjectsResponse?.GetValue(1).ToString();
+        var allObjectscontentNew = allObjectsResponse?.GetValue<string>(1);
 
         if (allObjectscontentNew is null)
         {
@@ -207,7 +206,7 @@ public class IoBrokerManager
 
             foreach (var item in deviceStates.Where(x => x._id.Contains(deviceRes.native.id)))
             {
-                var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item._id[(item._id.LastIndexOf(".") + 1)..], new Parameter(item.val));
+                var ioObject = new IoBrokerObject(BrokerEvent.StateChange, "", 0, item._id[(item._id.LastIndexOf('.') + 1)..], new Parameter(item.val));
                 if (ioObject.ValueName == "msg_from_zigbee" || ioObject.ValueName == "device_query")
                     continue;
 

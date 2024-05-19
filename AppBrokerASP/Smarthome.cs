@@ -211,13 +211,6 @@ public class SmartHome : Hub<ISmartHomeClient>
         return new(layoutHash.Value.layout.UniqueName, layoutHash.Value.hash);
     }
 
-    public IEnumerable<KeyValuePair<string, string>> GetAppConfig()
-    {
-        var loader = IInstanceContainer.Instance.GetDynamic<PluginLoader>();
-        return loader.AppConfigurators.Select(x => x.GetConfigs()).Where(x => x is not null).SelectMany(x => x!);
-    }
-
-
 
     //public DashboardDeviceLayout? GetDashboardDeviceLayoutByName(string typename) => DeviceLayoutService.GetDashboardDeviceLayout(typename);
     //public DashboardDeviceLayout? GetDashboardDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDashboardDeviceLayout(id);

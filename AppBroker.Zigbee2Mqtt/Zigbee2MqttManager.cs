@@ -10,11 +10,12 @@ using AppBroker.Core;
 using AppBroker.Core.Database;
 using AppBrokerASP;
 
-using ZigbeeConfig = AppBroker.Zigbee2Mqtt.Zigbee2MqttConfig;
 using AppBroker.Zigbee2Mqtt.Devices;
 using System.Diagnostics.CodeAnalysis;
 using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
+
+using ZigbeeConfig = AppBroker.Zigbee2Mqtt.Zigbee2MqttConfig;
 
 namespace AppBroker.Zigbee2Mqtt;
 
@@ -253,11 +254,10 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 .DeviceStateManager
                 .SetMultipleStates(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
 
-                InstanceContainer
-                    .Instance
-                    .DeviceStateManager
-                    .SetSingleState(id, "lastReceived", DateTime.UtcNow);
-            }
+            InstanceContainer
+                .Instance
+                .DeviceStateManager
+                .SetSingleState(id, "lastReceived", DateTime.UtcNow);
         }
     }
 

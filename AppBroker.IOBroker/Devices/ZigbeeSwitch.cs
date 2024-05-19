@@ -2,14 +2,12 @@
 
 using Newtonsoft.Json.Linq;
 
-using SocketIOClient;
-
 namespace AppBroker.IOBroker.Devices;
 
 public abstract partial class ZigbeeSwitch : UpdateableZigbeeDevice
 {
 
-    protected ZigbeeSwitch(long nodeId, SocketIO socket, string typeName) : base(nodeId, socket, typeName)
+    protected ZigbeeSwitch(long nodeId, SocketIOClient.SocketIO socket, string typeName) : base(nodeId, socket, typeName)
     {
         ShowInApp = true;
     }

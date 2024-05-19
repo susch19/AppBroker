@@ -15,21 +15,12 @@ COPY ["AppBrokerASP/AppBrokerASP.csproj", "AppBrokerASP/"]
 COPY ["AppBroker.Elsa/AppBroker.Elsa.csproj", "AppBroker.Elsa/"]
 COPY ["AppBroker.Core/AppBroker.Core.csproj", "AppBroker.Core/"]
 COPY ["AppBroker.Generators/AppBroker.Generators.csproj", "AppBroker.Generators/"]
-RUN dotnet restore "AppBrokerASP/AppBrokerASP.csproj"
 COPY . .
 WORKDIR "/src/AppBrokerASP"
 
 FROM build AS publish
 ARG TARGETPLATFORM
-RUN if [ "$TARGETPLATFORM" = "linux/amd64" ]; then \
-        RID=linux-x64 ; \
-    elif [ "$TARGETPLATFORM" = "linux/arm64" ]; then \
-        RID=linux-arm64 ; \
-    elif [ "$TARGETPLATFORM" = "linux/arm/v7" ]; then \
-        RID=linux-arm ; \
-    fi \
-    && dotnet publish -c Release -r $RID -o /app/publish /p:UseAppHost=false --self-contained false 
-
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false --self-contained false 
 
 FROM base AS final
 WORKDIR /app
