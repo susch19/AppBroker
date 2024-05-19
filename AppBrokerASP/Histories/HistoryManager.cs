@@ -3,7 +3,7 @@ using AppBroker.Core.Database;
 using AppBroker.Core.Database.History;
 using AppBroker.Core.Models;
 
-using Common.Logging;
+using NLog;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -21,11 +21,11 @@ public class HistoryManager : IHistoryManager
 {
     static HeaterConfig emptyHeaderConfig = new();
 
-    private ILog logger;
+    private Logger logger;
 
     public HistoryManager()
     {
-        logger = LogManager.GetLogger<HistoryManager>();
+        logger = LogManager.GetLogger(nameof(HistoryManager));
     }
 
     public void StoreNewState(long id, string name, JToken? oldValue, JToken? newValue)

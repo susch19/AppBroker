@@ -113,6 +113,7 @@ internal class Plugin : IPlugin
                 {
                     var currentState = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(ledstrip, "colorMode");
                     IInstanceContainer.Instance.DeviceStateManager.SetSingleState(ledstrip, "colorMode", currentState.ToString() == "Off" ? "SingleColor" : "Off", StateFlags.SendToThirdParty);
+                    IInstanceContainer.Instance.DeviceStateManager.SetSingleState(ledstrip, "colorNumber", 4278190080, StateFlags.SendToThirdParty);
 #if DEBUG
                     if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(ledstrip, out var ledStripDev))
                         ledStripDev.SendDataToAllSubscribers();

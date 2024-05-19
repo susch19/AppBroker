@@ -13,6 +13,7 @@ internal class Plugin : IPlugin
 {
     public string Name => "Plainless Mesh";
 
+    
     public bool Initialize(LogFactory logFactory)
     {
         var cm = InstanceContainer.Instance.ConfigManager;

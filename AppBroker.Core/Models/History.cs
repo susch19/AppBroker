@@ -5,6 +5,8 @@ namespace AppBroker.Core.Models;
 
 public class History
 {
+    public static History Empty => new History();
+
     public History(HistoryRecord[] historyRecords, string propertyName)
     {
         HistoryRecords = historyRecords;

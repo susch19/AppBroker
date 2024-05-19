@@ -252,7 +252,7 @@ public class PainlessMeshMqttManager : IAsyncDisposable
         InstanceContainer
             .Instance
             .DeviceStateManager
-            .SetSingleState(id, "lastReceived", DateTime.Now);
+            .SetSingleState(id, "lastReceived", DateTime.UtcNow);
     }
     private void SetSingleState(long id, string propName, JToken value)
     {
@@ -264,7 +264,7 @@ public class PainlessMeshMqttManager : IAsyncDisposable
         InstanceContainer
             .Instance
             .DeviceStateManager
-            .SetSingleState(id, "lastReceived", DateTime.Now, StateFlags.StoreLastState);
+            .SetSingleState(id, "lastReceived", DateTime.UtcNow, StateFlags.StoreLastState);
     }
 
     public async ValueTask DisposeAsync()

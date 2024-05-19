@@ -52,21 +52,22 @@ public partial class Heater : PainlessDevice, IDisposable
 
     [AppBroker.IgnoreField]
     private bool disposed;
-    [IgnoreField]
+    [AppBroker.IgnoreField]
     static TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById("W. Europe Standard Time");
 
     public Heater(long id, ByteLengthList parameters) : base(id, "PainlessMeshHeater")
     {
         using BrokerDbContext? cont = DbProvider.BrokerDbContext;
 
-
         ShowInApp = true;
-        //cont.HeaterCalibrations.FirstOrDefault(x => x.Id == Id);
+
         try
         {
-
             DeviceModel? heater = cont.Devices.FirstOrDefault(x => x.Id == Id);
-            var mappings = cont.DeviceToDeviceMappings.Include(x => x.Child).Where(x => x.Parent!.Id == id /*&& cont.Devices.Any(y => y.Id == x.Child.Id)*/).ToList();
+            var mappings = cont.DeviceToDeviceMappings
+                .Include(x => x.Child)
+                .Where(x => x.Parent!.Id == id)
+                .ToList();
             Logger.Debug($"Heater {LogName} has {mappings?.Count} mappings");
             if (mappings?.Count > 0)
                 heaterSensorMapping = Task.Run(() => TrySubscribe(mappings));
@@ -115,9 +116,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private static TimeTempMessageLE Convert(HeaterConfig hc)
     {
-        var offset = tz.GetUtcOffset(hc.TimeOfDay);
-        var newTime=hc.TimeOfDay.Subtract(offset);
-        return new(hc.DayOfWeek, new TimeSpan(newTime.Hour, newTime.Minute, 0), (float)hc.Temperature);
+        return new(hc.DayOfWeek, new TimeSpan(hc.TimeOfDay.Hour, hc.TimeOfDay.Minute, 0), (float)hc.Temperature);
     }
 
     private Task TrySubscribe(List<DeviceMappingModel> mappings)
@@ -194,7 +193,7 @@ public partial class Heater : PainlessDevice, IDisposable
 
                         var dt = DateTime.UnixEpoch.AddSeconds(seconds);
                         var logLine = Encoding.UTF8.GetString(item.AsSpan(sizeof(long)));
-                        dt = dt.Add(tz.GetUtcOffset(dt));
+                        //dt = dt.Add(tz.GetUtcOffset(dt));
 
                         if(logLine.Contains("Ti: 0"))
                         {
@@ -207,7 +206,7 @@ public partial class Heater : PainlessDevice, IDisposable
                     {
                         var logLine = Encoding.UTF8.GetString(item.AsSpan(sizeof(long)));
 
-                        Logger.Error($"{Id}|{FriendlyName}|{DateTime.Now:yyyy-MM-dd HH:mm:ss}-Unknown|{logLine}|Binary:{BitConverter.ToString(item)}");
+                        Logger.Error($"{Id}|{FriendlyName}|{DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}-Unknown|{logLine}|Binary:{BitConverter.ToString(item)}");
 
                     }
                 }
@@ -228,8 +227,6 @@ public partial class Heater : PainlessDevice, IDisposable
         switch (e.Command)
         {
             case Command.Temp:
-                //CurrentConfig = TimeTempMessageLE.FromBase64((string)e.Parameters[0]);
-                //SendDataToAllSubscribers();
                 break;
             case Command.Off:
                 DisableLed = true;
@@ -238,9 +235,6 @@ public partial class Heater : PainlessDevice, IDisposable
                 DisableLed = false;
                 break;
             case Command.Mode:
-                //if (e.Parameters.Count < 1)
-                //    return;
-                //DisableLed = BitConverter.ToBoolean(e.Parameters[0]);
                 break;
             default:
 
@@ -251,25 +245,18 @@ public partial class Heater : PainlessDevice, IDisposable
 
     private void HandleTimeTempMessageUpdate(byte[] messages)
     {
-        void CorrectTimeZone(HeaterConfig config)
-        {
-            config.TimeOfDay = config.TimeOfDay.Add(tz.GetUtcOffset(config.TimeOfDay));
-        }
-
+  
         Span<byte> message = messages.AsSpan();
         var ttm = TimeTempMessageLE.LoadFromBinary(message[..3]);
         Temperature = ttm;
-        CorrectTimeZone(Temperature);
 
         ttm = TimeTempMessageLE.LoadFromBinary(message[3..6]);
         CurrentConfig = ttm;
-        CorrectTimeZone(CurrentConfig);
         ttm = TimeTempMessageLE.LoadFromBinary(message[6..9]);
         try
         {
             ttm.Temp -= 51.2f;
             CurrentCalibration = ttm;
-            CorrectTimeZone(CurrentCalibration);
         }
         catch (Exception e)
         {
@@ -409,15 +396,15 @@ public partial class Heater : PainlessDevice, IDisposable
         return true;
     }
 
-
-
     private void DeviceStateManager_StateChanged(object? sender, StateChangeArgs e)
     {
         if (e.Id != XiaomiTempSensor || !e.PropertyName.Equals("Temperature", StringComparison.OrdinalIgnoreCase))
             return;
 
         var temp = e.NewValue.Value<float>();
-        var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)DateTime.Now.DayOfWeek) + 6) % 7), new TimeSpan(DateTime.Now.TimeOfDay.Hours, DateTime.Now.TimeOfDay.Minutes, 0), temp);
+        var offset = tz.GetUtcOffset(DateTime.UtcNow.AddSeconds(-5));
+        var local = DateTime.UtcNow.Add(offset);
+        var ttm = new TimeTempMessageLE((DayOfWeek)((((byte)local.DayOfWeek) + 6) % 7), new TimeSpan(local.TimeOfDay.Hours, local.TimeOfDay.Minutes, 0), temp);
         var msg = new BinarySmarthomeMessage((uint)Id, MessageType.Relay, Command.Temp, ttm.ToBinary());
         meshManager.SendSingle((uint)Id, msg);
     }
@@ -425,13 +412,6 @@ public partial class Heater : PainlessDevice, IDisposable
     public override void Reconnect(ByteLengthList parameter)
     {
         base.Reconnect(parameter);
-
-        InterpretParameters(parameter);
-
-        meshManager.SingleUpdateMessageReceived -= Node_SingleUpdateMessageReceived;
-        meshManager.SingleOptionsMessageReceived -= Node_SingleOptionsMessageReceived;
-        meshManager.SingleUpdateMessageReceived += Node_SingleUpdateMessageReceived;
-        meshManager.SingleOptionsMessageReceived += Node_SingleOptionsMessageReceived;
 
         SendLastTempData();
     }

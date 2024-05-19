@@ -13,9 +13,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using AppBroker.Core.Javascript;
 using AppBroker.Core;
 using AppBrokerASP.Plugins;
-using MQTTnet.Server;
-using MQTTnet;
-using Newtonsoft.Json;
 
 namespace AppBrokerASP;
 
@@ -46,7 +43,10 @@ public class Startup
             });
 
         var signalRBuilder = services.AddSignalR(
-            opt => opt.EnableDetailedErrors = true
+            opt =>
+            {
+                opt.EnableDetailedErrors = true;
+            }
             )
             .AddNewtonsoftJsonProtocol();
 
@@ -74,7 +74,7 @@ public class Startup
         if (elsaSection.GetValue("Enabled", true))
         {
             _ = services
-             .AddElsa(options => options
+             .AddElsaCore(options => options
                  .UseEntityFrameworkPersistence(ef => ef.UseSqlite())
                  .AddConsoleActivities()
                  .AddHttpActivities(elsaSection.GetSection("Server").Bind)
@@ -90,8 +90,10 @@ public class Startup
              )
             .AddJavaScriptTypeDefinitionProvider<DeviceJavascriptProvider>()
             .AddJavaScriptTypeDefinitionProvider<DefaultAppbrokerJavascriptProvider>()
-            .AddNotificationHandlersFrom<DefaultAppbrokerLiquidHandler>()
-            .AddNotificationHandlersFrom<DeviceLiquidHandler>();
+            //.AddNotificationHandlersFrom<DefaultAppbrokerLiquidHandler>()
+            //.AddNotificationHandlersFrom<DeviceLiquidHandler>()
+            //;
+            ;
 
             _ = services
                 .AddElsaApiEndpoints();

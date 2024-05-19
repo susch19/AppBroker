@@ -10,5 +10,6 @@ public record DeviceLayout(
     long[]? Ids, 
     DashboardDeviceLayout? DashboardDeviceLayout, 
     DetailDeviceLayout? DetailDeviceLayout, 
+    [property:Newtonsoft.Json.JsonExtensionData]IDictionary<string, string> AdditionalData,
     int Version = 1, 
-    bool ShowOnlyInDeveloperMode = false);
+    bool ShowOnlyInDeveloperMode = false ); 

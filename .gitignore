@@ -286,3 +286,6 @@ OTA/*
 /DbMigrator/history.db-wal
 /AppBrokerASP/JSDevices
 /AppBrokerASP/JSExtensionDevices
+*.dll
+*.old
+/DbMigrator/old

@@ -1,7 +1,5 @@
 ﻿using AppBroker.Core.Devices;
 
-using SocketIOClient;
-
 namespace AppBroker.Zigbee2Mqtt.Devices;
 
 [DeviceName("E1603/E1702")]

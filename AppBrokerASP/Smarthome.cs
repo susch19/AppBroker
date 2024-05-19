@@ -4,10 +4,13 @@ using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
 using AppBroker.Core.Models;
 
+using AppBrokerASP.Plugins;
 
 using Microsoft.AspNetCore.SignalR;
 
 using Newtonsoft.Json;
+
+using NLog.Targets;
 
 using System.Reflection;
 using System.Threading.Tasks;
@@ -19,6 +22,8 @@ public class SmartHome : Hub<ISmartHomeClient>
     public SmartHome()
     {
     }
+
+
 
     public override Task OnConnectedAsync() =>
         //foreach (var item in IInstanceContainer.Instance.DeviceManager.Devices.Values)
@@ -98,7 +103,7 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public Task<List<History>> GetIoBrokerHistories(long id, string dt)
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) )
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
         {
             DateTime date = DateTime.Parse(dt).Date;
             return device.GetHistory(date, date.AddDays(1).AddSeconds(-1));
@@ -113,12 +118,12 @@ public class SmartHome : Hub<ISmartHomeClient>
             DateTime date = DateTime.Parse(dt).Date;
             return device.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
         }
-        return Task.FromResult(new History());
+        return Task.FromResult(History.Empty);
     }
 
     public Task<List<History>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) )
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
         {
             return device.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
         }
@@ -126,40 +131,21 @@ public class SmartHome : Hub<ISmartHomeClient>
         return Task.FromResult(new List<History>());
     }
 
-    // TODO: remove list, just return one item
-    public virtual async Task<List<History>> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
+    public virtual async Task<History> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
     {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device) )
+        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
         {
-            return new List<History>()
-                {
-                    await device.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), propertyName)
-                };
+            return await device.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), propertyName)
+                ;
         }
 
-        return new List<History>();
+        return History.Empty;
     }
 
 
     public List<Device> Subscribe(List<long> DeviceIds)
     {
-        FieldInfo? proxyFieldInfo = Clients
-            .Caller
-            .GetType()
-            .GetRuntimeFields()
-            .First(x => x.Name == "_proxy");
-        object? singeClientProxy = proxyFieldInfo!.GetValue(Clients.Caller)!;
-        FieldInfo? singeClientProxyFieldInfo = singeClientProxy
-            .GetType()
-            .GetRuntimeFields()
-            .First(x => x.Name == "_proxy");
-        object? proxy = singeClientProxyFieldInfo!.GetValue(singeClientProxy)!;
-        FieldInfo? highlightedItemProperty =
-            proxy
-            .GetType()
-            .GetRuntimeFields()
-            .First(pi => pi.Name == "_connectionId");
-        string connectionId = (string)highlightedItemProperty.GetValue(proxy)!;
+        string connectionId = Context.ConnectionId;
         var devices = new List<Device>();
         string? subMessage = "User subscribed to ";
         foreach (long deviceId in DeviceIds)
@@ -182,23 +168,11 @@ public class SmartHome : Hub<ISmartHomeClient>
 
     public void Unsubscribe(List<long> DeviceIds)
     {
-        FieldInfo? proxyFieldInfo = Clients
-            .Caller
-            .GetType()
-            .GetRuntimeFields()
-            .First(x => x.Name == "_proxy");
-        object? proxy = proxyFieldInfo!.GetValue(Clients.Caller)!;
-        FieldInfo? highlightedItemProperty =
-            proxy
-            .GetType()
-            .GetRuntimeFields()
-            .First(pi => pi.Name == "_connectionId");
-        string connectionId = (string)highlightedItemProperty.GetValue(proxy)!;
+        string connectionId = Context.ConnectionId;
         var devices = new List<Device>();
         string? subMessage = "User unsubscribed from ";
         foreach (long deviceId in DeviceIds)
         {
-
             if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out Device? device))
             {
 
@@ -226,7 +200,6 @@ public class SmartHome : Hub<ISmartHomeClient>
     public DeviceLayout? GetDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDeviceLayout(id)?.layout;
     public List<DeviceLayout> GetAllDeviceLayouts() => DeviceLayoutService.GetAllLayouts();
 
-
     public record LayoutNameWithHash(string Name, string Hash);
     public LayoutNameWithHash? GetDeviceLayoutHashByDeviceId(long id)
     {
@@ -237,6 +210,14 @@ public class SmartHome : Hub<ISmartHomeClient>
 
         return new(layoutHash.Value.layout.UniqueName, layoutHash.Value.hash);
     }
+
+    public IEnumerable<KeyValuePair<string, string>> GetAppConfig()
+    {
+        var loader = IInstanceContainer.Instance.GetDynamic<PluginLoader>();
+        return loader.AppConfigurators.Select(x => x.GetConfigs()).Where(x => x is not null).SelectMany(x => x!);
+    }
+
+
 
     //public DashboardDeviceLayout? GetDashboardDeviceLayoutByName(string typename) => DeviceLayoutService.GetDashboardDeviceLayout(typename);
     //public DashboardDeviceLayout? GetDashboardDeviceLayoutByDeviceId(long id) => DeviceLayoutService.GetDashboardDeviceLayout(id);
