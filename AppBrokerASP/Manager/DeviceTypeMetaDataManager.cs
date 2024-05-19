@@ -1,12 +1,11 @@
-﻿using AppBroker.Core;
-using AppBroker.Core.Devices;
+﻿using AppBroker.Core.Devices;
 using AppBroker.Core.Managers;
-
+using AppBroker.Core;
+using System.Reflection;
 using NLog;
 
-using System.Reflection;
+namespace AppBrokerASP.Manager;
 
-namespace AppBrokerASP.Devices.Elsa;
 
 public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
 {
@@ -27,13 +26,11 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
     private readonly HashSet<PropertyInfo> properties;
     private readonly HashSet<Type> deviceTypes;
 
-    private readonly IDeviceManager manager;
     private readonly NLog.ILogger logger;
 
     public DeviceTypeMetaDataManager(DeviceManager manager)
     {
         var stringArrWithEmpty = new[] { "" };
-        this.manager = manager;
         logger = LogManager.GetCurrentClassLogger();
         deviceTypes = Assembly
             .GetExecutingAssembly()

@@ -5,6 +5,7 @@ using AppBroker.Core.Managers;
 
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Histories;
+using AppBrokerASP.Manager;
 using AppBrokerASP.State;
 
 namespace AppBrokerASP;
@@ -37,7 +38,7 @@ public class InstanceContainer : IInstanceContainer, IDisposable
         var localDeviceManager = new DeviceManager();
         DeviceManager = localDeviceManager;
         localDeviceManager.LoadDevices();
-        //DeviceTypeMetaDataManager = new DeviceTypeMetaDataManager(localDeviceManager);
+        DeviceTypeMetaDataManager = new DeviceTypeMetaDataManager(localDeviceManager);
     }
 
 
