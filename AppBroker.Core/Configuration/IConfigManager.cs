@@ -8,4 +8,6 @@ public interface IConfigManager
     HistoryConfig HistoryConfig { get; }
     MqttConfig MqttConfig { get; }
     DatabaseConfig DatabaseConfig { get; }
+
+    IReadOnlyCollection<IConfig> PluginConfigs { get; }
 }

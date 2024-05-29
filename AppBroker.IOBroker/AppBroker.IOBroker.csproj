@@ -21,10 +21,4 @@
 
 	</ItemGroup>
 
-	<Target Name="CopyDLLs" AfterTargets="Build">
-		<ItemGroup>
-			<MySourceFiles Include="$(TargetDir)\**\*.*" />
-		</ItemGroup>
-		<Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)plugins/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)')" />
-	</Target>
 </Project>

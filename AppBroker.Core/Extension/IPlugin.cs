@@ -23,4 +23,12 @@ namespace AppBroker.Core.Extension
         void RegisterTypes() { }
 
     }
+
+
+    public interface IAppConfigurator
+    {
+        string UniqueName { get; }
+        IDictionary<string, string>? GetConfigs();
+    }
+
 }

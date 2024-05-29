@@ -17,6 +17,9 @@ using AppBroker.Core;
 using MQTTnet.Server;
 using MQTTnet;
 using Newtonsoft.Json;
+using System.Reflection.Emit;
+using System.Reflection;
+using Microsoft.AspNetCore.SignalR;
 
 namespace AppBrokerASP;
 
@@ -36,12 +39,9 @@ public class Program
         Console.OutputEncoding = Encoding.UTF8;
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 
-        _ = new InstanceContainer();
-
         var pluginLoader = new PluginLoader(LogManager.LogFactory);
-        IInstanceContainer.Instance.RegisterDynamic(pluginLoader);
-
         pluginLoader.LoadAssemblies();
+        _ = new InstanceContainer(pluginLoader);
 
         _ = DeviceLayoutService.InstanceDeviceLayouts;
 
@@ -126,6 +126,15 @@ public class Program
 
             var startup = new Startup(webBuilder.Configuration);
             startup.ConfigureServices(webBuilder.Services);
+            List<Type> hubTypes = new();
+            foreach (var extender in pluginLoader.ServiceExtenders)
+            {
+                extender.ConfigureServices(webBuilder.Services);
+                foreach (var type in extender.GetHubTypes())
+                {
+                    hubTypes.Add(type);
+                }
+            }
 
             WebApplication? app = webBuilder.Build();
             _ = app.UseWebSockets();
@@ -133,12 +142,19 @@ public class Program
             _ = app.UseRouting();
             _ = app.UseStaticFiles();
 
+            Type dynamicHub = GenerateDynamicHub(hubTypes, mainLogger);
             _ = app.UseEndpoints(e =>
             {
                 _ = e.MapFallbackToPage("/_Host");
-                _ = e.MapHub<SmartHome>(pattern: "/SmartHome/{id}");
-                _ = e.MapHub<SmartHome>(pattern: "/SmartHome");
                 _ = e.MapControllers();
+                var mapHubMethod = typeof(HubEndpointRouteBuilderExtensions).GetMethod("MapHub", 1, new[] { typeof(IEndpointRouteBuilder), typeof(string) });
+                _ = mapHubMethod.MakeGenericMethod(dynamicHub).Invoke(null, new object[] { e, "/Smarthome" });
+                _ = mapHubMethod.MakeGenericMethod(dynamicHub).Invoke(null, new object[] { e, "/Smarthome/{id}" });
+
+                foreach (var extender in pluginLoader.ServiceExtenders)
+                {
+                    extender.UseEndpoints(e);
+                }
 
                 if (mqttConfig.Enabled)
                 {
@@ -153,8 +169,6 @@ public class Program
             {
                 _ = app.UseMqttServer(server =>
                 {
-
-
                     static async Task Server_RetainedMessagesClearedAsync(EventArgs arg) => File.Delete(InstanceContainer.Instance.ConfigManager.MqttConfig.RetainedMessageFilePath);
                     static Task Server_LoadingRetainedMessageAsync(LoadingRetainedMessagesEventArgs arg)
                     {
@@ -200,6 +214,7 @@ public class Program
             NLog.LogManager.Shutdown();
         }
     }
+
 
     private static IPEndPoint CreateIPEndPoint(string endPoint)
     {
@@ -250,5 +265,46 @@ public class Program
         sd.Advertise(serv);
 
         mdns.Start();
+    }
+
+    private static Type GenerateDynamicHub(List<Type> hubTypes, Logger mainLogger)
+    {
+        AssemblyName assemblyName = new AssemblyName("DynamicHubAssembly");
+        AssemblyBuilder assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+        ModuleBuilder moduleBuilder = assemblyBuilder.DefineDynamicModule("DynamicModule");
+        TypeBuilder typeBuilder = moduleBuilder.DefineType("RuntimeHub", TypeAttributes.Public, typeof(DynamicHub));
+        foreach (var hubType in hubTypes)
+        {
+            foreach (var method in hubType.GetMethods())
+            {
+                if (method.DeclaringType != hubType || (method.Attributes & MethodAttributes.Private) > 0)
+                    continue;
+                if ((method.Attributes & MethodAttributes.Static) == 0)
+                {
+                    mainLogger.Warn("Method {0}.{1} was not static, only public static methods are supported", hubType.FullName, method.Name);
+                    continue;
+                }
+                var parameters = method.GetParameters();
+                bool passThis = false;
+                if (parameters.Length > 0 && parameters[0].ParameterType == typeof(DynamicHub))
+                    passThis = true;
+                MethodBuilder methodBuilder = typeBuilder.DefineMethod(
+                    method.Name,
+                    MethodAttributes.Public | MethodAttributes.HideBySig,
+                    method.ReturnType,
+                    parameters.Skip(passThis ? 1 : 0).Select(x => x.ParameterType).ToArray());
+
+                var gen = methodBuilder.GetILGenerator();
+
+                for (int i = 0; i < parameters.Length; i++)
+                {
+                    gen.Emit(OpCodes.Ldarg, i + (passThis ? 0 : 1));
+                }
+                gen.EmitCall(OpCodes.Call, method, null);
+                gen.Emit(OpCodes.Ret);
+            }
+        }
+        Type dynamicType = typeBuilder.CreateType();
+        return dynamicType;
     }
 }

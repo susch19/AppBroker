@@ -289,3 +289,4 @@ OTA/*
 *.dll
 *.old
 /DbMigrator/old
+/AppBrokerASP/service_account.json

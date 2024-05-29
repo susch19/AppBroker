@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
@@ -10,11 +10,15 @@
 		<ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
 	</ItemGroup>
 
+
 	<Target Name="CopyDLLs" AfterTargets="Build">
+		<Message Text="##### Copy Dlls for $(ProjectName)#####" Importance="high"/>
 		<ItemGroup>
 			<MySourceFiles Include="$(TargetDir)\**\*.*" />
+			<PluginDlls Include="$(TargetDir)\$(ProjectName).*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)plugins/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)')" />
+		<Copy SourceFiles="@(PluginDlls)" DestinationFiles="@(PluginDlls->'$(SolutionDir)AppBrokerASP\$(OutputPath)\plugins\%(Filename)%(Extension)')" />
 	</Target>
 
 </Project>

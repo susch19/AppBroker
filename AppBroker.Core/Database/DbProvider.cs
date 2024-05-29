@@ -16,6 +16,8 @@ public static class DbProvider
 
     public static HistoryDbContext HistoryContext => new();
 
+    //public static AppDbContext AppContext => new();
+
     private class CountResult
     {
         public int Count { get; set; }
@@ -25,6 +27,7 @@ public static class DbProvider
     {
         using var ctx = BrokerDbContext;
         using var ctx2 = HistoryContext;
+        //using var ctx3 = AppContext;
 
         if (ctx2.Database.CanConnect() && ctx2.DatabaseType.Contains("sqlite", StringComparison.OrdinalIgnoreCase))
         {
@@ -52,6 +55,7 @@ public static class DbProvider
 
         ctx.Database.Migrate();
         ctx2.Database.Migrate();
+        //ctx3.Database.Migrate();
 
     }
 

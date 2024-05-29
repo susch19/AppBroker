@@ -1,15 +1,21 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	  <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
-    <ItemGroup>
-        <ProjectReference Include="..\AppBrokerASP\AppBrokerASP.csproj" />
-        <ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
-    </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MailKit" Version="4.6.0" />
+  </ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
+		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\AppBroker.Zigbee2Mqtt\AppBroker.Zigbee2Mqtt.csproj" />
+	</ItemGroup>
 
 	<Target Name="CopyDLLs" AfterTargets="Build">
 		<Message Text="##### Copy Dlls for $(ProjectName)#####" Importance="high"/>

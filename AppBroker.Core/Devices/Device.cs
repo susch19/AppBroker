@@ -13,7 +13,6 @@ using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 
 namespace AppBroker.Core.Devices;
 

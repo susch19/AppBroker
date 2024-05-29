@@ -37,10 +37,14 @@
 		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 	</ItemGroup>
 
+
 	<Target Name="CopyDLLs" AfterTargets="Build">
+		<Message Text="##### Copy Dlls for $(ProjectName)#####" Importance="high" />
 		<ItemGroup>
 			<MySourceFiles Include="$(TargetDir)\**\*.*" />
+			<PluginDlls Include="$(TargetDir)\$(ProjectName).*" />
 		</ItemGroup>
 		<Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)plugins/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)')" />
+		<Copy SourceFiles="@(PluginDlls)" DestinationFiles="@(PluginDlls->'$(SolutionDir)AppBrokerASP\$(OutputPath)\plugins\%(Filename)%(Extension)')" />
 	</Target>
 </Project>
