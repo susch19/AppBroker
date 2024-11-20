@@ -125,7 +125,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
             }
         }
-        ;
         logger.Debug("Subscribed the incomming mqtt messages");
         await managedMqttClient.StartAsync(managedMqttClientOptions);
         logger.Debug("Started the mqtt client");
