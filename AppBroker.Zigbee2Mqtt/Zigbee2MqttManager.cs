@@ -111,7 +111,20 @@ public class Zigbee2MqttManager : IAsyncDisposable
         logger.Debug("Builded new mqtt tcp client options");
 
         MQTTClient = managedMqttClient;
-        MQTTClient.ApplicationMessageReceivedAsync += Mqtt_ApplicationMessageReceivedAsync;
+        MQTTClient.ApplicationMessageReceivedAsync += async (e) =>
+        {
+
+            try
+            {
+                await Mqtt_ApplicationMessageReceivedAsync(e);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex);
+                logger.Error($"{e.ApplicationMessage.Topic}{Environment.NewLine}{e.ApplicationMessage.ConvertPayloadToString()}");
+
+            }
+        }
         logger.Debug("Subscribed the incomming mqtt messages");
         await managedMqttClient.StartAsync(managedMqttClientOptions);
         logger.Debug("Started the mqtt client");

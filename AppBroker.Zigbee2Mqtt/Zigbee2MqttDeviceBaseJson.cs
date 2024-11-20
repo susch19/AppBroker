@@ -520,13 +520,26 @@ public class Zigbee2MqttBinaryFeature : Zigbee2MqttGenericExposedFeature
 public class Zigbee2MqttListFeature : Zigbee2MqttGenericExposedFeature
 {
     [JsonProperty("item_type")]
-    public string ItemType { get; set; } = "number";
+    public ItemType ItemType { get; set; }
 
     public Zigbee2MqttListFeature()
     {
         Type = Zigbee2MqttGenericFeatureType.List;
     }
 }
+
+public class ItemType
+{
+    [JsonProperty("access")]
+    public int Access { get; set; }
+    [JsonProperty("label")]
+    public string Label { get; set; }
+    [JsonProperty("name")]
+    public string Name { get; set; }
+    [JsonProperty("type")]
+    public string Type { get; set; }
+}
+
 
 public class Zigbee2MqttNumericFeaturePreset : Zigbee2MqttDeviceBaseJson
 {
@@ -664,6 +677,9 @@ public enum Zigbee2MqttPowerSource
 
     [EnumMember(Value = "DC Source")]
     DC,
+
+    [EnumMember(Value = "Unknown")]
+    Unknown,
 }
 
 public class Coordinator1 : Zigbee2MqttDeviceBaseJson
