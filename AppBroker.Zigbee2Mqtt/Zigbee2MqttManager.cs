@@ -124,7 +124,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 logger.Error($"{e.ApplicationMessage.Topic}{Environment.NewLine}{e.ApplicationMessage.ConvertPayloadToString()}");
 
             }
-        }
+        };
         logger.Debug("Subscribed the incomming mqtt messages");
         await managedMqttClient.StartAsync(managedMqttClientOptions);
         logger.Debug("Started the mqtt client");
@@ -283,7 +283,14 @@ public class Zigbee2MqttManager : IAsyncDisposable
         {
             if (customStates.TryGetValue(item.Property, out var token))
             {
-                customStates[item.Name] = item.ConvertToBool(token.ToOObject());
+                try
+                {
+                    customStates[item.Name] = item.ConvertToBool(token.ToOObject());
+                }
+                catch (Exception e)
+                {
+                    logger.Warn("Could not convert {0}. \r\n Reson: {1}", item.Name, e.ToString());
+                }
             }
         }
         return customStates;
