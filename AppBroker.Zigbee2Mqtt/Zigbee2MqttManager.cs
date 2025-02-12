@@ -146,7 +146,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
         {
             var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
             var manager = IInstanceContainer.Instance.DeviceStateManager;
-            if (!long.TryParse(c.Coordinator.IEEEAddress, out var coordinatorId))
+            if (!long.TryParse(c.Coordinator.IEEEAddress, NumberStyles.HexNumber, null,  out var coordinatorId))
                 return;
             manager.SetSingleState(coordinatorId, nameof(c.PermitJoin), c.PermitJoin);
             manager.SetSingleState(coordinatorId, nameof(c.PermitJoinTimeout), c.PermitJoinTimeout);

@@ -244,11 +244,7 @@ public class Zigbee2MqttCoordinator : Zigbee2MqttDeviceBaseJson
 
 public class Zigbee2MqttConfigJson : Zigbee2MqttDeviceBaseJson
 {
-    [JsonProperty("homeassistant")]
-    public bool Homeassistant { get; set; }
 
-    [JsonProperty("advanced")]
-    public Zigbee2MqttAdvancedConfig Advanced { get; set; }
 
     [JsonProperty("devices")]
     public Dictionary<string, Dictionary<string, object>> Devices { get; set; }
@@ -317,11 +313,6 @@ public enum Zigbee2MqttAvailabilityState
 
 public class Zigbee2MqttBridgeInfo : Zigbee2MqttDeviceBaseJson
 {
-    [JsonProperty("config")]
-    public Zigbee2MqttConfigJson Config { get; set; }
-
-    [JsonProperty("config_schema")]
-    public object ConfigSchema { get; set; }
 
     [JsonProperty("permit_join")]
     public bool PermitJoin { get; set; }
@@ -564,8 +555,8 @@ public class Zigbee2MqttNumericFeature : Zigbee2MqttGenericExposedFeature
     [JsonProperty("value_step")]
     public float ValueStep { get; set; }
 
-    [JsonProperty("presets")]
-    public Zigbee2MqttNumericFeaturePreset[] Presets { get; set; }
+    //[JsonProperty("presets")]
+    //public Zigbee2MqttNumericFeaturePreset[] Presets { get; set; }
 
     public Zigbee2MqttNumericFeature()
     {
