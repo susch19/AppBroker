@@ -1,6 +1,7 @@
-﻿namespace AppBroker.Core.DynamicUI;
+﻿
+namespace AppBroker.Core.DynamicUI;
 
-public class DetailPropertyInfo : LayoutBasePropertyInfo
+public partial class DetailPropertyInfo : LayoutBasePropertyInfo
 {
     public int? TabInfoId { get; set; }
     public bool BlurryCard { get; set; }

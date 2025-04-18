@@ -1,0 +1,147 @@
+{
+  "Version":  2,
+  "UniqueName": "ContactSensorLayout",
+  "TypeNames": [ "SNZB-04", "WL-19DWZ" ],
+  "IconName": "XiaomiTempSensor",
+  "NotificationSetup": [
+    {
+      "UniqueName": "DingDongNotification",
+      "TranslatableName": "Klingel",
+      "Global":  false
+    },
+    {
+      "UniqueName": "Fridge15MinutesNotification",
+      "TranslatableName": "Über 15 Minuten geöffnet",
+      "Global":  false
+    }
+  ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "contact",
+        "Order": 2,
+        "RowNr": 1,
+        "EditInfo": {
+          "EditType": "toggle",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "zigbee",
+              "Value": true,
+              "Parameters": [
+              ]
+            },
+            {
+              "Command": "zigbee",
+              "Value": false,
+              "Parameters": [
+              ]
+            }
+          ],
+          "Display": "Status",
+          "ActiveValue": false
+        }
+      },
+      {
+        "Name": "id",
+        "Order": 2,
+        "RowNr": 2,
+	"Hex": true,
+        "ShowOnlyInDeveloperMode": true
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "Name": "friendlyName",
+        "Order": 0,
+        "RowNr": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "id",
+        "Order": 1,
+        "RowNr": 1,
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true
+      },
+      {
+        "Name": "contact",
+        "Order": 0,
+        "RowNr": 2,
+        "DisplayName": "Geoeffnet: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
+        "Name": "lastReceived",
+        "Order": 0,
+        "RowNr": 6,
+        "DisplayName": "Zuletzt empfangen: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "Format": "dd.MM.yyyy HH:mm:ss"
+      },
+      {
+        "Name": "linkQuality",
+        "Order": 0,
+        "RowNr": 7,
+        "DisplayName": "Verbindungsqualität: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      }
+    ],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "home",
+        "Order": 1,
+        "LinkedDevice": null
+      }
+    ],
+    "HistoryProperties": [
+      {
+        "PropertyName": "contact",
+        "XAxisName": "Kontakt",
+        "UnitOfMeasurement": "",
+        "IconName": "power-swtich-59454",
+        "BrightThemeColor": 4292149248,
+        "DarkThemeColor": 4294922834,
+        "ChartType": "step"
+      }
+    ]
+  }
+}

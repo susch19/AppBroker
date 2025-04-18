@@ -8,11 +8,11 @@ namespace AppBroker.Core;
 public abstract class BaseSmarthomeMessage
 {
     [JsonProperty("id")]
-    public virtual uint NodeId { get; set; }
+    public virtual long NodeId { get; set; }
 
-    [JsonProperty("m"), JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(StringEnumConverter))]
     public virtual MessageType MessageType { get; set; }
 
-    [JsonProperty("c"), JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(StringEnumConverter))]
     public virtual Command Command { get; set; }
 }

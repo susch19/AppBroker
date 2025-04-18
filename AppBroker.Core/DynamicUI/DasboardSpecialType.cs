@@ -5,7 +5,9 @@ using Newtonsoft.Json.Serialization;
 
 namespace AppBroker.Core.DynamicUI;
 
-[JsonConverter(typeof(StringEnumConverter), converterParameters: typeof(CamelCaseNamingStrategy))]
+[JsonConverter(typeof(StringEnumConverter)
+    //,converterParameters: typeof(CamelCaseNamingStrategy)
+    )]
 public enum DasboardSpecialType
 {
     None = 0,

@@ -1,7 +1,6 @@
 ﻿using AppBroker.Core.Database.History;
 using AppBroker.Core.Devices;
 
-using AppBrokerASP.Devices;
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
@@ -13,8 +12,11 @@ namespace AppBroker.Core.Database;
 public static class DbProvider
 {
     public static BrokerDbContext BrokerDbContext => new();
+    public static AppDbContext AppDbContext => new();
 
     public static HistoryDbContext HistoryContext => new();
+
+    //public static AppDbContext AppContext => new();
 
     private class CountResult
     {
@@ -25,6 +27,7 @@ public static class DbProvider
     {
         using var ctx = BrokerDbContext;
         using var ctx2 = HistoryContext;
+        using var ctx3 = AppDbContext;
 
         if (ctx2.Database.CanConnect() && ctx2.DatabaseType.Contains("sqlite", StringComparison.OrdinalIgnoreCase))
         {
@@ -52,7 +55,7 @@ public static class DbProvider
 
         ctx.Database.Migrate();
         ctx2.Database.Migrate();
-
+        ctx3.Database.Migrate();
     }
 
     public static bool AddDeviceToDb(Device d)

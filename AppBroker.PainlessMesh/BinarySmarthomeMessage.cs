@@ -9,10 +9,12 @@ namespace AppBroker.PainlessMesh;
 public partial class BinarySmarthomeMessage : BaseSmarthomeMessage
 {
     public SmarthomeHeader Header { get; set; }
-    public override uint NodeId { get => base.NodeId; set => base.NodeId = value; }
+    //public override uint NodeId { get => base.NodeId; set => base.NodeId = value; }
+    [JsonProperty("m"), JsonConverter(typeof(StringEnumConverter))]
     public override MessageType MessageType { get => base.MessageType; set => base.MessageType = value; }
-    [JsonConverter(typeof(StringEnumConverter))]
+    [JsonConverter(typeof(StringEnumConverter)), JsonProperty("c")]
     public override Command Command { get => base.Command; set => base.Command = value; }
+
 
     public ByteLengthList Parameters { get; set; }
     //public List<byte> Parameters2 { get; set; }

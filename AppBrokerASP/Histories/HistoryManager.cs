@@ -140,8 +140,8 @@ public class HistoryManager : IHistoryManager
 
         var values = ctx.ValueBases
             .Where(x => x.HistoryValueId == histProp.Id
-                && x.Timestamp > start.ToUniversalTime()
-                && x.Timestamp < end.ToUniversalTime())
+                && x.Timestamp > new DateTime(start.Ticks, DateTimeKind.Utc) 
+                && x.Timestamp < new DateTime(end.Ticks, DateTimeKind.Utc))
              .ToArray();
 
         logger.Info($"Loaded {values.Length} values for {propertyName} of device {deviceId} from {start} to {end}");

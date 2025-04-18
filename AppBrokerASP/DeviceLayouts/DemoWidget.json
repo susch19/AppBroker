@@ -1,6 +1,15 @@
 {
+  "Version": 2,
   "UniqueName": "WeatherDevice",
   "TypeName": "WeatherDevice",
+  "IconName": "XiaomiTempSensor",
+  "NotificationSetup": [
+    {
+      "UniqueName": "DingDongNotification",
+      "TranslatableName": "Klingel",
+      "Global":  true
+    }
+  ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {

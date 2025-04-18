@@ -6,7 +6,7 @@ namespace AppBroker.Core;
 
 [NonSucking.Framework.Serialization.Nooson]
 
-public partial record SvgIcon(string Name, string Hash, [property: JsonIgnore] string Path, byte[]? Data);
+public partial record SvgIcon(string Name, string Hash,[property: JsonIgnore] string Path, byte[]? Data, string TypeName ="");
 
 
 #pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
@@ -71,7 +71,7 @@ public class IconService
             var iconBytes = File.ReadAllBytes(path);
             var existing = iconCache.FirstOrDefault(x => x.Value.Path == path).Value;
 
-            result = existing == default ? new(tmpTypeName, GetMD5StringFor(iconBytes), path, iconBytes) : existing;
+            result = existing == default ? new(tmpTypeName, GetMD5StringFor(iconBytes), path, iconBytes, tmpTypeName) : existing;
             break;
         }
 

@@ -17,10 +17,22 @@ namespace AppBroker.Core.Extension
     /// </remarks>
     public interface IPlugin
     {
-        public string Name { get; }
+        string Name { get; }
+        /// <summary>
+        /// Gets the numeric order for when to load the plugin, higher numbers means loaded later
+        /// </summary>
+        int LoadOrder { get; }
 
         bool Initialize(NLog.LogFactory logFactory);
         void RegisterTypes() { }
 
     }
+
+
+    public interface IAppConfigurator
+    {
+        string UniqueName { get; }
+        IDictionary<string, string>? GetConfigs();
+    }
+
 }

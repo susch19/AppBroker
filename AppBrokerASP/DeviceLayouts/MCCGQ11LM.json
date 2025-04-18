@@ -1,9 +1,10 @@
 {
   "UniqueName": "MCCGQ11LM",
   "TypeName": "MCCGQ11LM",
+  "IconName": "XiaomiTempSensor",
   "DashboardDeviceLayout": {
     "DashboardProperties": [
-     
+
       {
         "Name": "opened",
         "RowNr": 2

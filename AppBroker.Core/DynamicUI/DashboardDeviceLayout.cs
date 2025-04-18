@@ -1,3 +1,3 @@
 ﻿namespace AppBroker.Core.DynamicUI;
 
-public record DashboardDeviceLayout(List<DashbardPropertyInfo> DashboardProperties);
+public record DashboardDeviceLayout(List<DashboardPropertyInfo> DashboardProperties);

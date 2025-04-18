@@ -6,6 +6,7 @@ using AppBroker.Core.Managers;
 using AppBrokerASP.Configuration;
 using AppBrokerASP.Histories;
 using AppBrokerASP.Manager;
+using AppBrokerASP.Plugins;
 using AppBrokerASP.State;
 
 namespace AppBrokerASP;
@@ -23,12 +24,14 @@ public class InstanceContainer : IInstanceContainer, IDisposable
 
     public IConfigManager ConfigManager => ServerConfigManager;
     public ConfigManager ServerConfigManager { get; }
+    public PluginLoader PluginLoader { get; }
 
     private Dictionary<Type, object> dynamicObjects = new();
 
-    public InstanceContainer()
+    public InstanceContainer(PluginLoader pluginLoader)
     {
         IInstanceContainer.Instance = Instance = this;
+        PluginLoader = pluginLoader;
         IconService = new IconService();
         ServerConfigManager = new ConfigManager();
         DeviceStateManager = new DeviceStateManager();

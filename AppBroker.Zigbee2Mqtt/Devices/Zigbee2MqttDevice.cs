@@ -234,9 +234,7 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
 
     protected override bool FriendlyNameChanging(string oldName, string newName)
     {
-#if DEBUG
-        return false;
-#endif
+
         if (string.IsNullOrWhiteSpace(newName))
             return false;
         try
@@ -247,7 +245,9 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
                 return true;
             }
             logger.Info($"Trying to rename {oldName} to {newName} for device with id {Id}");
+#if !(DEBUG)
             client.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{newName}\"}}");
+#endif
             if (zigbeeManager.friendlyNameToIdMapping.TryGetValue(oldName, out var id)
                   && id == Id
                   && !zigbeeManager.friendlyNameToIdMapping.ContainsKey(newName)
@@ -264,5 +264,10 @@ public partial class Zigbee2MqttDevice : PropChangedJavaScriptDevice
             logger.Error(ex, $" Couldn't rename {oldName} to {newName} for zigbee2mqtt");
         }
         return false;
+    }
+
+    internal virtual Dictionary<string, JToken> ConvertStates(Dictionary<string, JToken> customStates)
+    {
+        return customStates;
     }
 }

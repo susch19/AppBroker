@@ -36,6 +36,7 @@ public class DeviceTypeMetaDataManager : IDeviceTypeMetaDataManager
             .GetExecutingAssembly()
             .GetTypes()
             .Where(x => typeof(Device).IsAssignableFrom(x) && x != typeof(Device))
+            .Concat(InstanceContainer.Instance.PluginLoader.DeviceTypes)
         .ToHashSet();
 
         foreach (var type in deviceTypes)

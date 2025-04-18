@@ -27,6 +27,7 @@ public class BrokerDbContext : BaseDbContext
     public DbSet<DeviceModel> Devices => Set<DeviceModel>();
     public DbSet<DeviceMappingModel> DeviceToDeviceMappings => Set<DeviceMappingModel>();
     //public DbSet<HeaterConfigTemplateModel> HeaterConfigTemplates { get; set; }
+    public DbSet<ConfigDataModel> ConfigDatas => Set<ConfigDataModel>();
 
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

@@ -1,8 +1,11 @@
 ﻿
 using AppBroker.Core;
+using AppBroker.Core.Configuration;
 using AppBroker.Core.Devices;
 using AppBroker.Core.Extension;
 using AppBroker.Core.HelperMethods;
+
+using AppBrokerASP.Extension;
 
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,8 +20,11 @@ namespace AppBrokerASP.Plugins;
 
 public class PluginLoader
 {
-
-    public List<Type> ControllerTypes { get; } = new List<Type>();
+    internal List<Type> ControllerTypes { get; } = new List<Type>();
+    internal List<IAppConfigurator> AppConfigurators { get; } = new();
+    internal List<IServiceExtender> ServiceExtenders { get; } = new();
+    internal List<IConfig> Configs { get; } = new();
+    internal List<Type> DeviceTypes { get; } = new();
 
     private readonly List<IPlugin> plugins = new();
     private readonly ILogger logger;
@@ -43,11 +49,23 @@ public class PluginLoader
                 }
                 else if (typeof(Device).IsAssignableFrom(type))
                 {
-                    IInstanceContainer.Instance.DeviceTypeMetaDataManager.RegisterDeviceType(type);
+                    DeviceTypes.Add(type);
                 }
                 else if (typeof(ControllerBase).IsAssignableFrom(type))
                 {
                     ControllerTypes.Add(type);
+                }
+                else if (typeof(IAppConfigurator).IsAssignableFrom(type))
+                {
+                    AppConfigurators.Add((IAppConfigurator)Activator.CreateInstance(type)!);
+                }             
+                else if (typeof(IServiceExtender).IsAssignableFrom(type))
+                {
+                    ServiceExtenders.Add((IServiceExtender)Activator.CreateInstance(type)!);
+                }     
+                else if (typeof(IConfig).IsAssignableFrom(type))
+                {
+                    Configs.Add((IConfig)Activator.CreateInstance(type)!);
                 }
             }
         }
@@ -108,10 +126,10 @@ public class PluginLoader
 
     public void InitializePlugins(LogFactory logFactory)
     {
-        foreach (IPlugin plugin in plugins)
+        foreach (IPlugin plugin in plugins.OrderBy(x=>x.LoadOrder))
             plugin.RegisterTypes();
 
-        foreach (IPlugin plugin in plugins)
+        foreach (IPlugin plugin in plugins.OrderBy(x => x.LoadOrder))
         {
             if (!plugin.Initialize(logFactory))
                 logger.Warn($"Plugin {plugin.Name} had errors in initialization :(");

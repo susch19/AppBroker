@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
@@ -11,13 +11,13 @@
         <ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
-    <Target Name="CopyDLLs" AfterTargets="Build">
-        <Message Text="##### Copy Dlls #####" Importance="high"/>
-        <ItemGroup>
-            <MySourceFiles Include="$(TargetDir)\**\*.*" />
-            <PluginDlls Include="$(TargetDir)\AppBroker.Zigbee2Mqtt.*" />
-        </ItemGroup>
-        <Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)plugins/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)')" />
-        <Copy SourceFiles="@(PluginDlls)" DestinationFiles="@(PluginDlls->'$(SolutionDir)AppBrokerASP\$(OutputPath)\plugins\%(Filename)%(Extension)')" />
-    </Target>
+	<Target Name="CopyDLLs" AfterTargets="Build">
+		<Message Text="##### Copy Dlls for $(ProjectName)#####" Importance="high"/>
+		<ItemGroup>
+			<MySourceFiles Include="$(TargetDir)\**\*.*" />
+			<PluginDlls Include="$(TargetDir)\$(ProjectName).*" />
+		</ItemGroup>
+		<Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)plugins/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)')" />
+		<Copy SourceFiles="@(PluginDlls)" DestinationFiles="@(PluginDlls->'$(SolutionDir)AppBrokerASP\$(OutputPath)\plugins\%(Filename)%(Extension)')" />
+	</Target>
 </Project>

@@ -1,7 +1,6 @@
 ﻿using AppBroker.Core.Database.Model;
 using AppBroker.Core.Devices;
 
-using AppBrokerASP.Devices;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

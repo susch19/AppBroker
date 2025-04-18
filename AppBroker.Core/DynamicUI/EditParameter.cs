@@ -12,6 +12,7 @@ public class EditParameter
     public MessageType? MessageType { get; set; }
     public string? DisplayName { get; set; }
     public List<JToken>? Parameters { get; set; }
-    [property: JsonExtensionData]
-    public Dictionary<string, JToken>? ExtensionData { get; set; }
+    [JsonExtensionData]
+    public Dictionary<string, JToken>? ExtensionDataDes { get; set; }
+    public Dictionary<string, JToken>? ExtensionData => ExtensionDataDes;
 }

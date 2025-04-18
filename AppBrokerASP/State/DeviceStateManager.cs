@@ -93,10 +93,10 @@ public class DeviceStateManager : IDeviceStateManager
     {
         propertyName = MapValueName(id, propertyName);
         InstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out var device);
+        JToken? oldValue = null;
 
         if (deviceStates.TryGetValue(id, out var oldState))
         {
-
             if (oldState.ContainsKey(propertyName) && JToken.DeepEquals(oldState[propertyName], newVal))
                 return;
 
@@ -104,6 +104,7 @@ public class DeviceStateManager : IDeviceStateManager
             InstanceContainer.Instance.HistoryManager.StoreNewState(id, propertyName, oldVal, newVal);
 
             AddStatesForBackwartsCompatibilityForOldApp(id, propertyName, newVal);
+            oldState.TryGetValue(propertyName, out oldValue);
             oldState[propertyName] = newVal;
         }
         else
@@ -115,16 +116,19 @@ public class DeviceStateManager : IDeviceStateManager
         }
 
         if ((stateFlags & StateFlags.NotifyOfStateChange) > 0)
-            StateChanged?.Invoke(this, new(id, propertyName, null, newVal));
+            Task.Run(() => StateChanged?.Invoke(this, new(id, propertyName, oldValue, newVal)));
 
-        if (device is not null && (stateFlags & StateFlags.SendToThirdParty) > 0)
-            device.ReceivedNewState(propertyName, newVal, stateFlags);
+        if (device is not null)
+        {
+            if ((stateFlags & StateFlags.SendToThirdParty) > 0)
+                device.ReceivedNewState(propertyName, newVal, stateFlags);
 
-        if (device is not null && (stateFlags & StateFlags.SendDataToApp) > 0)
-            device.StateDataUpdated();
+            if ((stateFlags & StateFlags.SendDataToApp) > 0)
+                device.StateDataUpdated();
 
-        if (device is not null && (stateFlags & StateFlags.StoreLastState) > 0)
-            StoreLastState(id, deviceStates[id], device);
+            if ((stateFlags & StateFlags.StoreLastState) > 0)
+                StoreLastState(id, deviceStates[id], device);
+        }
     }
 
     /// <inheritdoc/>
