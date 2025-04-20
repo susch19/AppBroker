@@ -12,7 +12,7 @@ public class GenericControllerFeatureProvider : IApplicationFeatureProvider<Cont
 
     public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
     {
-        var pluginLoader = IInstanceContainer.Instance.GetDynamic< PluginLoader>();
+        var pluginLoader = InstanceContainer.Instance.PluginLoader;
 
         foreach (var type in pluginLoader.ControllerTypes)
         {

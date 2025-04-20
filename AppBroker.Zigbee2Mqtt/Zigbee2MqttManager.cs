@@ -16,6 +16,8 @@ using AppBroker.Core.Devices;
 using AppBroker.Core.DynamicUI;
 
 using ZigbeeConfig = AppBroker.Zigbee2Mqtt.Zigbee2MqttConfig;
+using Quartz.Util;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace AppBroker.Zigbee2Mqtt;
 
@@ -46,7 +48,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
         try
         {
             logger.Debug("Subscribing to zigbee2mqtt topic");
-            await MQTTClient.SubscribeAsync("zigbee2mqtt/#");
+            await MQTTClient.SubscribeAsync($"{config.Topic}/#");
 
         }
         catch (Exception ex)
@@ -57,35 +59,62 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
     public Task SetOption(string name, string propName, JToken value)
     {
-        return MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/options", $$"""{"id":{{name}}, "options":{"{{propName}}":{{value}}} }""");
+        return MQTTClient.EnqueueAsync($"{config.Topic}/bridge/request/device/options", $$"""{"id":{{name}}, "options":{"{{propName}}":{{value}}} }""");
     }
 
-    public async Task<bool> SetValue(string deviceName, string propertyName, JToken newValue)
+    public Task SetCommand(long deviceId, ushort cluster, byte command, JToken payload)
+    {
+        var body =
+            $$"""
+            {
+                "command": {
+                    "cluster": {{cluster}},
+                    "command": {{command}},
+                    "payload": {{payload.ToString()}}
+                }
+            }
+            """;
+        var hexId = deviceId.ToString("x2");
+        return MQTTClient.EnqueueAsync($"{config.Topic}/0x{hexId}/set", body);
+    }
+
+    public Task<bool> SetValue(string deviceName, string propertyName, JToken newValue)
+    {
+        if (MQTTClient is null)
+            return Task.FromResult(false);
+        var deviceId = IInstanceContainer.Instance.DeviceManager.Devices.FirstOrDefault(x => x.Value.FriendlyName == deviceName).Key;
+        if (deviceId == default)
+            return Task.FromResult(false);
+
+        return SetValue(deviceId, propertyName, newValue);
+
+    }
+
+    public async Task<bool> SetValue(long deviceId, string propertyName, JToken newValue)
     {
         if (MQTTClient is null)
             return false;
+        var hexId = deviceId.ToString("x2");
 
-        logger.Info($"Updating device {deviceName} state {propertyName} with new value {newValue}");
-        await MQTTClient.EnqueueAsync($"zigbee2mqtt/{deviceName}/set/{propertyName}", newValue.ToString());
+        logger.Info($"Updating device 0x{hexId} state {propertyName} with new value {newValue}");
+
+        string val = newValue.Type switch
+        {
+            JTokenType.Float => newValue.Value<float>().ToString(CultureInfo.InvariantCulture),
+            _ => newValue.ToString(),
+        };
+
+        await MQTTClient.EnqueueAsync($"{config.Topic}/0x{hexId}/set/{propertyName}", val);
         return true;
-    }
-
-    public Task<bool> SetValue(long deviceId, string propertyName, JToken newValue)
-    {
-        if (MQTTClient is null || IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(deviceId, out var device))
-            return Task.FromResult(false);
-        return SetValue(device.FriendlyName, propertyName, newValue);
     }
     public Task<bool> SetValue(Device device, string propertyName, JToken newValue)
     {
-        if (MQTTClient is null)
-            return Task.FromResult(false);
-        return SetValue(device.FriendlyName, propertyName, newValue);
+        return SetValue(device.Id, propertyName, newValue);
     }
 
     public Task EnqueueToZigbee(string path, JToken payload)
     {
-        return MQTTClient.EnqueueAsync($"zigbee2mqtt/{path}", payload.ToString());
+        return MQTTClient.EnqueueAsync($"{config.Topic}/{path}", payload.ToString());
     }
 
     public async Task<IManagedMqttClient> Connect()
@@ -93,7 +122,6 @@ public class Zigbee2MqttManager : IAsyncDisposable
         logger.Debug("Connecting to mqtt");
         if (MQTTClient is not null)
         {
-
             logger.Debug("Already connected to mqtt, returing existing instance");
             return MQTTClient;
         }
@@ -170,7 +198,16 @@ public class Zigbee2MqttManager : IAsyncDisposable
         }
         else if (topic == "bridge/devices")
         {
-            devices = JsonConvert.DeserializeObject<Zigbee2MqttDeviceJson[]>(payload);
+            try
+            {
+
+                devices = JsonConvert.DeserializeObject<Zigbee2MqttDeviceJson[]>(payload);
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
             using (var ctx = DbProvider.BrokerDbContext)
             {
                 foreach (var item in devices!)
@@ -178,10 +215,10 @@ public class Zigbee2MqttManager : IAsyncDisposable
                     var id = long.Parse(item.IEEEAddress[2..], NumberStyles.HexNumber);
                     logger.Debug($"Trying to create new device {id}");
                     var dbDevice = ctx.Devices.FirstOrDefault(x => x.Id == id);
-                    if (dbDevice is not null && !string.IsNullOrWhiteSpace(dbDevice.FriendlyName) && dbDevice.FriendlyName != item.FriendlyName)
+                    if (dbDevice is not null && !string.IsNullOrWhiteSpace(dbDevice.FriendlyName) && !string.Equals(dbDevice.FriendlyName, item.FriendlyName, StringComparison.OrdinalIgnoreCase))
                     {
                         logger.Info($"Friendly name of Zigbee2Mqtt Device {item.FriendlyName} does not match saved name {dbDevice.FriendlyName}, updating");
-                        await MQTTClient.EnqueueAsync("zigbee2mqtt/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyName}\"}}");
+                        await MQTTClient.EnqueueAsync($"{config.Topic}/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyName}\"}}");
                         item.FriendlyName = dbDevice.FriendlyName;
                     }
 
@@ -229,6 +266,10 @@ public class Zigbee2MqttManager : IAsyncDisposable
         {
 
         }
+        else if (topic == "bridge/definitions")
+        {
+
+        }
         else if (topic.EndsWith("/availability", StringComparison.OrdinalIgnoreCase))
         {
             var deviceName = topic[0..^"/availability".Length];
@@ -245,9 +286,13 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 logger.Warn($"Couldn't set availability ({payload}) on {deviceName}");
             }
         }
+        else if (topic == "bridge/converters")
+        {
+
+        }
         else
         {
-            logger.Warn($"[{topic}] {payload}");
+            logger.Trace($"[{topic}] {payload}");
             if (devices is null)
             {
                 logger.Trace($"Got state before device {topic}, is something wrong with the retained messages of the mqtt broker?");
@@ -293,6 +338,9 @@ public class Zigbee2MqttManager : IAsyncDisposable
                 }
             }
         }
+
+        customStates = zdev.ConvertStates(customStates);
+
         return customStates;
     }
 

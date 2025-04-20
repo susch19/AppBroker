@@ -1,6 +1,7 @@
 {
   "Version": 13,
   "UniqueName": "Ikea Lampe1",
+  "IconName": "XiaomiTempSensor",
   "TypeNames": [
     "LED1624G9",
     "LED1732G11",
@@ -45,7 +46,7 @@
         "Order": 4,
         "RowNr": 4,
         "ShowOnlyInDeveloperMode": true
-      },
+      }
     ]
   },
   "DetailDeviceLayout": {
@@ -100,12 +101,12 @@
         },
         "SpecialType": "none"
       },
-    
+
       {
         "Name": "color_temp",
         "RowNr": 3,
         "Order": 0,
-        "Expanded":true,
+        "Expanded": true,
         "EditInfo": {
           "EditType": "slider",
           "EditCommand": "Update",
@@ -159,7 +160,7 @@
         "Name": "brightness",
         "RowNr": 5,
         "Order": 0,
-        "Expanded":true,
+        "Expanded": true,
         "EditInfo": {
           "EditType": "slider",
           "EditCommand": "Update",

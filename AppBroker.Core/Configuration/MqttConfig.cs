@@ -1,8 +1,9 @@
 ﻿namespace AppBroker.Core.Configuration;
 
-public class MqttConfig
+public class MqttConfig : IConfig
 {
     public const string ConfigName = nameof(MqttConfig);
+    public string Name => ConfigName;
 
     public bool Enabled { get; set; }
     public int ConnectionBacklog { get; set; }

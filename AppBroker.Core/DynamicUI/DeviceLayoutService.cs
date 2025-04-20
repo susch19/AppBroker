@@ -37,11 +37,17 @@ public static class DeviceLayoutService
     }
 #pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
 
-    private static (DeviceLayout? layout, string hash) GetHashAndFile(string path)
+    private static DeviceLayout GetLayout(string path)
     {
         var text = File.ReadAllText(path);
         var hash = GetMD5StringFor(File.ReadAllBytes(path));
-        return (JsonConvert.DeserializeObject<DeviceLayout>(text), hash);
+        var layout = JsonConvert.DeserializeObject<DeviceLayout>(text);
+        if(layout is null)
+        {
+            throw new FileLoadException($"Could not parse {text} to DeviceLayout");
+        }
+        return layout with { AdditionalDataDes = layout.AdditionalDataDes ?? [], Hash= hash };
+        
     }
     private static void FileChanged(object sender, FileSystemEventArgs e)
     {
@@ -50,24 +56,24 @@ public static class DeviceLayoutService
         _ = Task.Delay(100).ContinueWith((t) =>
         {
             logger.Info($"Layout change detected: {e.FullPath}");
-            var (layout, hash) = GetHashAndFile(e.FullPath);
+            var layout = GetLayout(e.FullPath);
 
             if (layout is null)
                 return;
 
             HashSet<string> subs = new();
 
-            CheckLayout(layout, hash, subs);
+            CheckLayout(layout, layout.Hash, subs);
             if (layout.TypeNames is not null)
             {
                 foreach (var item in layout.TypeNames)
                 {
-                    CheckLayout(layout with { TypeName = item }, hash, subs);
+                    CheckLayout(layout with { TypeName = item }, layout.Hash, subs);
 
                 }
             }
 
-            CheckLayoutIds(layout, hash, subs);
+            CheckLayoutIds(layout, layout.Hash, subs);
         });
     }
     private static void CheckLayoutIds(DeviceLayout layout, string hash, HashSet<string> subs)
@@ -140,8 +146,8 @@ public static class DeviceLayoutService
             // TODO: try catch
             try
             {
-                var (layout, hash) = GetHashAndFile(file);
-
+                var layout = GetLayout(file);
+                var hash = layout.Hash; 
                 if (layout is null)
                     continue;
 

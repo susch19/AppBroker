@@ -1,9 +1,10 @@
 ﻿namespace AppBroker.Core.Configuration;
 
 
-public class DatabaseConfig
+public class DatabaseConfig : IConfig
 {
     public const string ConfigName = nameof(DatabaseConfig);
+    public string Name => ConfigName;
 
     public string BrokerDBConnectionString { get; set; }
     public string BrokerDatabasePluginName { get; set; }

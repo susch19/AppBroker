@@ -23,12 +23,12 @@ public class ZigbeeSwitch : Zigbee2MqttDevice
         {
             case Command.On:
                 SetState("state", true);
-                await zigbeeManager.SetValue(FriendlyName, "state", "ON");
+                await zigbeeManager.SetValue(Id, "state", "ON");
                 break;
 
             case Command.Off:
                 SetState("state", false);
-                await zigbeeManager.SetValue(FriendlyName, "state", "OFF");
+                await zigbeeManager.SetValue(Id, "state", "OFF");
                 break;
             case Command.None:
                 Console.WriteLine(string.Join(",", parameters.Select(x => x.ToObject<string>())));

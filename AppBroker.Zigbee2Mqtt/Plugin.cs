@@ -12,6 +12,7 @@ namespace AppBroker.Zigbee2Mqtt;
 internal class Plugin : IPlugin
 {
     public string Name => "Zigbee2MQTT";
+    public int LoadOrder => int.MinValue;
 
     public void RegisterTypes()
     {

@@ -1,5 +1,6 @@
 {
   "UniqueName": "DemoEdit",
+  "IconName": "XiaomiTempSensor",
   "TypeNames": [ "DemoEdit" ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
@@ -413,28 +414,28 @@
         }
       },
       {
-       "Name": "current",
-       "Order": 2,
-       "RowNr": 4,
-       "EditInfo": {
-         "EditType": "input",
-         "EditCommand": "Update",
-         "EditParameter": [
-           {
-             "Command": "None",
-             "Parameters": [ "Current" ],
-             "Value": {
-               "Min": -25.0,
-               "Max": 40.0,
-               "Divisions": 5
-             }
-           }
-         ],
-         "Display": "Ein tolles Label",
-         "ActiveValue": true,
-         "HintText": "Toller Hint",
-         "KeyboardType": "number"
-       }
+        "Name": "current",
+        "Order": 2,
+        "RowNr": 4,
+        "EditInfo": {
+          "EditType": "input",
+          "EditCommand": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Parameters": [ "Current" ],
+              "Value": {
+                "Min": -25.0,
+                "Max": 40.0,
+                "Divisions": 5
+              }
+            }
+          ],
+          "Display": "Ein tolles Label",
+          "ActiveValue": true,
+          "HintText": "Toller Hint",
+          "KeyboardType": "number"
+        }
       },
 
       {
@@ -443,7 +444,7 @@
         "RowNr": 4,
         "TabInfoId": 0,
         "EditInfo": {
-          "EditType": "slider",
+          "EditType": "Slider",
           "EditCommand": "Update",
           "EditParameter": [
             {

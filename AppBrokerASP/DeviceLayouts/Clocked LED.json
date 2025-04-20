@@ -1,6 +1,7 @@
 {
   "UniqueName": "Clocked LED",
   "TypeName": "Clocked LED",
+  "IconName": "XiaomiTempSensor",
   "Ids": [],
   "DashboardDeviceLayout": {
     "DashboardProperties": [

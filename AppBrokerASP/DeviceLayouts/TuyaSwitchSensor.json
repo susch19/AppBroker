@@ -1,5 +1,6 @@
 {
   "UniqueName": "TuyaLayout",
+  "IconName": "XiaomiTempSensor",
   "TypeNames": [
     "TuyaSwitchSensor",
     "TS011F_plug_1"
@@ -55,7 +56,7 @@
           "EditParameter": [
             {
               "Command": "On",
-              "Value" :  true
+              "Value": true
             },
             {
               "Command": "Off",
@@ -63,9 +64,9 @@
             }
           ],
           "ActiveValue": true,
-          "Display": "Status",
+          "Display": "Status"
         }
-      },
+      }
     ]
   },
   "DetailDeviceLayout": {
@@ -189,7 +190,7 @@
         "RowNr": 33,
         "DisplayName": "Status: "
       },
-     
+
       {
         "Name": "state",
         "Order": 1,
@@ -218,7 +219,8 @@
         "UnitOfMeasurement": " W",
         "IconName": "XiaomiTempSensor",
         "BrightThemeColor": 4292149248,
-        "DarkThemeColor": 4294922834
+        "DarkThemeColor": 4294922834,
+        "ChartType": "line"
       },
       {
         "PropertyName": "current",
@@ -226,7 +228,8 @@
         "UnitOfMeasurement": " A",
         "IconName": "cloud",
         "BrightThemeColor": 4280902399,
-        "DarkThemeColor": 4286755327
+        "DarkThemeColor": 4286755327,
+        "ChartType": "line"
       },
       {
         "PropertyName": "energy",
@@ -234,7 +237,8 @@
         "UnitOfMeasurement": " kWh",
         "IconName": "droplet-59403",
         "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078
+        "DarkThemeColor": 4278249078,
+        "ChartType": "line"
       },
       {
         "PropertyName": "voltage",
@@ -242,7 +246,8 @@
         "UnitOfMeasurement": " V",
         "IconName": "flash-59419",
         "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078
+        "DarkThemeColor": 4278249078,
+        "ChartType": "line"
       },
       {
         "PropertyName": "state",
@@ -250,7 +255,8 @@
         "UnitOfMeasurement": " ",
         "IconName": "flash-59419",
         "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078
+        "DarkThemeColor": 4278249078,
+        "ChartType": "line"
       }
     ]
   }

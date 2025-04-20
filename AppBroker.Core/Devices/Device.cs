@@ -13,7 +13,6 @@ using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.Json;
 
 namespace AppBroker.Core.Devices;
 
@@ -67,6 +66,7 @@ public abstract class Device : IDisposable
 
     [JsonExtensionData]
     public Dictionary<string, JToken>? DynamicStateData => IInstanceContainer.Instance.DeviceStateManager.GetCurrentState(Id);
+
     private readonly Timer sendLastDataTimer;
     private readonly List<Subscriber> toRemove = new();
     private string friendlyName;

@@ -1,7 +1,8 @@
 {
   "UniqueName": "SaschaTempSensorLayout",
+  "IconName": "XiaomiTempSensor",
   "Ids": [ 6066005697233659 ],
-"ShowOnlyInDeveloperMode":false,
+  "ShowOnlyInDeveloperMode": false,
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
@@ -289,7 +290,8 @@
         "UnitOfMeasurement": " °C",
         "IconName": "XiaomiTempSensor",
         "BrightThemeColor": 4292149248,
-        "DarkThemeColor": 4294922834
+        "DarkThemeColor": 4294922834,
+        "ChartType": "line"
       },
       {
         "PropertyName": "humidity",
@@ -297,7 +299,8 @@
         "UnitOfMeasurement": " %",
         "IconName": "cloud",
         "BrightThemeColor": 4280902399,
-        "DarkThemeColor": 4286755327
+        "DarkThemeColor": 4286755327,
+        "ChartType": "line"
       },
       {
         "PropertyName": "pressure",
@@ -305,7 +308,8 @@
         "UnitOfMeasurement": " kPA",
         "IconName": "barometer",
         "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078
+        "DarkThemeColor": 4278249078,
+        "ChartType": "line"
       }
     ]
   }

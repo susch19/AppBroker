@@ -1,6 +1,7 @@
 {
   "UniqueName": "SPZB0001",
-  "TypeName": "SPZB0001",
+  "TypeNames": [ "SPZB0001" ],
+  "IconName": "XiaomiTempSensor",
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {

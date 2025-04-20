@@ -2,6 +2,7 @@
   //"Id\":-8922170722047078453,\"TypeName\":\"": null,
   "UniqueName": "Ikea Lampe Farbig",
   "TypeName": "TRADFRI bulb E14 CWS opal 600lm",
+  "IconName": "XiaomiTempSensor",
   //"Ids": [ -8922170722047078453 ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
@@ -15,7 +16,7 @@
         "RowNr": 0,
         "UnitOfMeasurement": " K"
       },
-     
+
       {
         "Name": "id",
         "Order": 2,
@@ -144,10 +145,10 @@
         "Order": 1,
         "LinkedDevice": null
       }
-     
+
     ],
     "HistoryProperties": [
-     
+
     ]
   }
 }

@@ -7,8 +7,8 @@ namespace AppBroker.Core.DynamicUI;
 /// <summary>
 /// Whether to slant the glyphs in the font
 /// </summary>
-[JsonConverter(typeof(StringEnumConverter), converterParameters: typeof(CamelCaseNamingStrategy))]
-public enum FontStyle
+[JsonConverter(typeof(StringEnumConverter))]
+public enum FontStyleSetting
 {
     /// <summary>
     /// Use the upright glyphs

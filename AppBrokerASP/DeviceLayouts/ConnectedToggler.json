@@ -1,6 +1,7 @@
 {
   "UniqueName": "ConnectedToggler",
   "TypeName": "ConnectedToggler",
+  "IconName": "XiaomiTempSensor",
   "Ids": [],
   "DashboardDeviceLayout": {
     "DashboardProperties": [

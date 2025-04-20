@@ -12,6 +12,7 @@ namespace AppBroker.IOBroker;
 public class Plugin : IPlugin
 {
     public string Name { get; }
+    public int LoadOrder => int.MinValue;
 
     public bool Initialize(LogFactory logFactory)
     {

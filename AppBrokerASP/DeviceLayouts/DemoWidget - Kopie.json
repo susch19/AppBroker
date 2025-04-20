@@ -1,101 +1,446 @@
 {
-  "Version": 3,
-  "UniqueName": "TestDevice",
-  "TypeName": "TestDevice",
+  "Version": 2,
+  "UniqueName": "SuschHeater",
+  "IconName": "XiaomiTempSensor",
+  "TypeNames": [
+    "SuschHeater"
+  ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
-        "Name": "id",
-        "Order": 1,
-        "RowNr": 2
+        "Name": "current_target_temp",
+        "Order": 0,
+        "RowNr": 0,
+        "TextStyle": {
+          "FontSize": 22.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "UnitOfMeasurement": " °C"
       },
       {
-        "Name": "speaking",
-        "EditParameter": [],
+        "Name": "current_target_time",
+        "Order": 0,
+        "RowNr": 1,
+        "Format": "HH:mm",
+        "UnitOfMeasurement": " Uhr"
+      },
+      {
+        "Name": "system_mode",
+        "Order": 0,
         "EditInfo": {
-          "EditType": "button",
-          "Dialog": "HeaterConfig",
-          "Display": "Heizplan einstellen"
-        }
+          "EditType": "icon",
+          "MessageType": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": "off",
+              "CodePoint": 62148,
+              "FontFamily": "MaterialIcons"
+            },
+            {
+              "Command": "None",
+              "Value": "heat",
+              "Disable": true
+            },
+            {
+              "Command": "None",
+              "Value": "auto",
+              "Disable": true
+            }
+          ]
+        },
+        "SpecialType": "right"
       },
       {
-        "Name": "targetTemp",
-        "RowNr": 3
+        "Name": "running_mode",
+        "Order": 0,
+        "RowNr": 0,
+        "EditInfo": {
+          "EditType": "icon",
+          "MessageType": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": "off",
+              "Disable": true
+            },
+            {
+              "Command": "None",
+              "Value": "heat",
+              "CodePoint": 984437,
+              "FontFamily": "MaterialIcons",
+              "Size": 18.0
+            },
+            {
+              "Command": "None",
+              "Value": "cool",
+              "CodePoint": 57399,
+              "FontFamily": "MaterialIcons",
+              "Size": 18.0
+            }
+          ]
+        },
+        "SpecialType": "right"
       },
       {
-        "Name": "dayOfWeek",
-        "RowNr": 4
+        "Name": "used_temperature_source",
+        "Order": 0,
+        "EditInfo": {
+          "EditType": "icon",
+          "MessageType": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": "none",
+              "CodePoint": 983712,
+              "FontFamily": "MaterialIcons",
+              "Color": 4294901760
+            },
+            {
+              "Command": "None",
+              "Value": "local",
+              "CodePoint": 983712,
+              "FontFamily": "MaterialIcons",
+              "Color": 4294967040
+            },
+            {
+              "Command": "None",
+              "Value": "remote",
+              "CodePoint": 57399,
+              "FontFamily": "MaterialIcons",
+              "Disable": true
+            }
+          ]
+        },
+        "SpecialType": "right"
       },
       {
-        "Name": "timeOfDay",
-        "RowNr": 5
+        "Name": "id",
+        "Order": 2,
+        "RowNr": 3,
+	"Hex": true,
+        "ShowOnlyInDeveloperMode": true
       }
     ]
   },
   "DetailDeviceLayout": {
     "PropertyInfos": [
       {
-        "Name": "temperature",
-        "TabInfoId": 0,
+        "Name": "id",
+        "Order": 1,
+        "RowNr": 60,
+        "EditParameter": [],
         "EditInfo": {
-          "EditType": "Radial",
-          "EditCommand": "Update",
+          "EditType": "button",
+          "Dialog": "HeaterConfig",
+          "Display": "Heizplan einstellen",
           "EditParameter": [
             {
-              "Command": 889,
-              "Value": false,
-              "Parameters": []
+              "Name": "icon",
+              "CodePoint": 58751,
+              "FontFamily": "MaterialIcons"
+            }
+          ]
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "blurryCard": true,
+        "Expanded": true
+      },
+      {
+        "Name": "friendlyName",
+        "Order": 0,
+        "RowNr": 0,
+        "TextStyle": {
+          "FontSize": 25.0,
+          "FontFamily": "FontName",
+          "FontWeight": "bold",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      // {
+      //   "Name": "id",
+      //   "Order": 1,
+      //   "RowNr": 1,
+      //   "TextStyle": {
+      //     "FontSize": 16.0,
+      //     "FontFamily": "FontName",
+      //     "FontWeight": "bold",
+      //     "FontStyle": "normal"
+      //   },
+      //   "TabInfoId": 0,
+      //   "SpecialType": "none",
+      //   "ShowOnlyInDeveloperMode": true
+      // },
+      {
+        "Name": "system_mode",
+        "Order": 1,
+        "RowNr": 50,
+        "EditParameter": [],
+        "EditInfo": {
+          "EditType": "Toggle",
+          "MessageType": "Update",
+          "ActiveValue": "auto",
+          "EditParameter": [
+            {
+              "Command": 10,
+              "Value": "off",
+              "DisplayName": "Heizung: ",
+              "Parameters": [
+                "off"
+              ]
+            },
+            {
+              "Command": 10,
+              "Value": "auto",
+              "DisplayName": "Heizung: ",
+              "Parameters": [
+                "auto"
+              ]
+            },
+            // {
+            //   "Name": "icon",
+            //   "CodePoint": 62757,
+            //   "FontFamily": "Smarthome"
+            // }
+            //{
+            //  "Command": 10,
+            //  "Value": "heat",
+            //  "DisplayName": "Heizen",
+            //  "Parameters": [
+            //    "heat"
+            //  ]
+            //}
+          ]
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "Expanded": true,
+        "blurryCard": true
+      },
+      {
+        "Name": "current_target",
+        "Order": 0,
+        "RowNr": 10,
+        "DisplayName": "Aktuelles Ziel: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "Expanded": true,
+        "BlurryCard": true
+      },
+      {
+        "Name": "temperature",
+        "Order": 0,
+        "RowNr": 20,
+        "DisplayName": "Ausgelesene Temparatur: ",
+        "UnitOfMeasurement": " °C",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "BlurryCard": true,
+        "Expanded": true
+      },
+      {
+        "Name": "linkQuality",
+        "Order": 0,
+        "RowNr": 150,
+        "DisplayName": "Verbindungsqualität: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true,
+        "BlurryCard": true,
+        "Expanded": true
+      },
+      {
+        "Name": "update",
+        "Order": 0,
+        "RowNr": 70,
+        "DisplayName": "Installierte Version: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true,
+        "Expanded": true,
+        "JsonPath": "$.installed_version",
+        "BlurryCard": true
+      },
+      {
+        "Name": "update",
+        "Order": 0,
+        "RowNr": 80,
+        "DisplayName": "Letzte Version: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "ShowOnlyInDeveloperMode": true,
+        "Expanded": true,
+        "JsonPath": "$.latest_version",
+        "BlurryCard": true
+      },
+      //{
+      //  "Name": "temperature",
+      //  "Order": 2,
+      //  "RowNr": 9,
+      //  "UnitOfMeasurement": " °C",
+      //  "EditParameter": [],
+      //  "EditInfo": {
+      //    "EditType": "Radial",
+      //    "MessageType": "Update",
+      //    "CurrentValueProp": "heating_setpoint",
+      //    "Interval": 5,
+      //    "RadiusFactor": 10.9,
+      //    "ShowValueAbove": true,
+      //    "StartAngle": 265,
+      //    "EndAngle": 275,
+      //    "TickOffset": 0.001,
+      //    "CenterY": 5.45,
+      //    "CenterX": 0.5,
+      //    "LabelOffset": 0.005,
+      //    "Thickness": 0.005,
+      //    "Margin": 0,
+      //    "MinorTickInterval": 5,
+      //    "HeightFactor":0.2,
+      //    "EditParameter": [
+      //      {
+      //        "Command": 6
+      //      }
+      //    ]
+      //  },
+      //  "TabInfoId": 0,
+      //  "Expanded": true,
+      //  "SpecialType": "none"
+      //},
+      // {
+      //   "Name": "heating_setpoint",
+      //   "Order": 0,
+      //   "RowNr": 16,
+      //   "DisplayName": "Manuelle Temperatur Einstellung: ",
+      //   "TextStyle": {
+      //     "FontSize": 16.0,
+      //     "FontFamily": "FontName",
+      //     "FontWeight": "normal",
+      //     "FontStyle": "normal"
+      //   },
+      //   "TabInfoId": 0,
+      //   "SpecialType": "none"
+      // },
+      {
+        "Name": "heating_setpoint",
+        "Order": 1,
+        "RowNr": 40,
+        "DisplayName": "Manuelle Temperatur Einstellung: ",
+        "EditInfo": {
+          "EditType": "AdvancedSlider",
+          "MessageType": "Update",
+          "Display": "",
+          "EditParameter": [
+            {
+              "Command": 6,
+              "Parameters": [],
+              "Value": {
+                "Min": 5.0,
+                "Max": 35.0,
+                "Divisions": 30
+              }
             }
           ],
-          "Min": 5.0,
-          "Max": 35.0,
-          "Interval": 5,
-          "StartAngle": 180,
-          "EndAngle": 0,
           "GradientColors": [
             [
               255,
-              0,
-              255,
+              33,
+              150,
               255
             ],
             [
               255,
-              0,
-              0,
-              0
+              255,
+              193,
+              7
             ],
             [
               255,
               255,
-              0,
-              0
+              67,
+              54
             ]
           ],
-          "Margin": 96,
-          "Displays": [
-            {
-              "Text": "Id: ",
-              "Prop": "id"
-            },
-            {
-              "Text": "Ziel: ",
-              "Prop": "targetTemp",
-              "Unit": " °C"
-            },
-            {
-              "Text": "Aktuell: ",
-              "Prop": "temperature"
-            },
-            {
-              "Text": "Ziel: ",
-              "Prop": "timeOfDay",
-              "Unit": " Uhr"
-            }
-          ]
+          "Interval": 5,
+          "MinorTickInterval": 4
         },
-        "UnitOfMeasurement": " °C"
+        "Precision": 1,
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "UnitOfMeasurement": " °C",
+        "Expanded": true,
+        "BlurryCard": true
+      },
+      {
+        "Name": "lastReceivedFormatted",
+        "Order": 0,
+        "RowNr": 30,
+        "DisplayName": "Zuletzt empfangen: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "Format": "dd",
+        "BlurryCard": true,
+        "Expanded": true
+      }
+    ],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "home",
+        "Order": 1,
+        "LinkedDevice": null
       }
     ]
-  }
+  },
+  "NotificationSetup": [
+    {
+      "UniqueName": "MyUniqueHeaterNotification",
+      "TranslatableName": "Einmalig über 21°C",
+      "Times": "1"
+    },
+    {
+      "UniqueName": "MyUniqueHeaterNotification2",
+      "TranslatableName": "Wir deaktiviert"
+    }
+  ]
 }
