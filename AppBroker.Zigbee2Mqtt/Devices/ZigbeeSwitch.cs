@@ -22,6 +22,7 @@ public class ZigbeeSwitch : Zigbee2MqttDevice
         switch (command)
         {
             case Command.On:
+            case Command.SingleColor:
                 SetState("state", true);
                 await zigbeeManager.SetValue(Id, "state", "ON");
                 break;
