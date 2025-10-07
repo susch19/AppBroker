@@ -1,118 +1,52 @@
 {
-  "Version": 1,
+  "Version": 2,
   "UniqueName": "TempSensorLayout",
   "IconName": "XiaomiTempSensor",
-  "TypeNames": [ "XiaomiTempSensor", "lumi.weather", "WSDCGQ11LM" ],
+  "TypeNames": [
+    "XiaomiTempSensor",
+    "lumi.weather",
+    "WSDCGQ11LM"
+  ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
-        "Name": "temperature",
-        "Order": 0,
-        "TextStyle": {
-          "FontSize": 21.0,
-          "FontWeight": "bold"
-        },
-        "RowNr": 0,
-        "UnitOfMeasurement": " °C"
+        "@ref": "$['Base.json'].dashboard.temperature"
       },
       {
-        "Name": "humidity",
-        "Order": 1,
-        "RowNr": 1,
-        "TextStyle": {
-          "FontSize": 14.0,
-          "FontWeight": "normal"
-        },
-        "UnitOfMeasurement": " %"
+        "@ref": "$['Base.json'].dashboard.humidity"
       },
       {
-        "Name": "pressure",
-        "Order": 2,
-        "RowNr": 1,
-        "TextStyle": {
-          "FontSize": 14.0,
-          "FontWeight": "normal"
-        },
-        "UnitOfMeasurement": " kpa"
+        "@ref": "$['Base.json'].dashboard.pressure"
       },
       {
-        "Name": "id",
-        "Order": 2,
-        "RowNr": 2,
-        "ShowOnlyInDeveloperMode": true
+        "@ref": "$['Base.json'].dashboard.id"
       },
-
       {
-        "Name": "battery",
-        "Order": 0,
-        "EditInfo": {
-          "EditType": "icon",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": "None",
-              "Value": 0,
-              "Min": 0,
-              "Max": 20,
-              "CodePoint": 59412,
-              "FontFamily": "Smarthome"
-            },
-            {
-              "Command": "None",
-              "Value": 0,
-              "Min": 20,
-              "Max": 40,
-              "CodePoint": 59408,
-              "FontFamily": "Smarthome"
-            },
-            {
-              "Command": "None",
-              "Value": 0,
-              "Min": 40,
-              "Max": 60,
-              "CodePoint": 59409,
-              "FontFamily": "Smarthome"
-            },
-            {
-              "Command": "None",
-              "Value": 0,
-              "Min": 60,
-              "Max": 80,
-              "CodePoint": 59410,
-              "FontFamily": "Smarthome"
-            },
-            {
-              "Command": "None",
-              "Value": 100,
-              "Min": 80,
-              "Max": 101,
-              "CodePoint": 59411,
-              "FontFamily": "Smarthome"
-            }
-          ]
-        },
-        "SpecialType": "right"
+        "@ref": "$['Base.json'].dashboard.battery"
       },
       {
         "Name": "isConnected",
         "Order": 1,
         "EditInfo": {
           "EditType": "iconButton",
-          "EditCommand": "Update",
+          "MessageType": "Update",
           "EditParameter": [
             {
               "Command": "None",
               "Value": true,
               "CodePoint": 59411,
-              "Parameters": [ false ]
+              "Parameters": [
+                false
+              ]
             },
-
             {
               "Command": "None",
               "Value": false,
               "CodePoint": 59411,
               "FontFamily": "Smarthome",
-              "Parameters": [ true ]
+              "Parameters": [
+                true
+              ]
             }
           ]
         },
@@ -124,134 +58,31 @@
   "DetailDeviceLayout": {
     "PropertyInfos": [
       {
-        "Name": "friendlyName",
-        "Order": 0,
-        "RowNr": 0,
-        "TextStyle": {
-          "FontSize": 25.0,
-          "FontFamily": "FontName",
-          "FontWeight": "bold",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.friendly_name"
       },
       {
-        "Name": "id",
-        "Order": 1,
-        "RowNr": 1,
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "bold",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none",
-        "ShowOnlyInDeveloperMode": true
+        "@ref": "$['Base.json'].detail.id"
       },
       {
-        "Name": "temperature",
-        "Order": 0,
-        "RowNr": 2,
-        "DisplayName": "Temperature: ",
-        "UnitOfMeasurement": " °C",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.temperature"
       },
       {
-        "Name": "humidity",
-        "Order": 0,
-        "RowNr": 3,
-        "DisplayName": "Luftfeuchtigkeit: ",
-        "UnitOfMeasurement": " %",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.humidity"
       },
       {
-        "Name": "pressure",
-        "Order": 0,
-        "RowNr": 4,
-        "DisplayName": "Luftdruck: ",
-        "UnitOfMeasurement": " kPA",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.pressure"
       },
       {
-        "Name": "battery",
-        "Order": 0,
-        "RowNr": 5,
-        "DisplayName": "Battery: ",
-        "UnitOfMeasurement": " %",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.battery"
       },
       {
-        "Name": "voltage",
-        "Order": 0,
-        "DisplayName": "Spannung: ",
-        "UnitOfMeasurement": " mV",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.voltage"
       },
       {
-        "Name": "lastReceivedFormatted",
-        "Order": 0,
-        "RowNr": 6,
-        "DisplayName": "Zuletzt empfangen: ",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none",
-        "Format": "dd"
+        "@ref": "$['Base.json'].detail.last_received"
       },
       {
-        "Name": "linkQuality",
-        "Order": 0,
-        "RowNr": 7,
-        "DisplayName": "Verbindungsqualität: ",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.link_quality"
       }
     ],
     "TabInfos": [
@@ -264,31 +95,13 @@
     ],
     "HistoryProperties": [
       {
-        "PropertyName": "temperature",
-        "XAxisName": "Temperatur",
-        "UnitOfMeasurement": " °C",
-        "IconName": "XiaomiTempSensor",
-        "BrightThemeColor": 4292149248,
-        "DarkThemeColor": 4294922834,
-        "ChartType": "line"
+        "@ref": "$['HistoryBase.json'].temperature"
       },
       {
-        "PropertyName": "humidity",
-        "XAxisName": "rel. Luftfeuchtigkeit",
-        "UnitOfMeasurement": " %",
-        "IconName": "cloud",
-        "BrightThemeColor": 4280902399,
-        "DarkThemeColor": 4286755327,
-        "ChartType": "line"
+        "@ref": "$['HistoryBase.json'].humidity"
       },
       {
-        "PropertyName": "pressure",
-        "XAxisName": "Luftdruck",
-        "UnitOfMeasurement": " kPA",
-        "IconName": "barometer",
-        "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078,
-        "ChartType": "line"
+        "@ref": "$['HistoryBase.json'].pressure"
       }
     ]
   }

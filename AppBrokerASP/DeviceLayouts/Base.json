@@ -1,0 +1,388 @@
+{
+    "dashboard": {
+        "id": {
+            "Name": "id",
+            "Order": 4,
+            "RowNr": 400,
+            "ShowOnlyInDeveloperMode": true,
+            "Hex": true
+        },
+        "contact": {
+            "Name": "contact",
+            "Order": 2,
+            "RowNr": 10,
+            "EditInfo": {
+                "EditType": "toggle",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": "zigbee",
+                        "Value": true,
+                        "Parameters": []
+                    },
+                    {
+                        "Command": "zigbee",
+                        "Value": false,
+                        "Parameters": []
+                    }
+                ],
+                "Display": "Status",
+                "ActiveValue": false
+            }
+        },
+        "battery": {
+            "Name": "battery",
+            "Order": 0,
+            "EditInfo": {
+                "EditType": "icon",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": "None",
+                        "Value": 0,
+                        "Min": 0,
+                        "Max": 20,
+                        "CodePoint": 59412,
+                        "FontFamily": "Smarthome"
+                    },
+                    {
+                        "Command": "None",
+                        "Value": 0,
+                        "Min": 20,
+                        "Max": 40,
+                        "CodePoint": 59408,
+                        "FontFamily": "Smarthome"
+                    },
+                    {
+                        "Command": "None",
+                        "Value": 0,
+                        "Min": 40,
+                        "Max": 60,
+                        "CodePoint": 59409,
+                        "FontFamily": "Smarthome"
+                    },
+                    {
+                        "Command": "None",
+                        "Value": 0,
+                        "Min": 60,
+                        "Max": 80,
+                        "CodePoint": 59410,
+                        "FontFamily": "Smarthome"
+                    },
+                    {
+                        "Command": "None",
+                        "Value": 100,
+                        "Min": 80,
+                        "Max": 101,
+                        "CodePoint": 59411,
+                        "FontFamily": "Smarthome"
+                    }
+                ]
+            },
+            "SpecialType": "right"
+        },
+        "temperature": {
+            "Name": "temperature",
+            "Order": 0,
+            "TextStyle": {
+                "FontSize": 25.0,
+                "FontWeight": "bold"
+            },
+            "RowNr": 0,
+            "UnitOfMeasurement": " °C"
+        },
+        "humidity": {
+            "Name": "humidity",
+            "Order": 1,
+            "RowNr": 10,
+            "TextStyle": {
+                "FontSize": 14.0,
+                "FontWeight": "normal"
+            },
+            "UnitOfMeasurement": " %"
+        },
+        "pressure": {
+            "Name": "pressure",
+            "Order": 2,
+            "RowNr": 10,
+            "TextStyle": {
+                "FontSize": 14.0,
+                "FontWeight": "normal"
+            },
+            "UnitOfMeasurement": " kpa"
+        },
+        "occupancy": {
+            "Name": "occupancy",
+            "Order": 2,
+            "RowNr": 10,
+            "EditInfo": {
+                "EditType": "toggle",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": "zigbee",
+                        "Value": true,
+                        "Parameters": []
+                    },
+                    {
+                        "Command": "zigbee",
+                        "Value": false,
+                        "Parameters": []
+                    }
+                ],
+                "Display": "Status",
+                "ActiveValue": true
+            }
+        },
+        "load_power": {
+            "Name": "loadPower",
+            "Order": 0,
+            "RowNr": 10,
+            "TextStyle": {
+                "FontSize": 20.0,
+                "FontWeight": "bold"
+            },
+            "UnitOfMeasurement": " W",
+            "Precision": 0
+        },
+        "current": {
+            "Name": "current",
+            "Order": 1,
+            "RowNr": 30,
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontWeight": "normal"
+            },
+            "UnitOfMeasurement": " A",
+            "Precision": 2
+        },
+        "voltage": {
+            "Name": "voltage",
+            "Order": 2,
+            "RowNr": 30,
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontWeight": "normal"
+            },
+            "UnitOfMeasurement": " V",
+            "Precision": 0
+        }
+    },
+    "detail": {
+        "friendly_name": {
+            "Name": "friendlyName",
+            "RowNr": 0,
+            "TextStyle": {
+                "FontSize": 25.0,
+                "FontFamily": "FontName",
+                "FontWeight": "bold",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none"
+        },
+        "id": {
+            "Name": "id",
+            "RowNr": 10,
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "bold",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none",
+            "ShowOnlyInDeveloperMode": true,
+            "Hex": true
+        },
+        "last_received": {
+            "Name": "lastReceivedFormatted",
+            "Order": 0,
+            "RowNr": 650,
+            "DisplayName": "Zuletzt empfangen: ",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none",
+            "Format": "dd"
+        },
+        "link_quality": {
+            "Name": "linkQuality",
+            "Order": 0,
+            "RowNr": 700,
+            "DisplayName": "Verbindungsqualität: ",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        },
+        "temperature": {
+            "Name": "temperature",
+            "Order": 0,
+            "RowNr": 20,
+            "DisplayName": "Temperature: ",
+            "UnitOfMeasurement": " °C",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        },
+        "humidity": {
+            "Name": "humidity",
+            "Order": 0,
+            "RowNr": 30,
+            "DisplayName": "Luftfeuchtigkeit: ",
+            "UnitOfMeasurement": " %",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        },
+        "pressure": {
+            "Name": "pressure",
+            "Order": 0,
+            "RowNr": 40,
+            "DisplayName": "Luftdruck: ",
+            "UnitOfMeasurement": " kPA",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        },
+        "battery": {
+            "Name": "battery",
+            "Order": 0,
+            "RowNr": 50,
+            "DisplayName": "Battery: ",
+            "UnitOfMeasurement": " %",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        },
+        "milli_voltage": {
+            "Name": "voltage",
+            "Order": 0,
+            "RowNr": 60,
+            "DisplayName": "Spannung: ",
+            "UnitOfMeasurement": " mV",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        },
+        "contact": {
+            "Name": "contact",
+            "Order": 0,
+            "RowNr": 20,
+            "DisplayName": "Geoeffnet: ",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        },
+        "load_power": {
+            "Name": "loadPower",
+            "Order": 0,
+            "RowNr": 20,
+            "DisplayName": "Verbrauch: ",
+            "UnitOfMeasurement": " W",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none",
+            "Precision": 0
+        },
+        "current": {
+            "Name": "current",
+            "Order": 0,
+            "RowNr": 30,
+            "DisplayName": "Stromstärke: ",
+            "UnitOfMeasurement": " A",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none",
+            "Precision": 2
+        },
+        "voltage": {
+            "Name": "voltage",
+            "Order": 0,
+            "RowNr": 40,
+            "DisplayName": "Spannung: ",
+            "UnitOfMeasurement": " V",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none",
+            "Precision": 0
+        },
+        "energy": {
+            "Name": "energy",
+            "Order": 0,
+            "RowNr": 50,
+            "DisplayName": "Historischer Verbrauch: ",
+            "UnitOfMeasurement": " kWh",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none"
+        },
+        "occupancy": {
+            "Name": "occupancy",
+            "Order": 0,
+            "RowNr": 10,
+            "DisplayName": "Anwesenheit: ",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "TabInfoId": 0,
+            "SpecialType": "none"
+        }
+    }
+}

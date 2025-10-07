@@ -20,18 +20,21 @@ namespace AppBrokerASP.Plugins;
 
 public class PluginLoader
 {
+    public static PluginLoader Instance { get; private set; }
+
     internal List<Type> ControllerTypes { get; } = new List<Type>();
     internal List<IAppConfigurator> AppConfigurators { get; } = new();
     internal List<IServiceExtender> ServiceExtenders { get; } = new();
     internal List<IConfig> Configs { get; } = new();
     internal List<Type> DeviceTypes { get; } = new();
 
-    private readonly List<IPlugin> plugins = new();
+    internal List<IPlugin> Plugins { get; } = new();
     private readonly ILogger logger;
 
     public PluginLoader(LogFactory logFactory)
     {
         logger = logFactory.GetCurrentClassLogger();
+        Instance = this;
     }
 
     internal void LoadPlugins(Assembly ass)
@@ -45,7 +48,7 @@ public class PluginLoader
                 if (typeof(IPlugin).IsAssignableFrom(type))
                 {
                     logger.Info($"Loading Plugin {type.Name} from Assembly {ass.FullName}");
-                    plugins.Add(PluginCreator<IPlugin>.GetInstance(type));
+                    Plugins.Add(PluginCreator<IPlugin>.GetInstance(type));
                 }
                 else if (typeof(Device).IsAssignableFrom(type))
                 {
@@ -126,10 +129,10 @@ public class PluginLoader
 
     public void InitializePlugins(LogFactory logFactory)
     {
-        foreach (IPlugin plugin in plugins.OrderBy(x=>x.LoadOrder))
+        foreach (IPlugin plugin in Plugins.OrderBy(x=>x.LoadOrder))
             plugin.RegisterTypes();
 
-        foreach (IPlugin plugin in plugins.OrderBy(x => x.LoadOrder))
+        foreach (IPlugin plugin in Plugins.OrderBy(x => x.LoadOrder))
         {
             if (!plugin.Initialize(logFactory))
                 logger.Warn($"Plugin {plugin.Name} had errors in initialization :(");

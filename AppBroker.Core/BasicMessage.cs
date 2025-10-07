@@ -3,6 +3,8 @@
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
+using System.ComponentModel;
+
 namespace AppBroker.Core;
 
 public abstract class BaseSmarthomeMessage

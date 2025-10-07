@@ -160,9 +160,9 @@ public class SmarthomeMeshManager : IDisposable
         {
             logger.Debug("Received a who am i response from " + e.NodeId);
             if (!knownNodeIds.Any(x => x.Id == e.NodeId))
-                knownNodeIds.Add(new NodeSync(e.NodeId, 0));
+                knownNodeIds.Add(new NodeSync(e.NodeIdInt, 0));
 
-            _ = whoIAmSendTime.TryRemove(e.NodeId, out (DateTime time, int count) asda);
+            _ = whoIAmSendTime.TryRemove(e.NodeIdInt, out (DateTime time, int count) asda);
             if (e.Parameters != null)
             {
                 NewConnectionEstablished?.Invoke(this, (e.NodeId, e.Parameters));
@@ -174,18 +174,18 @@ public class SmarthomeMeshManager : IDisposable
         NodeSync? known = knownNodeIds.FirstOrDefault(x => x.Id == e.NodeId);
         if (known == default)
         {
-            if (!whoIAmSendTime.TryGetValue(e.NodeId, out (DateTime time, int count) dt) || dt.time.Add(waitBeforeWhoIAmSendAgain) > DateTime.UtcNow)
+            if (!whoIAmSendTime.TryGetValue(e.NodeIdInt, out (DateTime time, int count) dt) || dt.time.Add(waitBeforeWhoIAmSendAgain) > DateTime.UtcNow)
             {
                 //SendSingle(e.NodeId, new BinarySmarthomeMessage(0, MessageType.Get, Command.WhoIAm));
                 if (dt == default)
-                    _ = whoIAmSendTime.TryAdd(e.NodeId, (DateTime.UtcNow.Subtract(waitBeforeWhoIAmSendAgain), 0));
+                    _ = whoIAmSendTime.TryAdd(e.NodeIdInt, (DateTime.UtcNow.Subtract(waitBeforeWhoIAmSendAgain), 0));
                 else
-                    whoIAmSendTime[e.NodeId] = (DateTime.UtcNow.Subtract(waitBeforeWhoIAmSendAgain), 0);
+                    whoIAmSendTime[e.NodeIdInt] = (DateTime.UtcNow.Subtract(waitBeforeWhoIAmSendAgain), 0);
             }
-            if (!queuedMessages.TryGetValue(e.NodeId, out Queue<BinarySmarthomeMessage>? queue))
+            if (!queuedMessages.TryGetValue(e.NodeIdInt, out Queue<BinarySmarthomeMessage>? queue))
             {
                 queue = new Queue<BinarySmarthomeMessage>();
-                queuedMessages.Add(e.NodeId, queue);
+                queuedMessages.Add(e.NodeIdInt, queue);
             }
             queue.Enqueue(e);
             return;
@@ -197,11 +197,11 @@ public class SmarthomeMeshManager : IDisposable
             ConnectionReestablished?.Invoke(this, (known.Id, e.Parameters));
         }
 
-        if (queuedMessages.TryGetValue(e.NodeId, out Queue<BinarySmarthomeMessage>? messages))
+        if (queuedMessages.TryGetValue(e.NodeIdInt, out Queue<BinarySmarthomeMessage>? messages))
         {
             while (messages.TryDequeue(out BinarySmarthomeMessage? message))
                 MessageTypeSwitch(message);
-            _ = queuedMessages.Remove(e.NodeId);
+            _ = queuedMessages.Remove(e.NodeIdInt);
         }
 
         MessageTypeSwitch(e);

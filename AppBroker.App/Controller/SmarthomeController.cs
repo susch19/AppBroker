@@ -25,10 +25,10 @@ public class SmarthomeController : ControllerBase
     private readonly IDeviceManager deviceManager;
     private readonly NLog.ILogger logger;
 
-    public SmarthomeController(IDeviceManager deviceManager, ILogger logger)
+    public SmarthomeController(IDeviceManager deviceManager)
     {
         this.deviceManager = deviceManager;
-        this.logger = logger;
+        logger = LogManager.LogFactory.GetCurrentClassLogger();
     }
 
     /// <summary>

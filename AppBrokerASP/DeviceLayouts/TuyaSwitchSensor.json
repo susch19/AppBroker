@@ -1,6 +1,7 @@
 {
+  "Version": 1,
   "UniqueName": "TuyaLayout",
-  "IconName": "XiaomiTempSensor",
+  "IconName": "TuyaSwitchSensor",
   "TypeNames": [
     "TuyaSwitchSensor",
     "TS011F_plug_1"
@@ -8,208 +9,53 @@
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
-        "Name": "loadPower",
-        "Order": 0,
-        "RowNr": 1,
-        "TextStyle": {
-          "FontSize": 20.0,
-          "FontWeight": "bold"
-        },
-        "UnitOfMeasurement": " W",
-        "Precision": 0
+        "@ref": "$['Base.json'].dashboard.id"
       },
       {
-        "Name": "current",
-        "Order": 1,
-        "RowNr": 30,
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontWeight": "normal"
-        },
-        "UnitOfMeasurement": " A",
-        "Precision": 2
+        "@ref": "$['Base.json'].dashboard.last_received"
       },
       {
-        "Name": "voltage",
-        "Order": 2,
-        "RowNr": 30,
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontWeight": "normal"
-        },
-        "UnitOfMeasurement": " V",
-        "Precision": 0
+        "@ref": "$['Base.json'].dashboard.link_quality"
       },
       {
-        "Name": "id",
-        "Order": 2,
-        "RowNr": 40,
-        "ShowOnlyInDeveloperMode": true
+        "@ref": "$['Base.json'].dashboard.load_power"
       },
       {
-        "Name": "state",
-        "Order": 2,
-        "RowNr": 39,
-        "EditInfo": {
-          "EditType": "toggle",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": "On",
-              "Value": true
-            },
-            {
-              "Command": "Off",
-              "Value": false
-            }
-          ],
-          "ActiveValue": true,
-          "Display": "Status"
-        }
+        "@ref": "$['Base.json'].dashboard.current"
+      },
+      {
+        "@ref": "$['Base.json'].dashboard.voltage"
+      },
+      {
+        "@ref": "$['ZigbeeBase.json'].dashboard.toggle"
       }
     ]
   },
   "DetailDeviceLayout": {
     "PropertyInfos": [
       {
-        "Name": "friendlyName",
-        "Order": 0,
-        "RowNr": 10,
-        "TextStyle": {
-          "FontSize": 25.0,
-          "FontFamily": "FontName",
-          "FontWeight": "bold",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.friendly_name"
       },
       {
-        "Name": "id",
-        "Order": 1,
-        "RowNr": 11,
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "bold",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none",
-        "ShowOnlyInDeveloperMode": true
+        "@ref": "$['Base.json'].detail.id"
       },
       {
-        "Name": "loadPower",
-        "Order": 0,
-        "RowNr": 13,
-        "DisplayName": "Verbrauch: ",
-        "UnitOfMeasurement": " W",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none",
-        "Precision": 0
+        "@ref": "$['Base.json'].detail.last_received"
       },
       {
-        "Name": "current",
-        "Order": 0,
-        "RowNr": 14,
-        "DisplayName": "Stromstärke: ",
-        "UnitOfMeasurement": " A",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none",
-        "Precision": 2
+        "@ref": "$['Base.json'].detail.link_quality"
       },
       {
-        "Name": "voltage",
-        "Order": 0,
-        "RowNr": 15,
-        "DisplayName": "Spannung: ",
-        "UnitOfMeasurement": " V",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none",
-        "Precision": 0
+        "@ref": "$['Base.json'].detail.load_power"
       },
       {
-        "Name": "energy",
-        "Order": 0,
-        "RowNr": 16,
-        "DisplayName": "Historischer Verbrauch: ",
-        "UnitOfMeasurement": " kWh",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.current"
       },
       {
-        "Name": "lastReceivedFormatted",
-        "Order": 0,
-        "RowNr": 17,
-        "DisplayName": "Zuletzt empfangen: ",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none",
-        "Format": "dd"
+        "@ref": "$['Base.json'].detail.voltage"
       },
       {
-        "Name": "linkQuality",
-        "Order": 0,
-        "RowNr": 18,
-        "DisplayName": "Verbindungsqualität: ",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none"
-      },
-      {
-        "Name": "_",
-        "Order": 0,
-        "RowNr": 33,
-        "DisplayName": "Status: "
-      },
-
-      {
-        "Name": "state",
-        "Order": 1,
-        "RowNr": 33,
-        "EditInfo": {
-          "EditType": "Toggle",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": "Off",
-              "Value": false
-            },
-            {
-              "Command": "On",
-              "Value": true
-            }
-          ],
-          "ActiveValue": true
-        }
+        "@ref": "$['Base.json'].detail.energy"
       }
     ],
     "HistoryProperties": [
@@ -220,7 +66,7 @@
         "IconName": "XiaomiTempSensor",
         "BrightThemeColor": 4292149248,
         "DarkThemeColor": 4294922834,
-        "ChartType": "line"
+        "ChartType": "step"
       },
       {
         "PropertyName": "current",
@@ -229,7 +75,7 @@
         "IconName": "cloud",
         "BrightThemeColor": 4280902399,
         "DarkThemeColor": 4286755327,
-        "ChartType": "line"
+        "ChartType": "step"
       },
       {
         "PropertyName": "energy",
@@ -247,16 +93,16 @@
         "IconName": "flash-59419",
         "BrightThemeColor": 4278241363,
         "DarkThemeColor": 4278249078,
-        "ChartType": "line"
+        "ChartType": "step"
       },
       {
         "PropertyName": "state",
         "XAxisName": "Status",
         "UnitOfMeasurement": " ",
-        "IconName": "flash-59419",
+        "IconName": "celcius-59424",
         "BrightThemeColor": 4278241363,
         "DarkThemeColor": 4278249078,
-        "ChartType": "line"
+        "ChartType": "step"
       }
     ]
   }

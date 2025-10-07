@@ -1,15 +1,14 @@
 {
-  "Version": 3,
-  "UniqueName": "ContactSensorLayout",
-  "IconName": "Paw",
+  "Version": 2,
+  "UniqueName": "OsramPlugLayout",
+  "IconName": "TuyaSwitchSensor",
   "TypeNames": [
-    "SNZB-04",
-    "WL-19DWZ"
+    "OsramPlug"
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
-        "@ref": "$['Base.json'].dashboard.contact"
+        "@ref": "$['ZigbeeBase.json'].dashboard.toggle"
       },
       {
         "@ref": "$['Base.json'].dashboard.id"
@@ -33,23 +32,24 @@
       {
         "@ref": "$['Base.json'].detail.link_quality"
       }
-    ],
-    "TabInfos": [
       {
-        "Id": 0,
-        "IconName": "home",
-        "Order": 1,
-        "LinkedDevice": null
+        "Name": "_",
+        "Order": 0,
+        "RowNr": 33,
+        "DisplayName": "Status: "
+      },
+      {
+        "@ref": "$['ZigbeeBase.json'].detail.toggle"
       }
     ],
     "HistoryProperties": [
       {
-        "PropertyName": "contact",
-        "XAxisName": "Kontakt",
-        "UnitOfMeasurement": "",
-        "IconName": "power-swtich-59454",
-        "BrightThemeColor": 4292149248,
-        "DarkThemeColor": 4294922834,
+        "PropertyName": "state",
+        "XAxisName": "Status",
+        "UnitOfMeasurement": " ",
+        "IconName": "celcius-59424",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
         "ChartType": "step"
       }
     ]

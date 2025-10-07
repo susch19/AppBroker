@@ -12,7 +12,7 @@ namespace AppBroker.Windmill;
 internal class Plugin : IPlugin
 {
     public string Name => "Windmill";
-    public int LoadOrder => int.MinValue;
+    public int LoadOrder => 0;
 
     public void RegisterTypes()
     {

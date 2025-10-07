@@ -1,14 +1,9 @@
 {
-  "Version": 15,
-  "UniqueName": "Ikea Lampe1",
+  "Version": 3,
+  "UniqueName": "Tuya Lampe",
   "IconName": "L1529",
   "TypeNames": [
-    "LED1624G9",
-    "LED1723G11",
-    "T2011",
-    "L1529",
-    "FloaltPanel",
-    "ZigbeeLamp"
+    "CK-BL702-AL-01_1"
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
@@ -35,7 +30,7 @@
         "@ref": "$['ZigbeeBase.json'].detail.color_temp_label"
       },
       {
-        "@ref": "$['ZigbeeBase.json'].detail.color_temp"
+        "@ref": "$['TuyaBase.json'].detail.color_temp"
       },
       {
         "@ref": "$['ZigbeeBase.json'].detail.brightness_label"
@@ -48,55 +43,7 @@
       },
       {
         "@ref": "$['ZigbeeBase.json'].detail.light_state_fab"
-      },
-      {
-        "Name": "power_on_behavior",
-        "DisplayName": "Status beim Start: ",
-        "RowNr": 6,
-        "Order": 2,
-        "EditInfo": {
-          "EditType": "dropdown",
-          "MessageType": "Update",
-          "EditParameter": [
-            {
-              "Command": 150,
-              "Value": "off",
-              "DisplayName": "Aus",
-              "Parameters": [
-                "power_on_behavior",
-                "off"
-              ]
-            },
-            {
-              "Command": 150,
-              "Value": "on",
-              "DisplayName": "An",
-              "Parameters": [
-                "power_on_behavior",
-                "on"
-              ]
-            },
-            {
-              "Command": 150,
-              "Value": "toggle",
-              "DisplayName": "Umschalten",
-              "Parameters": [
-                "power_on_behavior",
-                "toggle"
-              ]
-            },
-            {
-              "Command": 150,
-              "Value": "previous",
-              "DisplayName": "Vorheriger",
-              "Parameters": [
-                "power_on_behavior",
-                "previous"
-              ]
-            }
-          ]
-        }
-      },
+      }
       // {
       //   "Name": "effect",
       //   "RowNr": 6,
@@ -148,7 +95,7 @@
       //     ],
       //     "Display": "Status DropDown"
       //   }
-      // }
+      // },
     ],
     "HistoryProperties": []
   }

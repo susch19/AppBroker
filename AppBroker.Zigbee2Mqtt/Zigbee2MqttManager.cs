@@ -174,7 +174,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
         {
             var c = JsonConvert.DeserializeObject<Zigbee2MqttBridgeInfo>(payload);
             var manager = IInstanceContainer.Instance.DeviceStateManager;
-            if (!long.TryParse(c.Coordinator.IEEEAddress, NumberStyles.HexNumber, null,  out var coordinatorId))
+            if (!long.TryParse(c.Coordinator.IEEEAddress, NumberStyles.HexNumber, null, out var coordinatorId))
                 return;
             manager.SetSingleState(coordinatorId, nameof(c.PermitJoin), c.PermitJoin);
             manager.SetSingleState(coordinatorId, nameof(c.PermitJoinTimeout), c.PermitJoinTimeout);
@@ -217,9 +217,13 @@ public class Zigbee2MqttManager : IAsyncDisposable
                     var dbDevice = ctx.Devices.FirstOrDefault(x => x.Id == id);
                     if (dbDevice is not null && !string.IsNullOrWhiteSpace(dbDevice.FriendlyName) && !string.Equals(dbDevice.FriendlyName, item.FriendlyName, StringComparison.OrdinalIgnoreCase))
                     {
-                        logger.Info($"Friendly name of Zigbee2Mqtt Device {item.FriendlyName} does not match saved name {dbDevice.FriendlyName}, updating");
-                        await MQTTClient.EnqueueAsync($"{config.Topic}/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyName}\"}}");
-                        item.FriendlyName = dbDevice.FriendlyName;
+                        if (config.SyncNamesToZigbee2Mqtt)
+                        {
+                            logger.Info($"Friendly name of Zigbee2Mqtt Device {item.FriendlyName} does not match saved name {dbDevice.FriendlyName}, updating");
+                            RenameDevice(item.IEEEAddress, dbDevice.FriendlyName);
+                            await MQTTClient.EnqueueAsync($"{config.Topic}/bridge/request/device/rename", $"{{\"from\": \"{item.IEEEAddress}\", \"to\": \"{dbDevice.FriendlyName}\"}}");
+                            item.FriendlyName = dbDevice.FriendlyName;
+                        }
                     }
 
                     friendlyNameToIdMapping[item.FriendlyName] = id;
@@ -303,19 +307,34 @@ public class Zigbee2MqttManager : IAsyncDisposable
         }
     }
 
+    public async Task RenameDevice(string oldName, string friendlyName)
+    {
+        if (config.SyncNamesToZigbee2Mqtt)
+        {
+            await MQTTClient.EnqueueAsync($"{config.Topic}/bridge/request/device/rename", $"{{\"from\": \"{oldName}\", \"to\": \"{friendlyName}\"}}");
+        }
+    }
+
     private void TryInterpretTopicAsStateUpdate(string deviceName, string payload)
     {
-        if (friendlyNameToIdMapping.TryGetValue(deviceName, out var id))
+        if (payload is not null && friendlyNameToIdMapping.TryGetValue(deviceName, out var id))
         {
-            InstanceContainer
-                .Instance
-                .DeviceStateManager
-                .SetMultipleStates(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
+            try
+            {
+                InstanceContainer
+                     .Instance
+                     .DeviceStateManager
+                     .SetMultipleStates(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
 
-            InstanceContainer
-                .Instance
-                .DeviceStateManager
-                .SetSingleState(id, "lastReceived", DateTime.UtcNow);
+                InstanceContainer
+                    .Instance
+                    .DeviceStateManager
+                    .SetSingleState(id, "lastReceived", DateTime.UtcNow);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "State could not be interpreted");
+            }
         }
     }
 

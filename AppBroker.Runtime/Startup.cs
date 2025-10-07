@@ -11,8 +11,13 @@ using AppBrokerASP.Plugins;
 using Newtonsoft.Json.Linq;
 using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.OpenApi;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using AppBrokerASP;
 
-namespace AppBrokerASP;
+namespace AppBroker.Runtime;
 
 public class Startup
 {
@@ -29,25 +34,6 @@ public class Startup
                   options.MinimumSameSitePolicy = SameSiteMode.None);
 
 
-        //services.AddEndpointsApiExplorer();
-        //services.AddSwaggerGen((c) =>
-        //{
-        //    c.MapType<JToken>(() => new OpenApiSchema()
-        //    {
-        //        OneOf = [
-        //        new OpenApiSchema() { Type = "object" },
-        //        new OpenApiSchema() { Type = "number" },
-        //        new OpenApiSchema() { Type = "integer" },
-        //        new OpenApiSchema() { Type = "boolean" },
-        //        new OpenApiSchema() { Type = "array" },
-        //        new OpenApiSchema() { Type = "string" },
-        //    ],
-        //        Nullable = true
-        //    });
-        //    c.SupportNonNullableReferenceTypes();
-        //    c.UseAllOfToExtendReferenceSchemas();
-        //    //opt.MapType<JToken>(() => new OpenApiSchema { Type = typeof(JToken).Name });
-        //});
 
         _ = services.AddCors(options => options.AddPolicy("CorsPolicy", builder => _ = builder
                   .AllowAnyMethod()
@@ -77,9 +63,6 @@ public class Startup
 
         signalRBuilder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IHubProtocol, NewtonsoftJsonSmarthomeHubProtocol>());
 
-        //_ = services.AddRazorPages();
-        //services.AddOpenApi("appbroker");
-        //services.AddOpenApiDocument();
         services.AddSwaggerDocument(c =>
         {
             c.RequireParametersWithoutDefault = true;
@@ -88,7 +71,7 @@ public class Startup
 
         _ = services.AddSingleton<JavaScriptEngineManager>();
         var container = InstanceContainer.Instance;
-        _ = services.AddSingleton(new CloudConnector());
+        //_ = services.AddSingleton(new CloudConnector());
         _ = services.AddSingleton<IInstanceContainer>(container);
         _ = services.AddSingleton(container.IconService);
         _ = services.AddSingleton(container.ConfigManager);
@@ -98,8 +81,6 @@ public class Startup
         _ = services.AddSingleton(container.DeviceManager);
         _ = services.AddSingleton(container.DeviceStateManager);
         _ = services.AddSingleton(container.HistoryManager);
-
-
 
         if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
         {

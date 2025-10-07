@@ -17,8 +17,6 @@ public class DatabaseConfig : IConfig
         HistoryDBConnectionString = "Data Source=history.db";
         BrokerDatabasePluginName = "NonSucking.Framework.Extension.Database.Sqlite.dll";
         HistoryDatabasePluginName = "NonSucking.Framework.Extension.Database.Sqlite.dll";
-
-
     }
 
 }

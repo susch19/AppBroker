@@ -1,6 +1,7 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Configuration;
 using AppBroker.Core.Database;
+using AppBroker.Core.DynamicUI;
 using AppBroker.Notifications.Configuration;
 using AppBroker.Notifications.Hubs;
 
@@ -62,5 +63,16 @@ public class NotificationController : ControllerBase
             .Where(x => EF.Functions.Like(x.Key, "% Unique Notification"))
             .Select(x => x.Value)
             .ToListAsync());
+    }
+
+    [HttpGet("allGlobalNotifications")]
+    public List<NotificationSetup> AllGlobalNotifications()
+    {
+        return DeviceLayoutService
+            .GetAllLayouts()
+            .Where(x => x.NotificationSetup != null)
+            .SelectMany(x => x.NotificationSetup!)
+            .Where(x => x.Global)
+            .ToList();
     }
 }

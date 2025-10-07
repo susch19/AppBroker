@@ -1,102 +1,34 @@
 {
-  "Version": 1,
+  "Version": 3,
   "UniqueName": "Osram Lampe Lightify",
-  "IconName": "XiaomiTempSensor",
+  "IconName": "AB32840",
   "TypeNames": [
-    "AB32840"
+    "AB32840QQQ"
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
-        "Name": "state",
-        "Order": 2,
-        "RowNr": 1,
-        "EditInfo": {
-          "EditType": "toggle",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": "zigbee",
-              "Value": true,
-              "Parameters": [
-                "Light.state",
-                "ON"
-              ]
-            },
-            {
-              "Command": "zigbee",
-              "Value": false,
-              "Parameters": [
-                "Light.state",
-                "OFF"
-              ]
-            }
-          ],
-          "Display": "Status",
-          "ActiveValue": true
-        }
+        "@ref": "$['ZigbeeBase.json'].dashboard.light"
       },
       {
-        "Name": "id",
-        "Order": 4,
-        "RowNr": 4,
-        "ShowOnlyInDeveloperMode": true
+        "@ref": "$['Base.json'].dashboard.id"
       }
     ]
   },
   "DetailDeviceLayout": {
     "PropertyInfos": [
       {
-        "Name": "friendlyName",
-        "RowNr": 0,
-        "TextStyle": {
-          "FontSize": 25.0,
-          "FontFamily": "FontName",
-          "FontWeight": "bold",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none"
+        "@ref": "$['Base.json'].detail.friendly_name"
       },
       {
-        "Name": "id",
-        "RowNr": 1,
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "bold",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none",
-        "ShowOnlyInDeveloperMode": true
+        "@ref": "$['Base.json'].detail.id"
       },
       {
-        "Name": "state",
-        "RowNr": 2,
-        "DisplayName": "Status: ",
-        "UnitOfMeasurement": "",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none"
+        "@ref": "$['ZigbeeBase.json'].detail.light_state"
       },
       {
-        "Name": "color_temp",
-        "RowNr": 3,
-        "Order": 0,
-        "DisplayName": "Farbtemperatur: ",
-        "UnitOfMeasurement": "",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none"
+        "@ref": "$['ZigbeeBase.json'].detail.color_temp_label"
       },
-
       {
         "Name": "color_temp",
         "RowNr": 3,
@@ -104,7 +36,7 @@
         "Expanded": true,
         "EditInfo": {
           "EditType": "slider",
-          "EditCommand": "Update",
+          "MessageType": "Update",
           "EditParameter": [
             {
               "Command": 151,
@@ -138,58 +70,16 @@
         "Precision": 0
       },
       {
-        "Name": "brightness",
-        "RowNr": 5,
-        "Order": 0,
-        "DisplayName": "Helligkeit: ",
-        "UnitOfMeasurement": "",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none"
+        "@ref": "$['ZigbeeBase.json'].detail.brightness_label"
       },
       {
-        "Name": "brightness",
-        "RowNr": 5,
-        "Order": 0,
-        "Expanded": true,
-        "EditInfo": {
-          "EditType": "slider",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "Command": 151,
-              "Parameters": [
-                "brightness"
-              ],
-              "Value": {
-                "Min": 0.0,
-                "Max": 254.0,
-                "Divisions": 254
-              }
-            }
-          ],
-          "Display": "Helligkeit",
-          "ActiveValue": true,
-          "GradientColors": [
-            [
-              255,
-              60,
-              60,
-              60
-            ],
-            [
-              255,
-              255,
-              255,
-              255
-            ]
-          ]
-        },
-        "Precision": 0
+        "@ref": "$['ZigbeeBase.json'].detail.brightness"
+      },
+      {
+        "@ref": "$['Base.json'].detail.link_quality"
+      },
+      {
+        "@ref": "$['ZigbeeBase.json'].detail.light_state_fab"
       },
       {
         "Name": "123_Invalid",
@@ -203,7 +93,7 @@
         "Order": 2,
         "EditInfo": {
           "EditType": "dropdown",
-          "EditCommand": "Update",
+          "MessageType": "Update",
           "EditParameter": [
             {
               "Command": 150,
@@ -244,24 +134,12 @@
           ]
         }
       },
-      {
-        "Name": "linkQuality",
-        "RowNr": 11,
-        "DisplayName": "Verbindungsqualität: ",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "SpecialType": "none"
-      },
       // {
       //   "Name": "effect",
       //   "RowNr": 6,
       //   "EditInfo": {
       //     "EditType": "dropdown",
-      //     "EditCommand": "Update",
+      //     "MessageType": "Update",
       //     "EditParameter": [
       //       {
       //         "Command": 404,
@@ -308,55 +186,7 @@
       //     "Display": "Status DropDown"
       //   }
       // },
-      {
-        "Name": "state",
-        "RowNr": 100,
-        "EditInfo": {
-          "EditType": "FloatingActionButton",
-          "EditCommand": "Update",
-          "EditParameter": [
-            {
-              "CodePoint": 58595,
-              "Command": 150,
-              "Value": true,
-              "Parameters": [
-                "state",
-                "OFF"
-              ]
-            },
-            {
-              "Command": 150,
-              "CodePoint": 58595,
-              "Value": false,
-              "Parameters": [
-                "state",
-                "ON"
-              ]
-            }
-            // {
-            //   "Command": "zigbee",
-            //   "Value": false,
-            //   "CodePoint": 58595,
-            //   "Parameters": [
-            //     "Light.state",
-            //     "ON"
-            //   ]
-            // },
-            // {
-            //   "Command": "zigbee",
-            //   "Value": true,
-            //   "CodePoint": 58595,
-            //   "Parameters": [
-            //     "Light.state",
-            //     "OFF"
-            //   ]
-            // }
-          ]
-        }
-      }
     ],
-    "HistoryProperties": [
-
-    ]
+    "HistoryProperties": []
   }
 }

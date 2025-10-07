@@ -1,5 +1,5 @@
 {
-  "Version": 2,
+  "Version": 4,
   "UniqueName": "SuschHeater",
   "IconName": "XiaomiTempSensor",
   "TypeNames": [
@@ -147,7 +147,8 @@
         "TabInfoId": 0,
         "SpecialType": "none",
         "blurryCard": true,
-        "Expanded": true
+        "Expanded": true,
+        "Hex": true
       },
       {
         "@ref": "$['Base.json'].detail.friendly_name"
@@ -181,7 +182,7 @@
               "Value": "off",
               "DisplayName": "Heizung: ",
               "Parameters": [
-                "off"
+                "auto"
               ]
             },
             {
@@ -189,9 +190,9 @@
               "Value": "auto",
               "DisplayName": "Heizung: ",
               "Parameters": [
-                "auto"
+                "off"
               ]
-            }
+            },
             // {
             //   "Name": "icon",
             //   "CodePoint": 62757,
@@ -260,7 +261,8 @@
         "SpecialType": "none",
         "ShowOnlyInDeveloperMode": true,
         "BlurryCard": true,
-        "Expanded": true
+        "Expanded": true,
+        "Precision":0
       },
       {
         "Name": "update",
@@ -357,7 +359,7 @@
           "EditParameter": [
             {
               "Command": 6,
-              "Parameters": [],
+              "Digits": 1,
               "Value": {
                 "Min": 5.0,
                 "Max": 35.0,
@@ -399,7 +401,7 @@
         "Name": "lastReceivedFormatted",
         "Order": 0,
         "RowNr": 30,
-        "DisplayName": "Zuletzt empfangen: ",
+        "DisplayName": "Zuletzt empfangens: ",
         "TextStyle": {
           "FontSize": 16.0,
           "FontFamily": "FontName",
@@ -434,7 +436,3 @@
     }
   ]
 }
-
-
-
-  
