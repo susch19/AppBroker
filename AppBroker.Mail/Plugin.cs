@@ -1,14 +1,11 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Devices;
 using AppBroker.Core.Extension;
+using AppBroker.Windmill.Configuration;
 using AppBroker.Zigbee2Mqtt.Devices;
-
-using AppBrokerASP;
 
 using MailKit;
 using MailKit.Net.Smtp;
-using MailKit.Security;
-
 
 using MimeKit;
 
@@ -20,18 +17,19 @@ namespace AppBroker.Zigbee2Mqtt;
 
 internal class Plugin : IPlugin
 {
-    private Logger logger;
-    private Dictionary<long, Timer> lastReceivedTimer = new Dictionary<long, Timer>();
-    public int LoadOrder => int.MinValue;
+    public int LoadOrder => 0;
 
     public string Name => "Mail";
 
+    private Logger logger;
+    private Dictionary<long, Timer> lastReceivedTimer = new Dictionary<long, Timer>();
+    private MailConfig config;
 
     public bool Initialize(LogFactory logFactory)
     {
         logger = logFactory.GetCurrentClassLogger();
         IInstanceContainer.Instance.DeviceStateManager.StateChanged += DeviceStateManager_StateChanged;
-
+        config ??= IInstanceContainer.Instance.ConfigManager.PluginConfigs.OfType<MailConfig>().First();
         return true;
     }
 
@@ -70,8 +68,8 @@ internal class Plugin : IPlugin
             client.CheckCertificateRevocation = true;
             client.ServerCertificateValidationCallback = (_, __, ___, ____) => true;
 
-            await client.ConnectAsync("mail.gallimathias.de", 465, useSsl: true);
-            await client.AuthenticateAsync("smarthome@susch.eu", "ocj+V}#R0c=>_`,R4:Ud'U;(e&qOZytoz3$Um]jpFxfR{1CN=YIph0x~.+?<F|KEKyw\\8Fi9/J}h^_uk4|-z9ybeFz(p',_MX))_t1!IGS!OFq!;:A[!#U=]");
+            await client.ConnectAsync(config.Host, config.Port, useSsl: config.UseSsl);
+            await client.AuthenticateAsync(config.Username, config.Password);
 
             await client.SendAsync(mail);
             await client.DisconnectAsync(true);

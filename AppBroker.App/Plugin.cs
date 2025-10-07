@@ -20,7 +20,7 @@ internal class Plugin : IPlugin
 {
     public string Name => "App";
 
-    public int LoadOrder => int.MinValue;
+    public int LoadOrder => 0;
 
     public bool Initialize(LogFactory logFactory)
     {

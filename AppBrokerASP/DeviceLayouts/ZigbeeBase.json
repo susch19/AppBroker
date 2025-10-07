@@ -1,0 +1,225 @@
+{
+    "dashboard": {
+        "light": {
+            "Name": "state",
+            "Order": 2,
+            "RowNr": 10,
+            "EditInfo": {
+                "EditType": "toggle",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": "zigbee",
+                        "Value": false,
+                        "Parameters": [
+                            "Light.state",
+                            "ON"
+                        ]
+                    },
+                    {
+                        "Command": "zigbee",
+                        "Value": true,
+                        "Parameters": [
+                            "Light.state",
+                            "OFF"
+                        ]
+                    }
+                ],
+                "Display": "Status",
+                "ActiveValue": true
+            }
+        },
+        "toggle": {
+            "Name": "state",
+            "Order": 1,
+            "RowNr": 10,
+            "EditInfo": {
+                "EditType": "Toggle",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": "Off",
+                        "Value": true
+                    },
+                    {
+                        "Command": "On",
+                        "Value": false
+                    }
+                ],
+                "ActiveValue": true
+            }
+        }
+    },
+    "detail": {
+        "light_state": {
+            "Name": "state",
+            "RowNr": 20,
+            "DisplayName": "Status: ",
+            "UnitOfMeasurement": "",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none"
+        },
+        "color_temp_label": {
+            "Name": "color_temp",
+            "RowNr": 30,
+            "Order": 0,
+            "DisplayName": "Farbtemperatur: ",
+            "UnitOfMeasurement": "",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none"
+        },
+        "color_temp": {
+            "Name": "color_temp",
+            "RowNr": 30,
+            "Order": 0,
+            "Expanded": true,
+            "EditInfo": {
+                "EditType": "slider",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": 151,
+                        "Parameters": [
+                            "color_temp"
+                        ],
+                        "Value": {
+                            "Min": 250.0,
+                            "Max": 454.0,
+                            "Divisions": 204
+                        }
+                    }
+                ],
+                "Display": "Farbtemperatur",
+                "ActiveValue": true,
+                "GradientColors": [
+                    [
+                        255,
+                        255,
+                        255,
+                        255
+                    ],
+                    [
+                        255,
+                        230,
+                        160,
+                        128
+                    ]
+                ]
+            },
+            "Precision": 0
+        },
+        "brightness_label": {
+            "Name": "brightness",
+            "RowNr": 50,
+            "Order": 0,
+            "DisplayName": "Helligkeit: ",
+            "UnitOfMeasurement": "",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none"
+        },
+        "brightness": {
+            "Name": "brightness",
+            "RowNr": 50,
+            "Order": 0,
+            "Expanded": true,
+            "EditInfo": {
+                "EditType": "slider",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": 151,
+                        "Parameters": [
+                            "brightness"
+                        ],
+                        "Value": {
+                            "Min": 0.0,
+                            "Max": 254.0,
+                            "Divisions": 254
+                        }
+                    }
+                ],
+                "Display": "Helligkeit",
+                "ActiveValue": true,
+                "GradientColors": [
+                    [
+                        255,
+                        60,
+                        60,
+                        60
+                    ],
+                    [
+                        255,
+                        255,
+                        255,
+                        255
+                    ]
+                ]
+            },
+            "Precision": 0
+        },
+        "light_state_fab": {
+            "Name": "state",
+            "RowNr": 100,
+            "EditInfo": {
+                "EditType": "FloatingActionButton",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "CodePoint": 58595,
+                        "Command": 150,
+                        "Value": true,
+                        "Parameters": [
+                            "Light.state",
+                            "OFF"
+                        ]
+                    },
+                    {
+                        "Command": 150,
+                        "CodePoint": 58595,
+                        "Value": false,
+                        "Parameters": [
+                            "Light.state",
+                            "ON"
+                        ]
+                    }
+                ]
+            }
+        },
+        "toggle": {
+            "Name": "state",
+            "Order": 1,
+            "DisplayName": "Status: ",
+            "RowNr": 40,
+            "EditInfo": {
+                "EditType": "Toggle",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": "Off",
+                        "Value": true
+                    },
+                    {
+                        "Command": "On",
+                        "Value": false
+                    }
+                ],
+                "ActiveValue": true
+            }
+        }
+    }
+}

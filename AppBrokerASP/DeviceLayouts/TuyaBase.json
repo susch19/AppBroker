@@ -1,0 +1,141 @@
+{
+    "dashboard": {},
+    "detail": {
+        "color_temp_label": {
+            "Name": "color_temp",
+            "RowNr": 30,
+            "Order": 0,
+            "DisplayName": "Farbtemperatur: ",
+            "UnitOfMeasurement": "",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none"
+        },
+        "color_temp": {
+            "Name": "color_temp",
+            "RowNr": 30,
+            "Order": 0,
+            "Expanded": true,
+            "EditInfo": {
+                "EditType": "slider",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": 151,
+                        "Parameters": [
+                            "color_temp"
+                        ],
+                        "Value": {
+                            "Min": 50.0,
+                            "Max": 1000.0,
+                            "Divisions": 950
+                        }
+                    }
+                ],
+                "Display": "Farbtemperatur",
+                "ActiveValue": true,
+                "GradientColors": [
+                    [
+                        255,
+                        255,
+                        255,
+                        255
+                    ],
+                    [
+                        255,
+                        230,
+                        160,
+                        128
+                    ]
+                ]
+            },
+            "Precision": 0
+        },
+        "brigtness_label": {
+            "Name": "brightness",
+            "RowNr": 50,
+            "Order": 0,
+            "DisplayName": "Helligkeit: ",
+            "UnitOfMeasurement": "",
+            "TextStyle": {
+                "FontSize": 16.0,
+                "FontFamily": "FontName",
+                "FontWeight": "normal",
+                "FontStyle": "normal"
+            },
+            "SpecialType": "none"
+        },
+        "brightness": {
+            "Name": "brightness",
+            "RowNr": 50,
+            "Order": 0,
+            "Expanded": true,
+            "EditInfo": {
+                "EditType": "slider",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "Command": 151,
+                        "Parameters": [
+                            "brightness"
+                        ],
+                        "Value": {
+                            "Min": 0.0,
+                            "Max": 254.0,
+                            "Divisions": 254
+                        }
+                    }
+                ],
+                "Display": "Helligkeit",
+                "ActiveValue": true,
+                "GradientColors": [
+                    [
+                        255,
+                        60,
+                        60,
+                        60
+                    ],
+                    [
+                        255,
+                        255,
+                        255,
+                        255
+                    ]
+                ]
+            },
+            "Precision": 0
+        },
+        "light_state_fab": {
+            "Name": "state",
+            "RowNr": 100,
+            "EditInfo": {
+                "EditType": "FloatingActionButton",
+                "MessageType": "Update",
+                "EditParameter": [
+                    {
+                        "CodePoint": 58595,
+                        "Command": 150,
+                        "Value": true,
+                        "Parameters": [
+                            "Light.state",
+                            "OFF"
+                        ]
+                    },
+                    {
+                        "Command": 150,
+                        "CodePoint": 58595,
+                        "Value": false,
+                        "Parameters": [
+                            "Light.state",
+                            "ON"
+                        ]
+                    }
+                ]
+            }
+        }
+    }
+}

@@ -1,0 +1,92 @@
+{
+    "load_power": {
+        "PropertyName": "loadPower",
+        "XAxisName": "Verbrauch",
+        "UnitOfMeasurement": " W",
+        "IconName": "XiaomiTempSensor",
+        "BrightThemeColor": 4292149248,
+        "DarkThemeColor": 4294922834,
+        "ChartType": "step"
+    },
+    "current": {
+        "PropertyName": "current",
+        "XAxisName": "Stromstärke",
+        "UnitOfMeasurement": " A",
+        "IconName": "cloud",
+        "BrightThemeColor": 4280902399,
+        "DarkThemeColor": 4286755327,
+        "ChartType": "step"
+    },
+    "energy": {
+        "PropertyName": "energy",
+        "XAxisName": "Historischer Verbrauch",
+        "UnitOfMeasurement": " kWh",
+        "IconName": "droplet-59403",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
+        "ChartType": "line"
+    },
+    "voltage": {
+        "PropertyName": "voltage",
+        "XAxisName": "Spannung",
+        "UnitOfMeasurement": " V",
+        "IconName": "flash-59419",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
+        "ChartType": "step"
+    },
+    "state": {
+        "PropertyName": "state",
+        "XAxisName": "Status",
+        "UnitOfMeasurement": " ",
+        "IconName": "celcius-59424",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
+        "ChartType": "step"
+    },
+    "contact": {
+        "PropertyName": "contact",
+        "XAxisName": "Kontakt",
+        "UnitOfMeasurement": "",
+        "IconName": "power-swtich-59454",
+        "BrightThemeColor": 4292149248,
+        "DarkThemeColor": 4294922834,
+        "ChartType": "step"
+    },
+    "occupancy": {
+        "PropertyName": "occupancy",
+        "XAxisName": "Anwesenheit",
+        "UnitOfMeasurement": "",
+        "IconName": "power-swtich-59454",
+        "BrightThemeColor": 4292149248,
+        "DarkThemeColor": 4294922834,
+        "ChartType": "step"
+    },
+    "temperature": {
+        "PropertyName": "temperature",
+        "XAxisName": "Temperatur",
+        "UnitOfMeasurement": " °C",
+        "IconName": "XiaomiTempSensor",
+        "BrightThemeColor": 4292149248,
+        "DarkThemeColor": 4294922834,
+        "ChartType": "line"
+    },
+    "humidity": {
+        "PropertyName": "humidity",
+        "XAxisName": "rel. Luftfeuchtigkeit",
+        "UnitOfMeasurement": " %",
+        "IconName": "cloud",
+        "BrightThemeColor": 4280902399,
+        "DarkThemeColor": 4286755327,
+        "ChartType": "line"
+    },
+    "pressure": {
+        "PropertyName": "pressure",
+        "XAxisName": "Luftdruck",
+        "UnitOfMeasurement": " kPA",
+        "IconName": "barometer",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
+        "ChartType": "line"
+    }
+}

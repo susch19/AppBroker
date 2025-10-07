@@ -1,0 +1,118 @@
+{
+  "Version": 4,
+  "UniqueName": "TempHumidityLayout",
+  "IconName": "XiaomiTempSensor",
+  "TypeNames": [
+    "TH02Z",
+    "ZG-227Z"
+  ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "@ref": "$['Base.json'].dashboard.temperature"
+      },
+      {
+        "@ref": "$['Base.json'].dashboard.humidity"
+      },
+      {
+        "@ref": "$['Base.json'].dashboard.battery"
+      },
+      // {
+      //   "Name": "isConnected",
+      //   "Order": 1,
+      //   "EditInfo": {
+      //     "EditType": "iconButton",
+      //     "MessageType": "Update",
+      //     "EditParameter": [
+      //       {
+      //         "Command": "None",
+      //         "Value": true,
+      //         "CodePoint": 59411,
+      //         "Parameters": [
+      //           false
+      //         ]
+      //       },
+      //       {
+      //         "Command": "None",
+      //         "Value": false,
+      //         "CodePoint": 59411,
+      //         "FontFamily": "Smarthome",
+      //         "Parameters": [
+      //           true
+      //         ]
+      //       }
+      //     ]
+      //   },
+      //   "SpecialType": "right",
+      //   "ShowOnlyInDeveloperMode": true
+      // }
+      // {
+      //   "Name": "temperature",
+      //   "Order": 0,
+      //   "TextStyle": {
+      //     "FontSize": 25.0,
+      //     "FontWeight": "bold"
+      //   },
+      //   "RowNr": 0,
+      //   "UnitOfMeasurement": " °C"
+      // },
+      // {
+      //   "Name": "humidity",
+      //   "Order": 1,
+      //   "RowNr": 1,
+      //   "TextStyle": {
+      //     "FontSize": 15.0,
+      //     "FontWeight": "normal"
+      //   },
+      //   "UnitOfMeasurement": " %"
+      // },
+      {
+        "@ref": "$['Base.json'].dashboard.id"
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "@ref": "$['Base.json'].detail.friendly_name"
+      },
+      {
+        "@ref": "$['Base.json'].detail.id"
+      },
+      {
+        "@ref": "$['Base.json'].detail.last_received"
+      },
+      {
+        "@ref": "$['Base.json'].detail.link_quality"
+      },
+      {
+        "@ref": "$['Base.json'].detail.temperature"
+      },
+      {
+        "@ref": "$['Base.json'].detail.humidity"
+      },
+      {
+        "@ref": "$['Base.json'].detail.battery"
+      },
+      {
+        "@ref": "$['Base.json'].detail.milli_voltage"
+      }
+    ],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "home",
+        "Order": 1,
+        "LinkedDevice": null
+      }
+    ],
+    "HistoryProperties": [
+      {
+        "@ref": "$['HistoryBase.json'].temperature"
+      },
+      {
+        "@ref": "$['HistoryBase.json'].humidity"
+      }
+    ]
+  }
+}

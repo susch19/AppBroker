@@ -1,16 +1,22 @@
 {
-  "Version": 3,
-  "UniqueName": "ContactSensorLayout",
+  "Version": 1,
+  "UniqueName": "DoorbellLayout",
   "IconName": "Paw",
   "TypeNames": [
-    "SNZB-04",
-    "WL-19DWZ"
+    "Doorbell"
+  ],
+  "NotificationSetup": [
+    {
+      "UniqueName": "DingDongNotification",
+      "TranslatableName": "Klingel",
+      "Global": true
+    }
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
-        "@ref": "$['Base.json'].dashboard.contact"
-      },
+        "@ref": "$['ZigbeeBase.json'].dashboard.toggle"
+      }
       {
         "@ref": "$['Base.json'].dashboard.id"
       }
@@ -19,13 +25,24 @@
   "DetailDeviceLayout": {
     "PropertyInfos": [
       {
+        "Name": "state",
+        "Order": 0,
+        "RowNr": 2,
+        "DisplayName": "Klingel: ",
+        "TextStyle": {
+          "FontSize": 16.0,
+          "FontFamily": "FontName",
+          "FontWeight": "normal",
+          "FontStyle": "normal"
+        },
+        "TabInfoId": 0,
+        "SpecialType": "none"
+      },
+      {
         "@ref": "$['Base.json'].detail.friendly_name"
       },
       {
         "@ref": "$['Base.json'].detail.id"
-      },
-      {
-        "@ref": "$['Base.json'].detail.contact"
       },
       {
         "@ref": "$['Base.json'].detail.last_received"
@@ -44,8 +61,8 @@
     ],
     "HistoryProperties": [
       {
-        "PropertyName": "contact",
-        "XAxisName": "Kontakt",
+        "PropertyName": "state",
+        "XAxisName": "An / Aus",
         "UnitOfMeasurement": "",
         "IconName": "power-swtich-59454",
         "BrightThemeColor": 4292149248,

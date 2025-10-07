@@ -1,6 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using Json.Path;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json.Nodes;
 
 namespace AppBroker.Core.DynamicUI;
 
@@ -29,7 +35,7 @@ public static class DeviceLayoutService
     }
 
 #pragma warning disable CA5351 // Do Not Use Broken Cryptographic Algorithms
-    private static string GetMD5StringFor(byte[] bytes)
+    private static string GetMD5StringFor(ReadOnlySpan<byte> bytes)
     {
         Span<byte> toWriteBytes = stackalloc byte[16];
         _ = MD5.HashData(bytes, toWriteBytes);
@@ -37,17 +43,17 @@ public static class DeviceLayoutService
     }
 #pragma warning restore CA5351 // Do Not Use Broken Cryptographic Algorithms
 
-    private static DeviceLayout GetLayout(string path)
+    private static DeviceLayout GetLayout(string fileName, JToken rawData)
     {
-        var text = File.ReadAllText(path);
-        var hash = GetMD5StringFor(File.ReadAllBytes(path));
-        var layout = JsonConvert.DeserializeObject<DeviceLayout>(text);
-        if(layout is null)
+        var hash = GetMD5StringFor(Encoding.UTF8.GetBytes(rawData.ToString()));
+
+        var layout = rawData.ToObject<DeviceLayout>();
+        if (layout is null)
         {
-            throw new FileLoadException($"Could not parse {text} to DeviceLayout");
+            throw new FileLoadException($"Could not parse {fileName} to DeviceLayout");
         }
-        return layout with { AdditionalDataDes = layout.AdditionalDataDes ?? [], Hash= hash };
-        
+        return layout with { AdditionalDataDes = layout.AdditionalDataDes ?? [], Hash = hash };
+
     }
     private static void FileChanged(object sender, FileSystemEventArgs e)
     {
@@ -56,7 +62,10 @@ public static class DeviceLayoutService
         _ = Task.Delay(100).ContinueWith((t) =>
         {
             logger.Info($"Layout change detected: {e.FullPath}");
-            var layout = GetLayout(e.FullPath);
+
+            var (name, token) = GetLayoutsWithPathReplaced("DeviceLayouts").FirstOrDefault(x => x.Key == e.Name);
+
+            var layout = GetLayout(name, token);
 
             if (layout is null)
                 return;
@@ -137,17 +146,17 @@ public static class DeviceLayoutService
 
     public static void ReloadLayouts()
     {
-        string[]? files = Directory.GetFiles("DeviceLayouts", "*.json");
+        var layouts = GetLayoutsWithPathReplaced("DeviceLayouts");
 
         TypeDeviceLayouts.Clear();
         InstanceDeviceLayouts.Clear();
-        foreach (string? file in files)
+
+        foreach (var (name, token) in layouts.Where(x => x.Value["UniqueName"] is not null))
         {
-            // TODO: try catch
             try
             {
-                var layout = GetLayout(file);
-                var hash = layout.Hash; 
+                var layout = GetLayout(name, token);
+                var hash = layout.Hash;
                 if (layout is null)
                     continue;
 
@@ -222,4 +231,83 @@ public static class DeviceLayoutService
             .ToList();
     }
 
+    const string refStr = "\"@ref\"";
+    private static Dictionary<string, JToken> GetLayoutsWithPathReplaced(string directory)
+    {
+        StringBuilder sb = new();
+        sb.Append("{");
+        foreach (var path in Directory.GetFiles(directory, "*.json", SearchOption.AllDirectories))
+        {
+            sb.Append(
+                $$"""
+                "{{Path.GetRelativePath(directory, path).Replace('\\', '/')}}" : {{File.ReadAllText(path)}},
+                """);
+        }
+
+        sb.Remove(sb.Length - 1, 1);
+        sb.Append("}");
+        var allCombined = sb.ToString();
+        var jo = JsonNode.Parse(allCombined,
+            documentOptions:
+            new System.Text.Json.JsonDocumentOptions()
+            {
+                CommentHandling = System.Text.Json.JsonCommentHandling.Skip,
+                AllowTrailingCommas = true
+            });
+        int currentIndex = 0;
+        while (currentIndex < allCombined.Length)
+        {
+            var refIndex = allCombined.IndexOf(refStr, currentIndex);
+            if (refIndex == -1)
+                break;
+            int refFrom = 0;
+            int refTo = 0;
+            byte foundQuotations = 0;
+            for (int i = refIndex + refStr.Length; i < allCombined.Length - 1; i++)
+            {
+                if (allCombined[i] == '"' && allCombined[i - 1] != '\\')
+                {
+                    foundQuotations++;
+                    if (foundQuotations == 1)
+                    {
+                        refFrom = i;
+                    }
+                    else
+                    {
+                        refTo = i + 1;
+                        break;
+                    }
+                }
+            }
+            if (foundQuotations < 2)
+                break;
+            refIndex = allCombined.LastIndexOf('{', refIndex);
+            var removeTo = allCombined.IndexOf('}', refTo) + 1;
+            var path = allCombined[(refFrom + 1)..(refTo - 1)];
+            allCombined = allCombined.Remove(refIndex, removeTo - refIndex);
+
+            var jPath = JsonPath.Parse(path);
+            var res = jPath.Evaluate(jo);
+            if (res.Matches.Count == 0)
+            {
+                throw new JsonPathNotResolvableException(path);
+            }
+            var match = res.Matches[0];
+            var key = jPath.Segments.Last().Selectors.Last().ToString().Replace("'", "\"");
+            allCombined = allCombined.Insert(refIndex, match.Value.ToJsonString());
+            currentIndex = refIndex;
+        }
+
+        return
+            JsonConvert
+            .DeserializeObject<Dictionary<string, JToken>>(allCombined);
+
+    }
+    private class JsonPathNotResolvableException : Exception
+    {
+        public JsonPathNotResolvableException(string? path) : base($"The json path ´{path}´ is not resolvable.")
+        {
+            
+        }
+    }
 }

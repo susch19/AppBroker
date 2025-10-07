@@ -16,13 +16,9 @@
         "RowNr": 0,
         "UnitOfMeasurement": " K"
       },
-
       {
-        "Name": "id",
-        "Order": 2,
-        "RowNr": 2,
-        "ShowOnlyInDeveloperMode": true
-      }
+        "@ref": "$['Base.json'].dashboard.id"
+      },
     ]
   },
   "DetailDeviceLayout": {
@@ -52,7 +48,6 @@
         "SpecialType": "none",
         "ShowOnlyInDeveloperMode": true
       },
-
       {
         "Name": "colorMode",
         "Order": 0,
@@ -67,7 +62,6 @@
         "TabInfoId": 0,
         "SpecialType": "none"
       },
-
       {
         "Name": "state",
         "Order": 0,
@@ -136,6 +130,9 @@
         },
         "TabInfoId": 0,
         "SpecialType": "none"
+      },
+      {
+        "@ref": "$['ZigbeeBase.json'].detail.light_state_fab"
       }
     ],
     "TabInfos": [
@@ -145,10 +142,7 @@
         "Order": 1,
         "LinkedDevice": null
       }
-
     ],
-    "HistoryProperties": [
-
-    ]
+    "HistoryProperties": []
   }
 }

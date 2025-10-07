@@ -23,7 +23,7 @@ internal class Plugin : IPlugin
     private Logger logger;
 
     public string Name => "Notifications";
-    public int LoadOrder => int.MinValue;
+    public int LoadOrder => 0;
 
     public void RegisterTypes()
     {

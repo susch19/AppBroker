@@ -1,0 +1,87 @@
+{
+  "UniqueName": "DemoLayout",
+  "IconName": "Paw",
+  "TypeNames": [
+    "E1743", "929002398602"
+  ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "Name": "Id",
+        "Order": 0,
+        "Format": "",
+        "EditInfo": null,
+        "TextStyle": {
+          "FontSize": 22.0,
+          "FontFamily": "FontName"
+        },
+        "RowNr": null,
+        "ShowOnlyInDeveloperMode": null,
+        "Hex": true
+      },
+      {
+        "Name": "battery",
+        "Order": 0,
+        "EditInfo": {
+          "EditType": "icon",
+          "MessageType": "Update",
+          "EditParameter": [
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 0,
+              "Max": 20,
+              "CodePoint": 59412,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 20,
+              "Max": 40,
+              "CodePoint": 59408,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 40,
+              "Max": 60,
+              "CodePoint": 59409,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 0,
+              "Min": 60,
+              "Max": 80,
+              "CodePoint": 59410,
+              "FontFamily": "Smarthome"
+            },
+            {
+              "Command": "None",
+              "Value": 100,
+              "Min": 80,
+              "Max": 101,
+              "CodePoint": 59411,
+              "FontFamily": "Smarthome"
+            }
+          ]
+        },
+        "SpecialType": "right"
+      },
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [],
+    "TabInfos": [
+      {
+        "Id": 0,
+        "IconName": "DefaultIcon",
+        "Order": 1,
+        "LinkedDevice": null
+      },
+    ],
+    "HistoryProperties": []
+  }
+}

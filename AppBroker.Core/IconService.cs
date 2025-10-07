@@ -4,8 +4,6 @@ using System.Security.Cryptography;
 
 namespace AppBroker.Core;
 
-[NonSucking.Framework.Serialization.Nooson]
-
 public partial record SvgIcon(string Name, string Hash,[property: JsonIgnore] string Path, byte[]? Data, string TypeName ="");
 
 
