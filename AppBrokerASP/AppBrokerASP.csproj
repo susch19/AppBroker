@@ -14,13 +14,6 @@
 		<DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<Compile Remove="Devices\Elsa\**" />
-		<Content Remove="Devices\Elsa\**" />
-		<EmbeddedResource Remove="Devices\Elsa\**" />
-		<None Remove="Devices\Elsa\**" />
-	</ItemGroup>
-
 
 
 	<ItemGroup>
@@ -84,12 +77,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
+		<!--<ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />-->
 		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\AppBroker.Plugins\AppBroker.Plugins.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<InternalsVisibleTo Include="AppBroker.Runtime" Exclude="BinaryRWExtensions.cs"/>
+		<InternalsVisibleTo Include="AppBroker.Runtime" Exclude="BinaryRWExtensions.cs" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(DOTNET_RUNNING_IN_CONTAINER)' != 'true'">
@@ -105,7 +99,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Devices\" />
 		<Folder Include="Properties\" />
 	</ItemGroup>
 

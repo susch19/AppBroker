@@ -11,10 +11,6 @@ using System.Threading.Tasks;
 namespace AppBroker.App.Hubs;
 public class HistoryHub
 {
-
-    [Obsolete("Use REST Method instead")]
-    public static List<HistoryPropertyState> GetHistoryPropertySettings() => IInstanceContainer.Instance.HistoryManager.GetHistoryProperties();
-
     [Obsolete("Use REST Method instead")]
     public static void SetHistory(bool enable, long id, string name)
     {
@@ -38,48 +34,4 @@ public class HistoryHub
                 IInstanceContainer.Instance.HistoryManager.DisableHistory(id, name);
         }
     }
-
-    [Obsolete("Use REST Method instead")]
-    public static Task<List<History>> GetIoBrokerHistories(long id, string dt)
-    {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
-        {
-            DateTime date = DateTime.Parse(dt).Date;
-            return device.GetHistory(date, date.AddDays(1).AddSeconds(-1));
-        }
-        return Task.FromResult(new List<History>());
-    }
-
-    public static Task<History> GetIoBrokerHistory(long id, string dt, string propertyName)
-    {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
-        {
-            DateTime date = DateTime.Parse(dt).Date;
-            return device.GetHistory(date, date.AddDays(1).AddSeconds(-1), propertyName);
-        }
-        return Task.FromResult(History.Empty);
-    }
-
-    public static Task<List<History>> GetIoBrokerHistoriesRange(long id, string dt, string dt2)
-    {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
-        {
-            return device.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2));
-        }
-
-        return Task.FromResult(new List<History>());
-    }
-
-    [Obsolete("Use REST Method instead")]
-    public static async Task<History> GetIoBrokerHistoryRange(long id, string dt, string dt2, string propertyName)
-    {
-        if (IInstanceContainer.Instance.DeviceManager.Devices.TryGetValue(id, out Device? device))
-        {
-            return await device.GetHistory(DateTime.Parse(dt), DateTime.Parse(dt2), propertyName)
-                ;
-        }
-
-        return History.Empty;
-    }
-
 }

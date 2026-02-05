@@ -73,6 +73,7 @@ public class NotificationController : ControllerBase
             .Where(x => x.NotificationSetup != null)
             .SelectMany(x => x.NotificationSetup!)
             .Where(x => x.Global)
+            .DistinctBy(x=>x.UniqueName)
             .ToList();
     }
 }

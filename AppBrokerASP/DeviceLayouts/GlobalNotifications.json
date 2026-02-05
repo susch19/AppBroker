@@ -1,0 +1,17 @@
+{
+  "Version": 1,
+  "UniqueName": "NotificationLayout",
+  "IconName": "Paw",
+  "NotificationSetup": [
+    {
+      "UniqueName": "WashingMachine2",
+      "TranslatableName": "Waschmaschine fertig 2",
+      "Global": true
+    },
+    {
+      "UniqueName": "ClothDrier2",
+      "TranslatableName": "Trockner fertig 2",
+      "Global": true
+    }
+  ]
+}

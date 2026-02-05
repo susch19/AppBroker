@@ -33,7 +33,11 @@ public class DeviceController : ControllerBase
     [HttpGet]
     public List<Device> GetAllAppDevices()
     {
-        var devices = deviceManager.Devices.Select(x => x.Value).Where(x => x.ShowInApp).ToList();
+        var devices = deviceManager.Devices
+            .Select(x => x.Value)
+            .Where(x => x.ShowInApp
+                && (deviceManager.GetLayout(x.TypeName, x.Id) is not null))
+            .ToList();
         var dev = JsonConvert.SerializeObject(devices);
 
         return devices;
@@ -43,7 +47,8 @@ public class DeviceController : ControllerBase
     public List<DeviceOverview> GetDeviceOverview(bool onlyShowInApp = true) => deviceManager
         .Devices
         .Select(x => x.Value)
-        .Where(x => !onlyShowInApp || x.ShowInApp)
+        .Where(x => (!onlyShowInApp || x.ShowInApp) 
+            && (deviceManager.GetLayout(x.TypeName, x.Id) is not null))
         .Select(x => new DeviceOverview(x.Id, x.FriendlyName, x.TypeName, x.TypeNames))
         .ToList();
 

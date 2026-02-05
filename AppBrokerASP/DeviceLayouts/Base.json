@@ -33,6 +33,7 @@
         "battery": {
             "Name": "battery",
             "Order": 0,
+            "ShowOnlyInDeveloperMode": false,
             "EditInfo": {
                 "EditType": "icon",
                 "MessageType": "Update",

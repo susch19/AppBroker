@@ -243,7 +243,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
                     if (dev is not null)
                     {
                         logger.Info($"Got new device {item.FriendlyName} with id {id}");
-                        InstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
+                        IInstanceContainer.Instance.DeviceManager.AddNewDevice(dev);
                     }
                     else
                     {
@@ -280,7 +280,7 @@ public class Zigbee2MqttManager : IAsyncDisposable
 
             if (friendlyNameToIdMapping.TryGetValue(deviceName, out var deviceId))
             {
-                InstanceContainer
+                IInstanceContainer
                     .Instance
                     .DeviceStateManager
                     .SetSingleState(deviceId, "available", payload == "online" || payload == "{\"state\":\"online\"}");
@@ -321,12 +321,12 @@ public class Zigbee2MqttManager : IAsyncDisposable
         {
             try
             {
-                InstanceContainer
+                IInstanceContainer
                      .Instance
                      .DeviceStateManager
                      .SetMultipleStates(id, ReplaceCustomStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!));
 
-                InstanceContainer
+                IInstanceContainer
                     .Instance
                     .DeviceStateManager
                     .SetSingleState(id, "lastReceived", DateTime.UtcNow);

@@ -1,21 +1,16 @@
 {
-  "Version": 1,
+  "Version": 4,
   "UniqueName": "TuyaLayout",
   "IconName": "TuyaSwitchSensor",
   "TypeNames": [
     "TuyaSwitchSensor",
     "TS011F_plug_1"
   ],
+
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "@ref": "$['Base.json'].dashboard.id"
-      },
-      {
-        "@ref": "$['Base.json'].dashboard.last_received"
-      },
-      {
-        "@ref": "$['Base.json'].dashboard.link_quality"
       },
       {
         "@ref": "$['Base.json'].dashboard.load_power"
@@ -29,6 +24,7 @@
       {
         "@ref": "$['ZigbeeBase.json'].dashboard.toggle"
       }
+
     ]
   },
   "DetailDeviceLayout": {
@@ -60,49 +56,19 @@
     ],
     "HistoryProperties": [
       {
-        "PropertyName": "loadPower",
-        "XAxisName": "Verbrauch",
-        "UnitOfMeasurement": " W",
-        "IconName": "XiaomiTempSensor",
-        "BrightThemeColor": 4292149248,
-        "DarkThemeColor": 4294922834,
-        "ChartType": "step"
+        "@ref": "$['HistoryBase.json'].load_power"
       },
       {
-        "PropertyName": "current",
-        "XAxisName": "Stromstärke",
-        "UnitOfMeasurement": " A",
-        "IconName": "cloud",
-        "BrightThemeColor": 4280902399,
-        "DarkThemeColor": 4286755327,
-        "ChartType": "step"
+        "@ref": "$['HistoryBase.json'].current"
       },
       {
-        "PropertyName": "energy",
-        "XAxisName": "Historischer Verbrauch",
-        "UnitOfMeasurement": " kWh",
-        "IconName": "droplet-59403",
-        "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078,
-        "ChartType": "line"
+        "@ref": "$['HistoryBase.json'].energy"
       },
       {
-        "PropertyName": "voltage",
-        "XAxisName": "Spannung",
-        "UnitOfMeasurement": " V",
-        "IconName": "flash-59419",
-        "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078,
-        "ChartType": "step"
+        "@ref": "$['HistoryBase.json'].voltage"
       },
       {
-        "PropertyName": "state",
-        "XAxisName": "Status",
-        "UnitOfMeasurement": " ",
-        "IconName": "celcius-59424",
-        "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078,
-        "ChartType": "step"
+        "@ref": "$['HistoryBase.json'].state"
       }
     ]
   }

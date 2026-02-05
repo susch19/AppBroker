@@ -13,16 +13,16 @@ namespace AppBroker.App.Hubs;
 public partial class LayoutHub
 {
     [Obsolete("Use REST Method instead")]
-    public static string GetHashCodeByTypeName(string typeName) => InstanceContainer.Instance.IconService.GetBestFitIcon(typeName).Hash;
+    public static string GetHashCodeByTypeName(string typeName) => IInstanceContainer.Instance.IconService.GetBestFitIcon(typeName).Hash;
     [Obsolete("Use REST Method instead")]
-    public static string GetHashCodeByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName).Hash;
+    public static string GetHashCodeByName(string iconName) => IInstanceContainer.Instance.IconService.GetIconByName(iconName).Hash;
 
     [Obsolete("Use REST Method instead")]
-    public static SvgIcon GetIconByTypeName(string typename) => InstanceContainer.Instance.IconService.GetBestFitIcon(typename);
+    public static SvgIcon GetIconByTypeName(string typename) => IInstanceContainer.Instance.IconService.GetBestFitIcon(typename);
     [Obsolete("Use REST Method instead")]
-    public static SvgIcon GetIconByName(string iconName) => InstanceContainer.Instance.IconService.GetIconByName(iconName);
+    public static SvgIcon GetIconByName(string iconName) => IInstanceContainer.Instance.IconService.GetIconByName(iconName);
     [Obsolete("Use REST Method instead")]
-    public static SvgIcon GetIconByDeviceId(long deviceId) => InstanceContainer.Instance.IconService.GetBestFitIcon(InstanceContainer.Instance.DeviceManager.Devices[deviceId].TypeName);
+    public static SvgIcon GetIconByDeviceId(long deviceId) => IInstanceContainer.Instance.IconService.GetBestFitIcon(IInstanceContainer.Instance.DeviceManager.Devices[deviceId].TypeName);
 
     [Obsolete("Use REST Method instead")]
     public static void ReloadDeviceLayouts() => DeviceLayoutService.ReloadLayouts();

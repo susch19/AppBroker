@@ -288,6 +288,7 @@ public static class DeviceLayoutService
 
             var jPath = JsonPath.Parse(path);
             var res = jPath.Evaluate(jo);
+            
             if (res.Matches.Count == 0)
             {
                 throw new JsonPathNotResolvableException(path);

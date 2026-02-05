@@ -1,5 +1,5 @@
 ﻿using AppBroker.Core;
-using AppBroker.Core.Extension;
+using AppBroker.Plugins.Extension;
 
 using AppBrokerASP;
 
@@ -9,6 +9,27 @@ using NLog;
 
 namespace AppBroker.Zigbee2Mqtt;
 
+class Clock : TimeProvider
+{
+    public static TimeProvider Application { get; set; } = new Clock();
+
+    public override DateTimeOffset GetUtcNow() => base.GetUtcNow().Add(TimeSpan.FromSeconds(15));
+
+    public override long GetTimestamp() => base.GetTimestamp();
+
+    
+}
+
+class Test
+{
+    void Main()
+    {
+
+        Clock.Application.GetLocalNow();
+
+    }
+}
+
 internal class Plugin : IPlugin
 {
     public string Name => "Zigbee2MQTT";
@@ -16,8 +37,9 @@ internal class Plugin : IPlugin
 
     public void RegisterTypes()
     {
+        Clock.Application.GetLocalNow();
 
-        var cm = InstanceContainer.Instance.ConfigManager;
+        var cm = IInstanceContainer.Instance.ConfigManager;
         var zigbee2MqttConfig = new Zigbee2MqttConfig();
         cm.Configuration.GetSection(Zigbee2MqttConfig.ConfigName).Bind(zigbee2MqttConfig);
 

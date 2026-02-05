@@ -243,24 +243,24 @@ public class PainlessMeshMqttManager : IAsyncDisposable
 
     private void TryInterpretTopicAsStateUpdate(long id, string payload)
     {
-        InstanceContainer
+        IInstanceContainer
             .Instance
             .DeviceStateManager
             .SetMultipleStates(id, JsonConvert.DeserializeObject<Dictionary<string, JToken>>(payload)!);
 
-        InstanceContainer
+        IInstanceContainer
             .Instance
             .DeviceStateManager
             .SetSingleState(id, "lastReceived", DateTime.UtcNow);
     }
     private void SetSingleState(long id, string propName, JToken value)
     {
-        InstanceContainer
+        IInstanceContainer
             .Instance
             .DeviceStateManager
             .SetSingleState(id, propName, value, StateFlags.All);
 
-        InstanceContainer
+        IInstanceContainer
             .Instance
             .DeviceStateManager
             .SetSingleState(id, "lastReceived", DateTime.UtcNow, StateFlags.StoreLastState);

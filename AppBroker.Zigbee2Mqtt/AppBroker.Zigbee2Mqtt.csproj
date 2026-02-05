@@ -7,12 +7,18 @@
   </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\AppBrokerASP\AppBrokerASP.csproj" />
+        <ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
         <ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="9.0.12" />
+		<PackageReference Include="MQTTnet" Version="4.3.7.1207" />
+		<PackageReference Include="MQTTnet.Extensions.ManagedClient" Version="4.3.7.1207" />
+	</ItemGroup>
+
 	<Target Name="CopyDLLs" AfterTargets="Build">
-		<Message Text="##### Copy Dlls for $(ProjectName)#####" Importance="high"/>
+		<Message Text="##### Copy Dlls for $(ProjectName)#####" Importance="high" />
 		<ItemGroup>
 			<MySourceFiles Include="$(TargetDir)\**\*.*" />
 			<PluginDlls Include="$(TargetDir)\$(ProjectName).*" />

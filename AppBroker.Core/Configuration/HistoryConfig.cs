@@ -1,4 +1,6 @@
-﻿namespace AppBroker.Core.Configuration;
+﻿using AppBroker.Plugins;
+
+namespace AppBroker.Core.Configuration;
 
 
 public class HistoryConfig : IConfig

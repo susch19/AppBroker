@@ -1,11 +1,9 @@
-﻿using AppBroker.Core;
-
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using nj = Newtonsoft.Json;
 
-namespace AppBroker.App;
+namespace AppBroker.Core;
 
 //[NonSucking.Framework.Serialization.Nooson]
 public partial class JsonSmarthomeMessage : BaseSmarthomeMessage

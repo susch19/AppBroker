@@ -1,9 +1,6 @@
-﻿
-using AppBroker.Core;
-using AppBroker.Core.Configuration;
-using AppBroker.Core.Devices;
-using AppBroker.Core.Extension;
-using AppBroker.Core.HelperMethods;
+﻿using AppBroker.Plugins;
+using AppBroker.Plugins.Extension;
+using AppBroker.Plugins.HelperMethods;
 
 using AppBrokerASP.Extension;
 
@@ -18,17 +15,17 @@ using ILogger = NLog.ILogger;
 
 namespace AppBrokerASP.Plugins;
 
-public class PluginLoader
+public class PluginLoader : IPluginLoader
 {
-    public static PluginLoader Instance { get; private set; }
+    public static PluginLoader Instance { get; private set; } = null!;
 
-    internal List<Type> ControllerTypes { get; } = new List<Type>();
-    internal List<IAppConfigurator> AppConfigurators { get; } = new();
-    internal List<IServiceExtender> ServiceExtenders { get; } = new();
-    internal List<IConfig> Configs { get; } = new();
-    internal List<Type> DeviceTypes { get; } = new();
+    public List<Type> ControllerTypes { get; } = new List<Type>();
+    public List<IAppConfigurator> AppConfigurators { get; } = new();
+    public List<IServiceExtender> ServiceExtenders { get; } = new();
+    public List<IConfig> Configs { get; } = new();
+    public List<Type> DeviceTypes { get; } = new();
 
-    internal List<IPlugin> Plugins { get; } = new();
+    public List<IPlugin> Plugins { get; } = new();
     private readonly ILogger logger;
 
     public PluginLoader(LogFactory logFactory)
@@ -50,7 +47,7 @@ public class PluginLoader
                     logger.Info($"Loading Plugin {type.Name} from Assembly {ass.FullName}");
                     Plugins.Add(PluginCreator<IPlugin>.GetInstance(type));
                 }
-                else if (typeof(Device).IsAssignableFrom(type))
+                else if (typeof(IDevice).IsAssignableFrom(type))
                 {
                     DeviceTypes.Add(type);
                 }
@@ -61,11 +58,11 @@ public class PluginLoader
                 else if (typeof(IAppConfigurator).IsAssignableFrom(type))
                 {
                     AppConfigurators.Add((IAppConfigurator)Activator.CreateInstance(type)!);
-                }             
+                }
                 else if (typeof(IServiceExtender).IsAssignableFrom(type))
                 {
                     ServiceExtenders.Add((IServiceExtender)Activator.CreateInstance(type)!);
-                }     
+                }
                 else if (typeof(IConfig).IsAssignableFrom(type))
                 {
                     Configs.Add((IConfig)Activator.CreateInstance(type)!);
@@ -129,7 +126,7 @@ public class PluginLoader
 
     public void InitializePlugins(LogFactory logFactory)
     {
-        foreach (IPlugin plugin in Plugins.OrderBy(x=>x.LoadOrder))
+        foreach (IPlugin plugin in Plugins.OrderBy(x => x.LoadOrder))
             plugin.RegisterTypes();
 
         foreach (IPlugin plugin in Plugins.OrderBy(x => x.LoadOrder))

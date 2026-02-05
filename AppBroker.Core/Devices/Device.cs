@@ -13,6 +13,7 @@ using System.Collections.Concurrent;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using AppBroker.Plugins;
 
 namespace AppBroker.Core.Devices;
 
@@ -32,7 +33,7 @@ public abstract class ConnectionDevice : Device
     public override void Reconnect(ByteLengthList parameter) => IsConnected = true;
 }
 
-public abstract class Device : IDisposable
+public abstract class Device : IDevice, IDisposable
 {
     public List<string> TypeNames { get; }
 
@@ -202,20 +203,6 @@ public abstract class Device : IDisposable
     public virtual void SetState(string name, JToken newValue)
         => IInstanceContainer.Instance.DeviceStateManager.SetSingleState(Id, name, newValue);
 
-
-    public virtual async Task<History> GetHistory(DateTimeOffset start, DateTimeOffset end, string type)
-    {
-
-        var history = new History(type);
-        history.HistoryRecords = IInstanceContainer.Instance.HistoryManager.GetHistoryFor(Id, type, start.DateTime, end.DateTime);
-
-        return history;
-
-    }
-    public virtual Task<List<History>> GetHistory(DateTimeOffset start, DateTimeOffset end)
-    {
-        return Task.FromResult(new List<History>());
-    }
 
     public void StorePersistent()
     {

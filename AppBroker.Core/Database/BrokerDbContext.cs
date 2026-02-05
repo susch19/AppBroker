@@ -1,24 +1,11 @@
 ﻿using AppBroker.Core.Database.Model;
+using AppBroker.Plugins.Database;
 
 using Microsoft.EntityFrameworkCore;
 
 using NonSucking.Framework.Extension.EntityFrameworkCore;
 
 namespace AppBroker.Core.Database;
-
-
-public class BaseDbContext : DatabaseContext
-{
-    public string DatabaseType { get; protected set; }
-
-    public BaseDbContext()
-    {
-        EnableUseLazyLoading = true;
-        AssemblyRootName = nameof(AppBroker);
-        AddAllEntities = false;
-    }
-
-}
 
 public class BrokerDbContext : BaseDbContext
 {

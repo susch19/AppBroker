@@ -12,9 +12,10 @@
   </ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\AppBroker.Api\AppBroker.Main.csproj" />
 		<ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
-		<ProjectReference Include="..\AppBrokerASP\AppBrokerASP.csproj" />
 		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\AppBrokerASP\AppBrokerASP.csproj" />
 	</ItemGroup>
 
 

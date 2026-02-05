@@ -1,6 +1,7 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.Devices;
-using AppBroker.Core.Extension;
+
+using AppBroker.Plugins.Extension;
 using AppBroker.Windmill.Configuration;
 using AppBroker.Zigbee2Mqtt.Devices;
 

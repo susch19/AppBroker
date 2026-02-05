@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+		
+		<LangVersion>preview</LangVersion>
+		<GenerateRequiresPreviewFeaturesAttribute>False</GenerateRequiresPreviewFeaturesAttribute>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+		<CompilerGeneratedFilesOutputPath>GeneratedFiles</CompilerGeneratedFilesOutputPath>
+		<NoWarn>CA2252</NoWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+
+		<PackageReference Include="CoordinateSharp" Version="2.22.1.1" />
+
+		<PackageReference Include="Jint" Version="3.1.1" />
+
+		<PackageReference Include="JsonPath.Net" Version="2.1.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="8.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="8.0.11" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+		<PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
+		<PackageReference Include="NonSucking.Framework.Extension" Version="1.0.0" />
+		<PackageReference Include="NonSucking.Framework.Extension.EntityFrameworkCore" Version="0.1.0.107-alpha" />
+		<!--<PackageReference Include="NonSucking.Framework.Serialization" Version="1.0.0" />-->
+		<PackageReference Include="NSwag.Annotations" Version="14.2.0" />
+		<PackageReference Include="NSwag.Core" Version="14.2.0" />
+		<PackageReference Include="Quartz" Version="3.9.0" />
+		<PackageReference Include="System.Runtime.Experimental" Version="6.0.2" />
+		<PackageReference Include="NiL.JS" Version="2.5.1677" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\AppBroker.Generators\AppBroker.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<!--<ItemGroup>
+	  <Folder Include="GeneratedFiles\AppBroker.Generators\" />
+	  <Folder Include="GeneratedFiles\AppBroker.Generators\AppBroker.Generators.NotifyPropertyChangedGenerator\" />
+	</ItemGroup>-->
+
+	<!--<Target Name="RemoveSourceGeneratedFiles" BeforeTargets="BeforeBuild">
+		<ItemGroup>
+			<Compile Remove="GeneratedFiles\**" />
+		</ItemGroup>
+	</Target>-->
+
+</Project>

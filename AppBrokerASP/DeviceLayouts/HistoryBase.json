@@ -3,7 +3,7 @@
         "PropertyName": "loadPower",
         "XAxisName": "Verbrauch",
         "UnitOfMeasurement": " W",
-        "IconName": "XiaomiTempSensor",
+        "IconName": "kW",
         "BrightThemeColor": 4292149248,
         "DarkThemeColor": 4294922834,
         "ChartType": "step"
@@ -12,7 +12,7 @@
         "PropertyName": "current",
         "XAxisName": "Stromstärke",
         "UnitOfMeasurement": " A",
-        "IconName": "cloud",
+        "IconName": "gauge-2-59433",
         "BrightThemeColor": 4280902399,
         "DarkThemeColor": 4286755327,
         "ChartType": "step"
@@ -21,7 +21,7 @@
         "PropertyName": "energy",
         "XAxisName": "Historischer Verbrauch",
         "UnitOfMeasurement": " kWh",
-        "IconName": "droplet-59403",
+        "IconName": "kWh",
         "BrightThemeColor": 4278241363,
         "DarkThemeColor": 4278249078,
         "ChartType": "line"

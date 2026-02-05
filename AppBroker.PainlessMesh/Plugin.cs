@@ -1,12 +1,10 @@
 ﻿using AppBroker.Core;
-using AppBroker.Core.Extension;
 using AppBroker.PainlessMesh.Hubs;
 using AppBroker.PainlessMesh.Ota;
+using AppBroker.Plugins.Extension;
 
-using AppBrokerASP;
 using AppBrokerASP.Extension;
 
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 
 using NLog;
@@ -19,7 +17,7 @@ internal class Plugin : IPlugin
 
     public bool Initialize(LogFactory logFactory)
     {
-        var cm = InstanceContainer.Instance.ConfigManager;
+        var cm = IInstanceContainer.Instance.ConfigManager;
         var painlessMeshConfig = new PainlessMeshSettings();
         cm.Configuration.GetSection(PainlessMeshSettings.ConfigName).Bind(painlessMeshConfig);
         var um = new UpdateManager();

@@ -1,0 +1,46 @@
+{
+  "Version": 2,
+  "UniqueName": "Switch",
+  "IconName": "TuyaSwitchSensor",
+  "TypeNames": [
+    "ZBMINIR2"
+  ],
+  "DashboardDeviceLayout": {
+    "DashboardProperties": [
+      {
+        "@ref": "$['ZigbeeBase.json'].dashboard.toggle"
+      },
+      {
+        "@ref": "$['Base.json'].dashboard.id"
+      }
+    ]
+  },
+  "DetailDeviceLayout": {
+    "PropertyInfos": [
+      {
+        "@ref": "$['Base.json'].detail.friendly_name"
+      },
+      {
+        "@ref": "$['Base.json'].detail.id"
+      },
+      {
+        "@ref": "$['ZigbeeBase.json'].detail.light_state"
+      },
+      {
+        "@ref": "$['Base.json'].detail.last_received"
+      },
+      {
+        "@ref": "$['Base.json'].detail.link_quality"
+      },
+     
+      {
+        "@ref": "$['ZigbeeBase.json'].detail.switch_state_fab"
+      }
+    ],
+    "HistoryProperties": [
+      {
+        "@ref": "$['HistoryBase.json'].state"
+      }
+    ]
+  }
+}

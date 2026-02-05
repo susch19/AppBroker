@@ -44,13 +44,7 @@
     ],
     "HistoryProperties": [
       {
-        "PropertyName": "contact",
-        "XAxisName": "Kontakt",
-        "UnitOfMeasurement": "",
-        "IconName": "power-swtich-59454",
-        "BrightThemeColor": 4292149248,
-        "DarkThemeColor": 4294922834,
-        "ChartType": "step"
+        "@ref": "$['HistoryBase.json'].contact"
       }
     ]
   }

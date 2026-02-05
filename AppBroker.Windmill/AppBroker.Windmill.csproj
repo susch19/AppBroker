@@ -6,10 +6,6 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\AppBrokerASP\AppBrokerASP.csproj" />
-	</ItemGroup>
-
 	<Target Name="CopyDLLs" AfterTargets="Build">
 		<Message Text="##### Copy Dlls for $(ProjectName)#####" Importance="high" />
 		<ItemGroup>
@@ -19,4 +15,10 @@
 		<Copy SourceFiles="@(MySourceFiles)" DestinationFiles="@(MySourceFiles->'$(SolutionDir)plugins/$(ProjectName)/%(RecursiveDir)%(Filename)%(Extension)')" />
 		<Copy SourceFiles="@(PluginDlls)" DestinationFiles="@(PluginDlls->'$(SolutionDir)AppBrokerASP\$(OutputPath)\plugins\%(Filename)%(Extension)')" />
 	</Target>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\AppBroker.Core\AppBroker.Core.csproj" />
+	  <ProjectReference Include="..\AppBroker.Plugins\AppBroker.Plugins.csproj" />
+	  <ProjectReference Include="..\AppBrokerASP\AppBrokerASP.csproj" />
+	</ItemGroup>
 </Project>

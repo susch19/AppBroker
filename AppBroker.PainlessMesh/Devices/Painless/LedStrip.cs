@@ -126,7 +126,7 @@ public partial class LedStrip : PainlessDevice
     private T? GetProperty<T>([CallerMemberName] string propertyName = "")
     {
 
-        var state = InstanceContainer.Instance.DeviceStateManager.GetSingleState(Id, char.ToLowerInvariant(propertyName[0]) + propertyName[1..]);
+        var state = IInstanceContainer.Instance.DeviceStateManager.GetSingleState(Id, char.ToLowerInvariant(propertyName[0]) + propertyName[1..]);
         if (state is null)
             return default;
 

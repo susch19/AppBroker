@@ -14,7 +14,7 @@ public class PainlessMeshDeviceManager
 
     public PainlessMeshDeviceManager()
     {
-        deviceManager = InstanceContainer.Instance.DeviceManager;
+        deviceManager = IInstanceContainer.Instance.DeviceManager;
         if (IInstanceContainer.Instance.TryGetDynamic(out SmarthomeMeshManager meshManager))
         {
             meshManager!.NewConnectionEstablished += Node_NewConnectionEstablished;

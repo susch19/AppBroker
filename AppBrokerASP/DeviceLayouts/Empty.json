@@ -2,7 +2,8 @@
   "UniqueName": "DemoLayout",
   "IconName": "Paw",
   "TypeNames": [
-    "E1743", "929002398602"
+    // "E1743", "929002398602"
+    "no_name"
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [

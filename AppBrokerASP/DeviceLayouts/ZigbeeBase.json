@@ -32,18 +32,26 @@
         "toggle": {
             "Name": "state",
             "Order": 1,
-            "RowNr": 10,
+            "RowNr": 20,
             "EditInfo": {
                 "EditType": "Toggle",
                 "MessageType": "Update",
                 "EditParameter": [
                     {
-                        "Command": "Off",
-                        "Value": true
+                        "Command": "zigbee",
+                        "Value": true,
+                        "Parameters": [
+                            "Switch.state",
+                            "OFF"
+                        ]
                     },
                     {
-                        "Command": "On",
-                        "Value": false
+                        "Command": "zigbee",
+                        "Value": false,
+                        "Parameters": [
+                            "Switch.state",
+                            "ON"
+                        ]
                     }
                 ],
                 "ActiveValue": true
@@ -88,7 +96,7 @@
                 "MessageType": "Update",
                 "EditParameter": [
                     {
-                        "Command": 151,
+                        "Command": 150,
                         "Parameters": [
                             "color_temp"
                         ],
@@ -142,7 +150,7 @@
                 "MessageType": "Update",
                 "EditParameter": [
                     {
-                        "Command": 151,
+                        "Command": 150,
                         "Parameters": [
                             "brightness"
                         ],
@@ -178,22 +186,50 @@
             "EditInfo": {
                 "EditType": "FloatingActionButton",
                 "MessageType": "Update",
-                "EditParameter": [
+                 "EditParameter": [
                     {
                         "CodePoint": 58595,
-                        "Command": 150,
+                        "Command": 100,
+                        "Value": false,
+                        "Parameters": [
+                            "Light.state",
+                            "ON"
+                        ]
+                    },
+                    {
+                        "CodePoint": 58595,
+                        "Command": 100,
                         "Value": true,
                         "Parameters": [
                             "Light.state",
                             "OFF"
                         ]
+                    }
+                ]
+            }
+        },
+        "switch_state_fab": {
+            "Name": "state",
+            "RowNr": 100,
+            "EditInfo": {
+                "EditType": "FloatingActionButton",
+                "MessageType": "Update",
+                 "EditParameter": [
+                    {
+                        "CodePoint": 58595,
+                        "Command": "zigbee",
+                        "Value": true,
+                        "Parameters": [
+                            "Switch.state",
+                            "OFF"
+                        ]
                     },
                     {
-                        "Command": 150,
                         "CodePoint": 58595,
+                        "Command": "zigbee",
                         "Value": false,
                         "Parameters": [
-                            "Light.state",
+                            "Switch.state",
                             "ON"
                         ]
                     }

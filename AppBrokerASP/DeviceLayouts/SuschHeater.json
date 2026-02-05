@@ -1,7 +1,7 @@
 {
-  "Version": 4,
+  "Version": 5,
   "UniqueName": "SuschHeater",
-  "IconName": "XiaomiTempSensor",
+  "IconName": "fire-1-62757",
   "TypeNames": [
     "SuschHeater"
   ],
@@ -19,13 +19,13 @@
         },
         "UnitOfMeasurement": " °C"
       },
-      {
-        "Name": "current_target_time",
-        "Order": 0,
-        "RowNr": 1,
-        "Format": "HH:mm",
-        "UnitOfMeasurement": " Uhr"
-      },
+      // {
+      //   "Name": "current_target_time",
+      //   "Order": 0,
+      //   "RowNr": 1,
+      //   "Format": "HH:mm",
+      //   "UnitOfMeasurement": " Uhr"
+      // },
       {
         "Name": "system_mode",
         "Order": 0,
@@ -92,7 +92,7 @@
           "MessageType": "Update",
           "EditParameter": [
             {
-              "Command": "None",
+              "Command": "Zigbee",
               "Value": "none",
               "CodePoint": 983712,
               "FontFamily": "MaterialIcons",
@@ -108,6 +108,13 @@
             {
               "Command": "None",
               "Value": "remote",
+              "CodePoint": 57399,
+              "FontFamily": "MaterialIcons",
+              "Disable": true
+            },
+            {
+              "Command": "None",
+              "Value": "remoteManual",
               "CodePoint": 57399,
               "FontFamily": "MaterialIcons",
               "Disable": true
@@ -128,7 +135,7 @@
   "DetailDeviceLayout": {
     "PropertyInfos": [
       {
-        "Name": "id",
+        "Name": "current_config",
         "Order": 1,
         "RowNr": 60,
         "EditParameter": [],
@@ -149,6 +156,9 @@
         "blurryCard": true,
         "Expanded": true,
         "Hex": true
+      },
+      {
+        "@ref": "$['Base.json'].detail.id"
       },
       {
         "@ref": "$['Base.json'].detail.friendly_name"
@@ -247,10 +257,11 @@
         "Expanded": true
       },
       {
-        "Name": "linkQuality",
+        "Name": "manual_remote_temperature",
         "Order": 0,
-        "RowNr": 150,
-        "DisplayName": "Verbindungsqualität: ",
+        "RowNr": 21,
+        "DisplayName": "Temperatur des Fernsensors: ",
+        "UnitOfMeasurement": " °C",
         "TextStyle": {
           "FontSize": 16.0,
           "FontFamily": "FontName",
@@ -259,10 +270,17 @@
         },
         "TabInfoId": 0,
         "SpecialType": "none",
-        "ShowOnlyInDeveloperMode": true,
         "BlurryCard": true,
-        "Expanded": true,
-        "Precision":0
+        "Expanded": true
+      },
+      {
+        "Name": "used_temperature_source",
+        "RowNr": 65,
+        "DisplayName": "Temparaturquelle: ",
+        "TabInfoId": 0,
+        "SpecialType": "none",
+        "BlurryCard": true,
+        "Expanded": true
       },
       {
         "Name": "update",
@@ -358,13 +376,14 @@
           "Display": "",
           "EditParameter": [
             {
-              "Command": 6,
+              "Command": "Temp",
               "Digits": 1,
               "Value": {
                 "Min": 5.0,
                 "Max": 35.0,
                 "Divisions": 30
-              }
+              },
+              "Parameters": []
             }
           ],
           "GradientColors": [
@@ -397,22 +416,53 @@
         "Expanded": true,
         "BlurryCard": true
       },
+      // {
+      //   "Name": "heating_setpoint",
+      //   "Order": 1,
+      //   "RowNr": 40,
+      //   "DisplayName": "Manuelle Temperatur Einstellung: ",
+      //   "EditInfo": {
+      //     "EditType": "textfield",
+      //     "MessageType": "Update",
+      //     "PostWithButton": true,
+      //     "PostOnSubmit": true,
+      //     "HintText": "Manuelle Temperatur Einstellung",
+      //     "DigitsOnly": false,
+      //     "InputTypeIdx": 2,
+      //     "MaxLen": 4,
+      //     "AllowRegex": "\b(?:[5-9](?:[.,]\\d+)?|[1-2][0-9](?:[.,]\\d+)?|3[0-9](?:[.,]\\d+)?|35)?\b",
+      //     "Display": "",
+      //     "Validator": {
+      //       "Min": 5,
+      //       "Max": 35,
+      //       "Error": "Temperatur muss zwischen 5°C und 35°C liegen."
+      //     },
+      //     "EditParameter": [
+      //       {
+      //         "Command": "Temp",
+      //         "Digits": 1,
+      //         "Value": {
+      //           "Min": 5.0,
+      //           "Max": 35.0,
+      //           "Divisions": 30
+      //         },
+      //         "Parameters": []
+      //       }
+      //     ],
+        
+      //   },
+      //   "Precision": 1,
+      //   "TabInfoId": 0,
+      //   "SpecialType": "none",
+      //   "UnitOfMeasurement": " °C",
+      //   "Expanded": true,
+      //   "BlurryCard": true
+      // },
       {
-        "Name": "lastReceivedFormatted",
-        "Order": 0,
-        "RowNr": 30,
-        "DisplayName": "Zuletzt empfangens: ",
-        "TextStyle": {
-          "FontSize": 16.0,
-          "FontFamily": "FontName",
-          "FontWeight": "normal",
-          "FontStyle": "normal"
-        },
-        "TabInfoId": 0,
-        "SpecialType": "none",
-        "Format": "dd",
-        "BlurryCard": true,
-        "Expanded": true
+        "@ref": "$['Base.json'].detail.link_quality"
+      },
+      {
+        "@ref": "$['Base.json'].detail.last_received"
       }
     ],
     "TabInfos": [
@@ -422,17 +472,27 @@
         "Order": 1,
         "LinkedDevice": null
       }
+    ],
+    "HistoryProperties": [
+      {
+        "PropertyName": "running_mode_b",
+        "XAxisName": "Heizt",
+        "UnitOfMeasurement": "",
+        "IconName": "sun-inv-59422",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
+        "ChartType": "step"
+      },
+      {
+        "PropertyName": "runtime_seconds",
+        "XAxisName": "Heizdauer",
+        "UnitOfMeasurement": " s",
+        "IconName": "time",
+        "BrightThemeColor": 4278241363,
+        "DarkThemeColor": 4278249078,
+        "ChartType": "line"
+      }
     ]
   },
-  "NotificationSetup": [
-    {
-      "UniqueName": "MyUniqueHeaterNotification",
-      "TranslatableName": "Einmalig über 21°C",
-      "Times": "1"
-    },
-    {
-      "UniqueName": "MyUniqueHeaterNotification2",
-      "TranslatableName": "Wir deaktiviert"
-    }
-  ]
+  "NotificationSetup": []
 }

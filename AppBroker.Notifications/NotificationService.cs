@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core;
+using AppBroker.Main;
 using AppBroker.Notifications.Hubs;
 
 using AppBrokerASP;
@@ -62,7 +63,7 @@ public class NotificationService
 
     internal NotificationService()
     {
-        InstanceContainer.Instance.DeviceStateManager.StateChanged += StateManager_StateChanged;
+        IInstanceContainer.Instance.DeviceStateManager.StateChanged += StateManager_StateChanged;
         timer = new Timer(TimeSpan.FromSeconds(5));
         timer.Elapsed += Timer_Elapsed;
     }

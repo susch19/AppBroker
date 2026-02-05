@@ -1,9 +1,9 @@
 ﻿using AppBroker.Core;
 using AppBroker.Core.DynamicUI;
-using AppBroker.Core.Extension;
+using AppBroker.Main;
+using AppBroker.Plugins.Extension;
 using AppBroker.Runtime.Swagger;
 
-using AppBrokerASP;
 using AppBrokerASP.Plugins;
 
 using Makaretu.Dns;
@@ -41,10 +41,14 @@ namespace AppBroker.Runtime;
 internal class Plugin : IPlugin, IRuntimePlugin
 {
     public string Name => "Runtime";
-    public int LoadOrder => -100;
+    public int LoadOrder => int.MinValue+5;
 
     public void RegisterTypes()
     {
+        _ = new InstanceContainer(PluginLoader.Instance);
+
+        _ = DeviceLayoutService.InstanceDeviceLayouts;
+
     }
 
     public bool Initialize(LogFactory logFactory)
@@ -66,10 +70,6 @@ internal class Plugin : IPlugin, IRuntimePlugin
 
     public void InitializeStartup(string[] args)
     {
-        _ = new InstanceContainer(PluginLoader.Instance);
-
-        _ = DeviceLayoutService.InstanceDeviceLayouts;
-
         mainLogger = LogManager
             .Setup()
             .LoadConfigurationFromSection(InstanceContainer.Instance.ConfigManager.Configuration)

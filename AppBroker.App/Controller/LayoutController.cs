@@ -36,7 +36,7 @@ public class LayoutController : ControllerBase
     [HttpGet("single")]
     public LayoutResponse GetSingle([FromQuery] LayoutRequest request)
     {
-        var layout = GetLayout(request);
+        var layout = deviceManager.GetLayout(request.TypeName, request.DeviceId);
         var icon = GetIcon(request, layout?.IconName);
         var additional = GetAdditionalIcons(layout);
 
@@ -70,7 +70,7 @@ public class LayoutController : ControllerBase
 
         foreach (var req in request)
         {
-            var layout = GetLayout(req);
+            var layout = deviceManager.GetLayout(req.TypeName, req.DeviceId);
             var icon = GetIcon(req, layout?.IconName);
             if (icon is not null || layout is not null)
                 response.Add(new LayoutResponse(layout, icon, GetAdditionalIcons(layout)));
@@ -100,26 +100,7 @@ public class LayoutController : ControllerBase
         return iconService.GetIconByName(name);
     }
 
-    private DeviceLayout? GetLayout(LayoutRequest request)
-    {
-        DeviceLayout? layout = null;
-        if (request.DeviceId != 0)
-            layout = DeviceLayoutService.GetDeviceLayout(request.DeviceId)?.layout;
-        if (layout is null && !string.IsNullOrWhiteSpace(request.TypeName))
-            layout = DeviceLayoutService.GetDeviceLayout(request.TypeName)?.layout;
-        if (layout is null && deviceManager.Devices.TryGetValue(request.DeviceId, out var device))
-        {
-            foreach (var item in device.TypeNames)
-            {
-                if (DeviceLayoutService.GetDeviceLayout(item) is { } res && res.layout is { } resLayout)
-                {
-                    layout = resLayout;
-                    break;
-                }
-            }
-        }
-        return layout;
-    }
+
 
     private IconResponse? GetIcon(LayoutRequest? request, string? iconName)
     {

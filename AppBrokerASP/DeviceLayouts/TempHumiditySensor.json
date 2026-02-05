@@ -1,10 +1,11 @@
 {
-  "Version": 4,
+  "Version": 5,
   "UniqueName": "TempHumidityLayout",
   "IconName": "XiaomiTempSensor",
   "TypeNames": [
     "TH02Z",
-    "ZG-227Z"
+    "ZG-227Z",
+    "TS0201"
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [

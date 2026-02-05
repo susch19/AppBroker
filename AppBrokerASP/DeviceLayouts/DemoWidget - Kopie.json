@@ -422,17 +422,17 @@
       }
     ]
   },
-  "NotificationSetup": [
-    {
-      "UniqueName": "MyUniqueHeaterNotification",
-      "TranslatableName": "Einmalig über 21°C",
-      "Times": "1"
-    },
-    {
-      "UniqueName": "MyUniqueHeaterNotification2",
-      "TranslatableName": "Wir deaktiviert"
-    }
-  ]
+  // "NotificationSetup": [
+  //   {
+  //     "UniqueName": "MyUniqueHeaterNotification",
+  //     "TranslatableName": "Einmalig über 21°C",
+  //     "Times": "1"
+  //   },
+  //   {
+  //     "UniqueName": "MyUniqueHeaterNotification2",
+  //     "TranslatableName": "Wir deaktiviert"
+  //   }
+  // ]
 }
 
 

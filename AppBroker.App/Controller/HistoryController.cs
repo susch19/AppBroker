@@ -1,14 +1,18 @@
-﻿using AppBroker.Core.Devices;
+﻿using AppBroker.Core;
+using AppBroker.Core.Devices;
+using AppBroker.Core.Managers;
 using AppBroker.Core.Models;
-using AppBroker.Core;
+using AppBroker.History;
+
+using Microsoft.AspNetCore.Mvc;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using AppBroker.Core.Managers;
+
+using HistoryModel = AppBroker.History.Models.History;
 
 namespace AppBroker.App.Controller;
 
@@ -17,10 +21,10 @@ public record struct SetHistoryRequest(bool Enable, List<long> Ids, string Name)
 [Route("app/history")]
 public class HistoryController : ControllerBase
 {
-    private readonly IHistoryManager historyManager;
+    private readonly HistoryManager historyManager;
     private readonly IDeviceManager deviceManager;
 
-    public HistoryController(IHistoryManager historyManager, IDeviceManager deviceManager)
+    public HistoryController(HistoryManager historyManager, IDeviceManager deviceManager)
     {
         this.historyManager = historyManager;
         this.deviceManager = deviceManager;
@@ -45,15 +49,16 @@ public class HistoryController : ControllerBase
         }
     }
 
-    [HttpGet]
-    public Task<List<History>> GetIoBrokerHistories([FromQuery] long id, [FromQuery] DateTime dt)
-    {
-        if (deviceManager.Devices.TryGetValue(id, out Device? device))
-        {
-            return device.GetHistory(dt.Date, dt.Date.AddDays(1).AddSeconds(-1));
-        }
-        return Task.FromResult(new List<History>());
-    }
+    //Currently not used on the app
+    //[HttpGet]
+    //public Task<List<HistoryModel>> GetIoBrokerHistories([FromQuery] long id, [FromQuery] DateTime dt)
+    //{
+    //    if (deviceManager.Devices.TryGetValue(id, out Device? device))
+    //    {
+    //        return device.GetHistory(dt.Date, dt.Date.AddDays(1).AddSeconds(-1));
+    //    }
+    //    return Task.FromResult(new List<HistoryModel>());
+    //}
 
     //Currently not used on the app
     //public Task<History> GetIoBrokerHistory(long id, string dt, string propertyName)
@@ -79,13 +84,18 @@ public class HistoryController : ControllerBase
     //}
 
     [HttpGet("range")]
-    public async Task<History> GetIoBrokerHistoryRange(long id, DateTime from, DateTime to, string propertyName)
+    public async Task<HistoryModel> GetIoBrokerHistoryRange(long id, DateTime from, DateTime to, string propertyName)
     {
-        if (deviceManager.Devices.TryGetValue(id, out Device? device))
+        var history = new HistoryModel(propertyName);
+
+        history.HistoryRecords = historyManager.GetHistoryFor(id, propertyName, from, to);
+
+        if (history.HistoryRecords.Count == 1)
         {
-            return await device.GetHistory(from, to, propertyName);
+            var only = history.HistoryRecords.First();
+            history.HistoryRecords.Insert(0, only with { Ts = only.Ts - 100 });
         }
 
-        return History.Empty;
+        return history;
     }
 }

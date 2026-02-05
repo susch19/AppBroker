@@ -1,0 +1,99 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Debug_Ubuntu" />
+    <BuildType Name="Release" />
+    <BuildType Name="Release_Ubuntu" />
+  </Configurations>
+  <Folder Name="/01_Core/">
+    <Project Path="AppBroker.Generators.Test/AppBroker.Generators.Test.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Generators/AppBroker.Generators.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Plugins/AppBroker.Plugins.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/03_Runtime/">
+    <Project Path="AppBrokerASP/AppBrokerASP.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="TcpProxy/TcpProxy.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/04_Plugins/">
+    <Project Path="AppBroker.Api/AppBroker.Main.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.App/AppBroker.App.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Core/AppBroker.Core.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.History/AppBroker.History.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Mail/AppBroker.Mail.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Notifications/AppBroker.Notifications.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.PainlessMesh/AppBroker.PainlessMesh.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Runtime/AppBroker.Runtime.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Windmill/AppBroker.Windmill.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="AppBroker.Zigbee2Mqtt/AppBroker.Zigbee2Mqtt.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/10_Misc/">
+    <Project Path="AppBroker.PainlessMesh.Elsa/AppBroker.PainlessMesh.Elsa.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="DbMigrator/DbMigrator.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="IoBrokerHistoryImporter/IoBrokerHistoryImporter.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="TestGenerator/TestGenerator.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+    <Project Path="TranslateTTMToHumanReadable/TranslateTTMToHumanReadable.csproj">
+      <BuildType Solution="Debug_Ubuntu|*" Project="Debug" />
+      <BuildType Solution="Release_Ubuntu|*" Project="Release" />
+    </Project>
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+  </Folder>
+</Solution>

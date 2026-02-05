@@ -14,9 +14,9 @@ public class Program
 
         var pluginLoader = new PluginLoader(LogManager.LogFactory);
         pluginLoader.LoadAssemblies();
+        pluginLoader.InitializePlugins(LogManager.LogFactory);
         var runtime = pluginLoader.Plugins.OfType<IRuntimePlugin>().First();
         runtime.InitializeStartup(args);
-        pluginLoader.InitializePlugins(LogManager.LogFactory);
         runtime.Run();
     }
 

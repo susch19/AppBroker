@@ -16,7 +16,7 @@ using System.Text;
 using System.Linq;
 using System;
 using System.IO.Compression;
-using AppBroker.Core;
+using AppBroker.Plugins.Configuration;
 
 namespace AppBrokerASP.SignalR;
 
@@ -50,7 +50,7 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
     /// <summary>
     /// Initializes a new instance of the <see cref="NewtonsoftJsonSmarthomeHubProtocol"/> class.
     /// </summary>
-    public NewtonsoftJsonSmarthomeHubProtocol() : this(Options.Create(new NewtonsoftJsonHubProtocolOptions()))
+    public NewtonsoftJsonSmarthomeHubProtocol() : this(Options.Create(new NewtonsoftJsonHubProtocolOptions()), new())
     {
     }
 
@@ -59,10 +59,10 @@ public class NewtonsoftJsonSmarthomeHubProtocol : IHubProtocol
     /// Initializes a new instance of the <see cref="NewtonsoftJsonSmarthomeHubProtocol"/> class.
     /// </summary>
     /// <param name="options">The options used to initialize the protocol.</param>
-    public NewtonsoftJsonSmarthomeHubProtocol(IOptions<NewtonsoftJsonHubProtocolOptions> options)
+    public NewtonsoftJsonSmarthomeHubProtocol(IOptions<NewtonsoftJsonHubProtocolOptions> options, ServerConfig serverConfig)
     {
         PayloadSerializer = JsonSerializer.Create(options.Value.PayloadSerializerSettings);
-        key = SHA256.HashData(Encoding.UTF8.GetBytes(InstanceContainer.Instance.ServerConfigManager.ServerConfig.EncryptionPassword));
+        key = SHA256.HashData(Encoding.UTF8.GetBytes(serverConfig.EncryptionPassword));
     }
 
     /// <inheritdoc />

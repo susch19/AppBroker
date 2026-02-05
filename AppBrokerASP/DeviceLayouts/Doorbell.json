@@ -10,13 +10,24 @@
       "UniqueName": "DingDongNotification",
       "TranslatableName": "Klingel",
       "Global": true
+    },
+    
+    {
+      "UniqueName": "WashingMachine",
+      "TranslatableName": "Waschmaschine fertig",
+      "Global": true
+    },
+    {
+      "UniqueName": "ClothDrier",
+      "TranslatableName": "Trockner fertig",
+      "Global": true
     }
   ],
   "DashboardDeviceLayout": {
     "DashboardProperties": [
       {
         "@ref": "$['ZigbeeBase.json'].dashboard.toggle"
-      }
+      },
       {
         "@ref": "$['Base.json'].dashboard.id"
       }

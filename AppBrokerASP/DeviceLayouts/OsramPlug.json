@@ -31,7 +31,7 @@
       },
       {
         "@ref": "$['Base.json'].detail.link_quality"
-      }
+      },
       {
         "Name": "_",
         "Order": 0,
@@ -44,13 +44,7 @@
     ],
     "HistoryProperties": [
       {
-        "PropertyName": "state",
-        "XAxisName": "Status",
-        "UnitOfMeasurement": " ",
-        "IconName": "celcius-59424",
-        "BrightThemeColor": 4278241363,
-        "DarkThemeColor": 4278249078,
-        "ChartType": "step"
+        "@ref": "$['HistoryBase.json'].state"
       }
     ]
   }

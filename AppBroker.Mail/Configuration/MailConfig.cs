@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core.Configuration;
+using AppBroker.Plugins;
 
 
 namespace AppBroker.Windmill.Configuration;

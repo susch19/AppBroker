@@ -2,7 +2,8 @@
 using AppBroker.App.Hubs;
 using AppBroker.Core;
 using AppBroker.Core.Devices;
-using AppBroker.Core.Extension;
+
+using AppBroker.Plugins.Extension;
 
 using AppBrokerASP.Extension;
 

@@ -15,7 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using AppBrokerASP;
+using AppBroker.Main;
 
 namespace AppBroker.Runtime;
 
@@ -71,16 +71,19 @@ public class Startup
 
         _ = services.AddSingleton<JavaScriptEngineManager>();
         var container = InstanceContainer.Instance;
+        var registered = container.GetAllRegistered();
+        foreach (var reg in registered)
+        {
+            _ = services.AddSingleton(reg.GetType(), reg);
+            foreach (var item in reg.GetType().GetInterfaces().Where(x=>x.FullName.StartsWith("AppBroker")))
+            {
+                services.AddSingleton(item, reg);
+            }
+        }
         //_ = services.AddSingleton(new CloudConnector());
         _ = services.AddSingleton<IInstanceContainer>(container);
-        _ = services.AddSingleton(container.IconService);
-        _ = services.AddSingleton(container.ConfigManager);
         _ = services.AddSingleton(container.ServerConfigManager.CloudConfig);
         _ = services.AddSingleton(container.ServerConfigManager.ServerConfig);
-        _ = services.AddSingleton(container.DeviceTypeMetaDataManager);
-        _ = services.AddSingleton(container.DeviceManager);
-        _ = services.AddSingleton(container.DeviceStateManager);
-        _ = services.AddSingleton(container.HistoryManager);
 
         if (InstanceContainer.Instance.ConfigManager.MqttConfig.Enabled)
         {

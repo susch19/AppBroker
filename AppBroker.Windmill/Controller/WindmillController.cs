@@ -1,19 +1,16 @@
-﻿using AppBroker.Core.Devices;
-using AppBroker.Core;
-
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR;
-
+﻿
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AppBroker.Core.Managers;
-using AppBrokerASP;
 using System.Text.Json;
 using NLog;
 using AppBroker.Windmill.Model;
+using Microsoft.AspNetCore.Mvc;
+using AppBroker.Core.Managers;
+using AppBroker.Core;
+using AppBroker.Core.Devices;
 
 namespace AppBroker.Windmill.Controller;
 

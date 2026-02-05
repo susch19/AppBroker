@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core.Database.Model;
+using AppBroker.Plugins.Database;
 
 using Microsoft.EntityFrameworkCore;
 
@@ -19,6 +20,7 @@ public class AppDbContext : BaseDbContext
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
         var dbConfig = IInstanceContainer.Instance.ConfigManager.DatabaseConfig;
+        
         DatabaseFactory.Initialize(new FileInfo(dbConfig.BrokerDatabasePluginName).FullName);
         DatabaseType = dbConfig.BrokerDatabasePluginName;
         foreach (var item in DatabaseFactory.DatabaseConfigurators)

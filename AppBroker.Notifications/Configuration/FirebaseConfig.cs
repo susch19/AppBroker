@@ -1,4 +1,5 @@
 ﻿using AppBroker.Core.Configuration;
+using AppBroker.Plugins;
 
 using System;
 using System.Collections.Generic;
